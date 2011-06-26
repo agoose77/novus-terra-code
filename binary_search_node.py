@@ -35,6 +35,9 @@ class BinarySearchNode:
             
         return l
         
+    def __iter__(self):
+        return self.to_list()
+        
     @classmethod
     def construct_from_data(data):
         # todo
@@ -64,7 +67,16 @@ class BinarySearchNode:
                 return self.right_child
             else:
                 return self.left_child.insert(key, value, data_type)
-                
+    
+    def to_list(self):
+        list = [self]
+        if self.left_child:
+            list.extend(left_child.to_list())
+        if self.right_child:
+            list.extend(right_child.to_list()
+            
+        return list
+            
     def remove(self, key):
         pass
         

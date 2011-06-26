@@ -3,8 +3,8 @@
 from binary_search_node import BinarySearchNode
 
 class KDNode(BinarySearchNode):
-    def __init__(self, key, depth=0):
-        BinarySearchNode.__init__(self, key, key.worldPosition[0], depth)
+    def __init__(self, key, value, depth=0):
+        BinarySearchNode.__init__(self, key, value[0], depth)
         
     @staticmethod
     def construct_kd_tree(object_list, depth=0):
@@ -28,7 +28,7 @@ class KDNode(BinarySearchNode):
     def insert(self, key, value=None, data_type=None):
         axis = self.depth % 3 
         
-        BinarySearchNode.insert(key, key.worldPosition[axis], KDNode)
+        BinarySearchNode.insert(key, value[axis], KDNode)
         
     def radius_search(self, point, radius):
         # todo

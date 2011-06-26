@@ -35,6 +35,7 @@ class EntityBase:
                 
         self.id = id
         self.type = type
+        EntityBase.entities[self.id] = self
         
         self.frozen = False
         self.stored_linear_velocity = None
@@ -44,7 +45,16 @@ class EntityBase:
         self.interact_distance = 2.0
         self.interact_icon = None
         self.interact_label = ''
-                
+    
+    def main(self):
+        if not self.frozen:
+            # apply gravity
+            pass
+            
+    def destroy(self):
+        EntityBase.entities.pop(self.id)
+        self.endObject()
+            
     def __getitem__(self, item):
         return self._data[item]
         
@@ -59,8 +69,6 @@ class EntityBase:
     
     def __contains__(self, item):
         return item in self._data
-        
-    
         
     @property
     def actuators(self):
