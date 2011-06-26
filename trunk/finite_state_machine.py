@@ -15,12 +15,13 @@ class FiniteStateMachine:
         action - callable, to be run while state is active
         """
         self.states[state] = action
+        self.transitions[state] = []
         
         if self.current_state is None:
             self.current_state = state
         
     def add_transition(self, parent_state, child_state, condition, action=None):
-        self.transitions[parent_state] = [child_state, condition, action]
+        self.transitions[parent_state].append([child_state, condition, action])
         
     def main(self):
         for transition in self.transitions[self.current_state]:
@@ -30,4 +31,4 @@ class FiniteStateMachine:
                     transition[2] (self)
         
         if callable(self.states[self.current_state]):
-            self.states[self.currnet_state] (self)
+            self.states[self.current_state] (self)
