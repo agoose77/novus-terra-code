@@ -1,4 +1,5 @@
 import bge
+from mathutils import Vector
 
 class World:
 
@@ -22,7 +23,7 @@ class World:
         self.current_weather = None
         self.light_sources = None
         self.type = None
-        self.gravity = [0,0, -9.8]
+        self.gravity = Vector([0,0, -9.8])
         
     def create(self, world_file):
         # Load a world file and make it active
@@ -35,8 +36,7 @@ class World:
         self.current_cell = None
         
     def destroy(self):
-        # Frees all the data
-        # sets the default state
+        # Frees all the data and restores the world back to its default state
         
         # remove the objects from the world
         for kdtree in self.loaded_kd_trees:

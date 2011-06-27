@@ -39,7 +39,7 @@ class EntityBase:
         
         self.frozen = False
         self.stored_linear_velocity = None
-        self.stored_rotational_velocity = None
+        self.stored_angular_velocity = None
         
         self.on_interact = None
         self.interact_distance = 2.0
@@ -48,12 +48,33 @@ class EntityBase:
     
     def main(self):
         if not self.frozen:
-            # apply gravity
-            pass
+            self.applyForce(self.mass * bge.logic.globalDict['game'].world.gravity)
             
     def destroy(self):
         EntityBase.entities.pop(self.id)
         self.endObject()
+        
+    def freeze(self):
+        self.stored_linear_velocity = self.worldLinearVelocity
+        self.store_angular_velocity = self.worldAngularVelocity
+        self.worldLinearVelocity = [0.00001]*3
+        self.worldAngularVelocity = [0.00001]*3
+        self.frozen = True
+        
+    def unfreeze(self):
+        self.worldLinearVelocity = self.stored_linear_velocity
+        self.worldAngularVelocity = self.stored_angular_velocity
+        self.frozen = False
+    
+    @classmethod
+    def from_pickled_entity(pickled_entity):
+        entity = EntityBase(pickled_entitiy.object_name, pickled_entity.position,
+            pickled_entity.orientation, pickled_entity.id, pickled_entity.type)
+            
+        entity.worldLinearVelocity = pickled_entity.linear_velocity
+        entity.worldAngularVelocity = pickled_entity.angular_velocity
+        
+        return entity
             
     def __getitem__(self, item):
         return self._data[item]

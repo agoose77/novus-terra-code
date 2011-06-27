@@ -69,7 +69,7 @@ class BinarySearchNode:
                 return self.left_child.insert(key, value, data_type)
     
     def to_list(self):
-        list = [self]
+        list = [self.key]
         if self.left_child:
             list.extend(left_child.to_list())
         if self.right_child:

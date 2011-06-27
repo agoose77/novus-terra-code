@@ -1,7 +1,10 @@
-import bge as bge
+import math
+
+import bge
+from mathutils import Vector
+
 from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
-import math
 from game import Game
 from sound_manager import SoundManager
 
@@ -9,22 +12,25 @@ class Player(EntityBase):
 
 	def __init__(self):
 		EntityBase.__init__(self, 'Cube')
+		
 		self.health = 100
-		self.stats = []
-		self.talking = False
-		self.walking_speed = 5
-		self.items = []
-		self.is_in_combat = False
 		self.hunger = 0.0
-		self.tiredness = 0.0 # - Right name?
-		self.is_talking = False
-		self.current_vehicle = False
-		self.current_places = []
+		self.tiredness = 0.0 # - Right name? fatigue?
+		self.stats = []
+		self.items = []
+		
+		self.talking = False
+		self.is_in_combat = False
 		self.stored_state = None
 		self.camera_on = True
-		self.walk_speed = 3
-		self.run_speed = 5
-		self.camera = self.children[0]
+		self.current_vehicle = None
+		self.walking_speed = 5
+		self.current_places = []
+		
+		self.walk_speed = 3.0
+		self.run_speed = 5.0
+		self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
+		
 		self.movement_state_machine = FiniteStateMachine(self)
 		self.movement_state_machine.add_state('walk', self.handle_walk_state) # add state
 		self.movement_state_machine.add_state('climb', self.handle_climb_state)
@@ -33,18 +39,19 @@ class Player(EntityBase):
 		#self.movement_state_machine.add_state('land', self.handle_land_state)
 		self.movement_state_machine.add_state('vehicle', self.handle_vehicle_state)
 		self.movement_state_machine.add_state('none', self.handle_none_state)
+		
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
 		self.movement_state_machine.add_transition('walk', 'fall', self.is_falling)
 
 
 	def handle_walk_state(self, FSM):
-		print ('WAlk')
+		print ('walk')
 		###
 		keyboard = bge.logic.keyboard.events
 		vel = self.getLinearVelocity()
 		move = [0,0,0]
 
-		#controls = Game.control_options
+		#controls = bge.logic.globalDict['game'].control_options
 
 		### Keys
 		if keyboard[bge.events.LEFTSHIFTKEY]:
@@ -65,18 +72,56 @@ class Player(EntityBase):
 		ray = self.rayCast(pos1, self.position, 1, '', 0, 0, 0)
 
 		if ray[0] != None:
-			if keyboard[bge.events.SPACEKEY] == 1:
+			if keyboard[bge.events.SPACEKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
 				move[2] = 10
 
 		###
-		from mathutils import Vector
 		com = vel[2]+move[2]
 		t1 = move[1] * self.worldOrientation[2].copy()
 
 		self.localLinearVelocity = [move[1],move[0], com]
 
-		# Handle sound
-
+		# Handle sound - would be connected to animation data I suppose, which frame the foot is on the ground
+		
+		""" Alternative movement code, always apply force along slope of the ground
+		keyboard = bge.logic.keyboard
+		
+		fx = 0.0
+		fy = 0.0
+		
+		if keyboard.events[bge.events.WKEY] == bge.logic.KX_INPUT_ACTIVE:
+			fy += 1.0
+		if keyboard.events[bge.events.SKEY] == bge.logic.KX_INPUT_ACTIVE:
+			fy -= 1.0
+		if keyboard.events[bge.events.AKEY] == bge.logic.KX_INPUT_ACTIVE:
+			fx -= 1.0
+		if keyboard.events[bge.events.DKEY] == bge.logic.KX_INPUT_ACTIVE:
+			fx += 1.0
+		
+		if fx or fy:
+			ray_end = self.worldPosition.copy()
+			ray_end.z -= 2.0
+			hit_obj, hit_pos, hit_normal = self.rayCast(ray_end, self._data)        ### TEMP - needs fixing (self._data)
+			
+			# Direction along the xy plane to apply the force  (rotated 90 degrees, for when cross product is taken)
+			force_xy = Vector([fx, fy, 0]) * Matrix.Rotation(math.pi/2, 3, [0, 0, 1])
+			
+			# Direction to apply force, taking into account slope of ground plane
+			force_xyz = 100 * hit_normal.cross(force_xy).normalized()
+			
+			self.applyForce(force_xyz, True)
+			
+			# limit velocity
+			if keyboard.events[bge.events.LEFTSHIFTKEY] == bge.logic.KX_INPUT_ACTIVE:
+				vel_limit = self.run_speed
+			else:
+				vel_limit = self.walk_speed
+			
+			vel = self.worldLinearVelocity
+			if vel.magnitude > vel_limit:
+				vel.magnitude = vel_limit
+				self.worldLinearVelocity = vel
+		"""    
 
 	def handle_climb_state(self, FSM):
 		pass
@@ -94,24 +139,14 @@ class Player(EntityBase):
 	def is_grounded(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
 		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
-
-		if ray2[0] == None:
-			grounded = False
-		else:
-			grounded = True
-
-		return grounded
+		
+		return bool(ray2[0])
 
 	def is_falling(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
 		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
-
-		if ray2[0] == None:
-			falling = True
-		else:
-			falling = False
-
-		return falling
+		
+		return not bool(ray2[0])
 
 
 	def has_entered_ladder(self, FSM):
@@ -138,6 +173,7 @@ class Player(EntityBase):
 
 	###
 	def handle_interactions(self):
+		# cast ray from mouse into world, check if hasattr(hit_obj, 'on_interact')
 		pass
 
 	def fast_travel(self, location):
@@ -152,12 +188,12 @@ class Player(EntityBase):
 		w = bge.render.getWindowWidth()
 		h = bge.render.getWindowHeight()
 
-		bge.render.setMousePosition(int(w/ 2), int(h/ 2))
+		bge.render.setMousePosition(w//2, h//2)
 
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))
 		else:
-			mouse_mx = (mpos[0] - 0.5) * Game.MOUSE_SENSITIVITY
+			mouse_mx = (mpos[0] - 0.5) * Game.MOUSE_SENSITIVITY # bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]
 			mouse_my = (mpos[1] - 0.5) * Game.MOUSE_SENSITIVITY
 
 			cap = 1.5

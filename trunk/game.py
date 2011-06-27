@@ -3,6 +3,7 @@ import time
 import bge
 
 from savefile import Savefile
+from sound_manager import SoundManager
 from world import World
 
 class Game:
@@ -50,7 +51,8 @@ class Game:
             }
         
         self.current_savefile = self.get_last_player_savefile()
-        world = None
+        self.sound_manager = SoundManager
+        self.world = None
         
         bge.logic.getCurrentScene().replace('world')
         

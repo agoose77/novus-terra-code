@@ -19,17 +19,23 @@ class QuadNode:
         self.children = [child1, child2, child3, child4]
         
     def get_node_from_point(self, point, depth=-1):
-        if len(self.children) == 0:
+        if abs(point[0]-self.centre[0]) > self.radius or 
+            abs(point[1]-self.centre[1]) > radius:
+            return None
+        
+        if len(self.children) == 0 or depth == 0:
             return self
         else:
-            if point[0] > self.centre[0] and self.point[1] > self.centre[1]:
-                return self.children[0].get_node_from_point(point)
-            elif point[0] > self.centre[0] and self.point[1] < self.centre[1]:
-                return self.children[1].get_node_from_point(point)
-            elif point[0] < self.centre[0] and self.point[1] < self.centre[1]:
-                return self.children[2].get_node_from_point(point)
+            if point[0] > self.centre[0]:
+                if self.point[1] > self.centre[1]:
+                    return self.children[0].get_node_from_point(point, depth-1)
+                else:
+                    return self.children[1].get_node_from_point(point, depth-1)
             else:
-                return self.children[3].get_node_from_point(point)
+                if self.point[1] < self.centre[1]:
+                    return self.children[2].get_node_from_point(point, depth-1)
+                else:
+                    return self.children[3].get_node_from_point(point, depth-1)
                 
     def get_neighbours(self, root_node):
         cx = self.centre[0]
