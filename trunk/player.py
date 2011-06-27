@@ -33,6 +33,8 @@ class Player(EntityBase):
 		#self.movement_state_machine.add_state('land', self.handle_land_state)
 		self.movement_state_machine.add_state('vehicle', self.handle_vehicle_state)
 		self.movement_state_machine.add_state('none', self.handle_none_state)
+		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
+		self.movement_state_machine.add_transition('walk', 'fall', self.is_falling)
 
 
 	def handle_walk_state(self, FSM):
@@ -41,6 +43,8 @@ class Player(EntityBase):
 		keyboard = bge.logic.keyboard.events
 		vel = self.getLinearVelocity()
 		move = [0,0,0]
+
+		#controls = Game.control_options
 
 		### Keys
 		if keyboard[bge.events.LEFTSHIFTKEY]:
@@ -69,7 +73,7 @@ class Player(EntityBase):
 		com = vel[2]+move[2]
 		t1 = move[1] * self.worldOrientation[2].copy()
 
-		self.worldLinearVelocity = [move[1],move[0], com]
+		self.localLinearVelocity = [move[1],move[0], com]
 
 		# Handle sound
 
@@ -87,14 +91,12 @@ class Player(EntityBase):
 		pass
 
 
-
 	def is_grounded(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
-		ray2 = self.rayCast(pos2, self.position, 0, '', 0, 0, 0)
+		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
 
 		if ray2[0] == None:
 			grounded = False
-
 		else:
 			grounded = True
 
@@ -102,15 +104,15 @@ class Player(EntityBase):
 
 	def is_falling(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
-		ray2 = self.rayCast(pos2, self.position, 0, '', 0, 0, 0)
+		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
 
 		if ray2[0] == None:
 			falling = True
-
 		else:
 			falling = False
 
 		return falling
+
 
 	def has_entered_ladder(self, FSM):
 		pass
@@ -124,8 +126,8 @@ class Player(EntityBase):
 	def has_exited_vehicle(self, FSM):
 		pass
 
-	#def has_pressed_jumpkey(self, FSM):
-	#	pass
+	def has_pressed_jumpkey(self, FSM):
+		pass
 
 	def has_entered_none(self, FSM):
 		pass
@@ -152,18 +154,20 @@ class Player(EntityBase):
 
 		bge.render.setMousePosition(int(w/ 2), int(h/ 2))
 
-
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))
-
 		else:
 			mouse_mx = (mpos[0] - 0.5) * Game.MOUSE_SENSITIVITY
 			mouse_my = (mpos[1] - 0.5) * Game.MOUSE_SENSITIVITY
 
-			if abs(mouse_mx) > 0.001 or abs(mouse_my) > 0.001:
-				self.camera.parent.applyRotation([0, 0, -mouse_mx], 0) # X
-				self.camera.applyRotation([-mouse_my, 0, 0], 1) # Y
-				self.camera['ml_rotx'] += mouse_my
+			cap = 1.5
+
+			if -(self.camera['ml_rotx'] + mouse_my) < cap and -(self.camera['ml_rotx'] + mouse_my) > -cap:
+				if abs(mouse_mx) > 0.001 or abs(mouse_my) > 0.001:
+					self.camera.parent.applyRotation([0, 0, -mouse_mx], 0) # X
+					self.camera.applyRotation([-mouse_my, 0, 0], 1) # Y
+					self.camera['ml_rotx'] += mouse_my
+
 
 
 	def remove_controls(self):
@@ -177,12 +181,6 @@ class Player(EntityBase):
 		EntityBase.main(self)
 		self.movement_state_machine.main()
 		self.handle_camera()
-
-		if self.movement_state_machine.current_state == 'walk':
-			self.movement_state_machine.add_transition('walk', 'fall', self.is_falling, self.handle_fall_state)
-		else:
-			self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded, self.handle_walk_state)
-
 
 
 ### Testing
