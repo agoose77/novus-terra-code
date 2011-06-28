@@ -3,10 +3,11 @@ class QuadNode:
         # children start in the 1st quadrant and go clockwise
         self.key = key
         self.centre = centre
+        self.radius = radius
         self.depth = depth
         self.children = []
         
-    def subdivide(self, keys=[None]*4):
+    def subdivide(self, keys=[None]*4, depth=1):
         cx = self.centre[0]
         cy = self.centre[1]
         r = self.radius
@@ -18,21 +19,26 @@ class QuadNode:
         
         self.children = [child1, child2, child3, child4]
         
+        depth -= 1
+        if depth != 0:
+            for child in self.children:
+                child.subdivide(depth=depth)
+        
     def get_node_from_point(self, point, depth=-1):
-        if abs(point[0]-self.centre[0]) > self.radius or 
-            abs(point[1]-self.centre[1]) > radius:
+        if abs(point[0]-self.centre[0]) > self.radius or\
+            abs(point[1]-self.centre[1]) > self.radius:
             return None
         
         if len(self.children) == 0 or depth == 0:
             return self
         else:
             if point[0] > self.centre[0]:
-                if self.point[1] > self.centre[1]:
+                if point[1] > self.centre[1]:
                     return self.children[0].get_node_from_point(point, depth-1)
                 else:
                     return self.children[1].get_node_from_point(point, depth-1)
             else:
-                if self.point[1] < self.centre[1]:
+                if point[1] < self.centre[1]:
                     return self.children[2].get_node_from_point(point, depth-1)
                 else:
                     return self.children[3].get_node_from_point(point, depth-1)
@@ -42,14 +48,14 @@ class QuadNode:
         cy = self.centre[1]
         r = self.radius
         
-        n1 = root_node.get_node_from_point([cx+2*r, cy], self.depth))
-        n2 = root_node.get_node_from_point([cx-2*r, cy], self.depth))
-        n3 = root_node.get_node_from_point([cx, cy+2*r], self.depth))
-        n4 = root_node.get_node_from_point([cx, cy-2*r], self.depth))
-        n5 = root_node.get_node_from_point([cx+2*r, cy+2*r], self.depth))
-        n6 = root_node.get_node_from_point([cx+2*r, cy-2*r], self.depth))
-        n7 = root_node.get_node_from_point([cx-2*r, cy+2*r], self.depth))
-        n8 = root_node.get_node_from_point([cx-2*r, cy-2*r], self.depth))
+        n1 = root_node.get_node_from_point([cx+2*r, cy], self.depth)
+        n2 = root_node.get_node_from_point([cx-2*r, cy], self.depth)
+        n3 = root_node.get_node_from_point([cx, cy+2*r], self.depth)
+        n4 = root_node.get_node_from_point([cx, cy-2*r], self.depth)
+        n5 = root_node.get_node_from_point([cx+2*r, cy+2*r], self.depth)
+        n6 = root_node.get_node_from_point([cx+2*r, cy-2*r], self.depth)
+        n7 = root_node.get_node_from_point([cx-2*r, cy+2*r], self.depth)
+        n8 = root_node.get_node_from_point([cx-2*r, cy-2*r], self.depth)
         
         neighbours = []
         if n1:
