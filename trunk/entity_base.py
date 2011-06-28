@@ -37,6 +37,9 @@ class EntityBase:
         self.type = type
         EntityBase.entities[self.id] = self
         
+        self.worldPosition = position
+        self.worldOrietnation = orientation
+        
         self.frozen = False
         self.stored_linear_velocity = None
         self.stored_angular_velocity = None
@@ -67,8 +70,8 @@ class EntityBase:
         self.frozen = False
     
     @classmethod
-    def from_pickled_entity(pickled_entity):
-        entity = EntityBase(pickled_entitiy.object_name, pickled_entity.position,
+    def from_pickled_entity(cls, pickled_entity):
+        entity = EntityBase(pickled_entity.object_name, pickled_entity.position,
             pickled_entity.orientation, pickled_entity.id, pickled_entity.type)
             
         entity.worldLinearVelocity = pickled_entity.linear_velocity

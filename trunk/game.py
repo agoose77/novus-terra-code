@@ -2,6 +2,8 @@ import time
 
 import bge
 
+from entity_base import EntityBase
+from player import Player
 from savefile import Savefile
 from sound_manager import SoundManager
 from world import World
@@ -10,7 +12,7 @@ class Game:
     FORWARD_KEY = 0
     BACKWARD_KEY = 1
     STRAFE_LEFT_KEY = 2
-    STRAGE_RIGHT_KEY = 3
+    STRAFE_RIGHT_KEY = 3
     ACTION_KEY = 4
     SWITCH_WEAPON_KEY = 5
     JUMP_KEY = 6
@@ -18,6 +20,11 @@ class Game:
     AIM_WEAPON_KEY = 8
     SHOOT_WEAPON_KEY = 9
     MOUSE_SENSITIVITY = 10
+    
+    entity = {\
+        'EntityBase': EntityBase,
+        'Player': Player,
+        }
     
     def __init__(self):
         self.game_started = time.time()
@@ -37,21 +44,21 @@ class Game:
             }
             
         self.control_options = {\
-            FORWARDKEY: bge.events.WKEY,
-            BACKWARDKEY: bge.events.SKEY,
-            STRAFE_LEFT_KEY: bge.events.AKEY,
-            STRAFE_RIGHT_KEY: bge.events.DKEY,
-            ACTION_KEY: bge.events.EKEY,
-            SWITCH_WEAPON_KEY: bge.events.FKEY,
-            JUMP_KEY: bge.events.SPACEKEY,
-            RUN_KEY: bg.eevnts.LEFTSHIFTKEY,
-            AIM_WEAPON_KEY: bge.events.RIGHTMOUSE,
-            SHOOT_WEAPON_KEY: bge.events.LEFTMOUSE,
-            MOUSE_SENSITIVITY: 5.0,
+            Game.FORWARD_KEY: bge.events.WKEY,
+            Game.BACKWARD_KEY: bge.events.SKEY,
+            Game.STRAFE_LEFT_KEY: bge.events.AKEY,
+            Game.STRAFE_RIGHT_KEY: bge.events.DKEY,
+            Game.ACTION_KEY: bge.events.EKEY,
+            Game.SWITCH_WEAPON_KEY: bge.events.FKEY,
+            Game.JUMP_KEY: bge.events.SPACEKEY,
+            Game.RUN_KEY: bge.events.LEFTSHIFTKEY,
+            Game.AIM_WEAPON_KEY: bge.events.RIGHTMOUSE,
+            Game.SHOOT_WEAPON_KEY: bge.events.LEFTMOUSE,
+            Game.MOUSE_SENSITIVITY: 5.0,
             }
         
-        self.current_savefile = self.get_last_player_savefile()
-        self.sound_manager = SoundManager
+        #self.current_savefile = self.get_last_played_savefile()
+        #self.sound_manager = SoundManager()
         self.world = None
         
         bge.logic.getCurrentScene().replace('world')

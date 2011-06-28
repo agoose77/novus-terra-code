@@ -5,7 +5,7 @@ from mathutils import Vector
 
 from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
-from game import Game
+from game import *
 from sound_manager import SoundManager
 
 class Player(EntityBase):
@@ -29,23 +29,23 @@ class Player(EntityBase):
 		
 		self.walk_speed = 3.0
 		self.run_speed = 5.0
-		self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
+		#self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
 		
 		self.movement_state_machine = FiniteStateMachine(self)
 		self.movement_state_machine.add_state('walk', self.handle_walk_state) # add state
 		self.movement_state_machine.add_state('climb', self.handle_climb_state)
 		#self.movement_state_machine.add_state('jump', self.handle_jump_state)
 		self.movement_state_machine.add_state('fall', self.handle_fall_state)
-		#self.movement_state_machine.add_state('land', self.handle_land_state)
+		#self.movement_state_machine.add_state('land', self.handle_land_state2)
 		self.movement_state_machine.add_state('vehicle', self.handle_vehicle_state)
 		self.movement_state_machine.add_state('none', self.handle_none_state)
 		
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
-		self.movement_state_machine.add_transition('walk', 'fall', self.is_falling)
+		#self.movement_state_machine.add_transition('walk', 'fall', self.is_falling)
 
 
 	def handle_walk_state(self, FSM):
-		print ('walk')
+		#print ('walk')
 		###
 		keyboard = bge.logic.keyboard.events
 		vel = self.getLinearVelocity()
@@ -127,7 +127,7 @@ class Player(EntityBase):
 		pass
 
 	def handle_fall_state(self, FSM):
-		print ('fall')
+		pass#print ('fall')
 
 	def handle_vehicle_state(self, FSM):
 		pass
@@ -216,9 +216,9 @@ class Player(EntityBase):
 	def main(self):
 		EntityBase.main(self)
 		self.movement_state_machine.main()
-		self.handle_camera()
+		#self.handle_camera()
 
-
+"""
 ### Testing
 own = bge.logic.getCurrentController().owner
 
@@ -229,4 +229,4 @@ if not 'INIT' in own:
 
 # If created already
 else:
-	Player.main(bge.logic.globalDict['game'])
+	Player.main(bge.logic.globalDict['game'])"""

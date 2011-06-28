@@ -1,20 +1,25 @@
+import pickle
+
 import bge
 from mathutils import Vector
+
+from player import Player
 
 class World:
 
     INTERIOR_WORLD = 0
-    EXTERIOUR_WORLD = 1
+    EXTERIOR_WORLD = 1
     
     def __init__(self):
         self.current_world_file = None
         self.current_cell = None
         self.loaded_libs = None
-        self.loaded_kd_trees = None
+        self.loaded_kdtrees = None
         self.loaded_entities = None
         self.entity_loading_queue = None
         
-        self.player = None
+        self.player = Player()
+        self.player.worldPosition = [15,15,5]
         self.current_quest = None
         self.quest_manager = None
         
@@ -28,9 +33,13 @@ class World:
     def create(self, world_file):
         # Load a world file and make it active
         # The actual loading doesn't take place until update_culling is called
-        self.current_world_file = bge.logic.globalDict['game'].current_savefile.load_file(world_file)
+        #self.current_world_file = bge.logic.globalDict['game'].current_savefile.load_file(world_file)
+        file = open(bge.logic.expandPath("//novus_terra.world"), 'rb')
+        self.current_world_file = pickle.load(file)
+        self.type = 1#self.current_world_file['type']
+        file.close()
         self.loaded_libs = {}
-        self.loaded_kd_trees = []
+        self.loaded_kdtrees = []
         self.loaded_entities = []
         self.entity_loading_queue = []
         self.current_cell = None
@@ -49,7 +58,7 @@ class World:
         self.current_world_file = None
         self.current_cell = None
         self.loaded_libs = None
-        self.loaded_kd_trees = None
+        self.loaded_kdtrees = None
         self.loaded_entities = None
         self.entity_loading_queue = None
         
@@ -57,7 +66,7 @@ class World:
         # loads a kdtree full of PickledEntities into the world
         for pickled_entity in kdtree:
             if pickled_entity.library in self.loaded_libs.keys():
-                self.loaded_libs[pickled_entity.library].append(kd_tree)
+                self.loaded_libs[pickled_entity.library].append(kdtree)
                 
             self.entity_loading_queue.append([pickled_entity, kdtree])
             
@@ -76,7 +85,7 @@ class World:
                     libs_to_free.append(lib)
                     
         for lib in libs_to_free:
-            bge.logic.FreeLib(lib)
+            #bge.logic.FreeLib(lib)
             self.loaded_libs.pop(lib)
             
         self.loaded_kdtrees.remove(kdtree)
@@ -93,6 +102,7 @@ class World:
                 kdtrees_to_free = []
                 
                 neighbours = current_cell.get_neighbours(self.current_world_file['data'])
+
                 loaded_kd_trees = self.loaded_kdtrees[:]
                 for neighbour in neighbours:
                     if neighbour.key not in loaded_kd_trees:
@@ -102,10 +112,12 @@ class World:
                 kdtrees_to_free.extend(loaded_kd_trees)
                 
                 for kdtree in kdtrees_to_load:
-                    self.load_kdtree(kdtree)
+                    if kdtree is not None:
+                        self.load_kdtree(kdtree)
                     
                 for kdtree in kdtrees_to_free:
-                    self.free_kdtree(kdtree)
+                    if kdtree != current_cell.key:
+                        self.free_kdtree(kdtree)
                     
                 self.current_cell = current_cell
                     
@@ -116,11 +128,13 @@ class World:
         # Loads a entity into the scene every few frames
         if len(self.entity_loading_queue) != 0:
             pickled_entity, kdtree = self.entity_loading_queue.pop(0)
+            
             if pickled_entity.library in self.loaded_libs.keys():
                 pickled_entity.add_to_world()
             else:
-                bge.logic.LoadLib(bge.logic.expandPath(pickled_entity.library), 'Scene')
+                #bge.logic.LoadLib(bge.logic.expandPath(pickled_entity.library), 'Scene')
                 self.loaded_libs[pickled_entity.library] = [kdtree]
+                pickled_entity.add_to_world()
         
     def main(self):
         self.player.main()

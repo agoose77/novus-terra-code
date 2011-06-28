@@ -1,7 +1,3 @@
-import bge
-
-from entity_base import EntityBase
-
 class PickledEntity:
     def __init__(self):
         self.id = None
@@ -16,21 +12,26 @@ class PickledEntity:
         self.frozen = None
         
     def add_to_world(self):
-        class_type.from_pickled_entity(self)
+        from game import Game
+        Game.entity[self.class_type].from_pickled_entity(self)
         
     def remove_from_world(self):
-        entity = EntityBase.entities[self.id]
-        
-        # Save position, rotation and velocity but as lists not Vectors
-        self.position = entity.worldPosition[:]
-        self.orientation = [\
-            entity.worldOrientation[0][:],
-            entity.worldOrientation[1][:],
-            entity.worldOrientation[2][:]]
-        self.linear_velocity = entity.worldLinearVelocity[:]
-        self.roatational_velocity = entity.worldRotationalVelocity[:]
-        
-        self.frozen = entity.frozen
-        
-        entity.destroy()
-        del(entity)
+        from entity_base import EntityBase
+        from game import Game
+        if self.id in EntityBase.entities.keys():
+            entity = Game.entity['EntityBase'].entities[self.id]
+            
+            # Save position, rotation and velocity but as lists not Vectors
+            self.position = entity.worldPosition[:]
+            self.orientation = [\
+                entity.worldOrientation[0][:],
+                entity.worldOrientation[1][:],
+                entity.worldOrientation[2][:]]
+            self.linear_velocity = entity.worldLinearVelocity[:]
+            self.angular_velocity = entity.worldAngularVelocity[:]
+            
+            self.frozen = entity.frozen
+            
+            entity.destroy()
+            del(entity)
+ 
