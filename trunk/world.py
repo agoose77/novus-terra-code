@@ -3,6 +3,7 @@ import pickle
 import bge
 from mathutils import Vector
 
+from dialogue_system import DialogueSystem
 from player import Player
 
 class World:
@@ -29,6 +30,8 @@ class World:
         self.light_sources = None
         self.type = None
         self.gravity = Vector([0,0, -9.8])
+        
+        self.dialogue_system = DialogueSystem()
         
     def create(self, world_file):
         # Load a world file and make it active
@@ -68,14 +71,18 @@ class World:
             if pickled_entity.library in self.loaded_libs.keys():
                 self.loaded_libs[pickled_entity.library].append(kdtree)
                 
-            self.entity_loading_queue.append([pickled_entity, kdtree])
+            self.entity_loading_queue.append((pickled_entity, kdtree))
             
         self.loaded_kdtrees.append(kdtree)
     
     def free_kdtree(self, kdtree):
         # frees a kdtree full of PickledEntities from the world
         for pickled_entity in kdtree:
-            pickled_entity.remove_from_world()
+            if (pickled_entity, kdtree) in self.entity_loading_queue:
+                # entity hadn't managed to be loaded yet, remove it from the queue
+                self.entity_loading_queue.remove((pickled_entity, kdtree))
+            else:
+                pickled_entity.remove_from_world()
         
         libs_to_free = []
         for (lib, kdtrees) in self.loaded_libs.items():

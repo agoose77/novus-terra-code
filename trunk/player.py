@@ -1,7 +1,7 @@
 import math
 
 import bge
-from mathutils import Vector
+from mathutils import Vector, Matrix
 
 from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
@@ -28,7 +28,7 @@ class Player(EntityBase):
 		self.current_places = []
 		
 		self.walk_speed = 3.0
-		self.run_speed = 5.0
+		self.run_speed = 9.0
 		#self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
 		
 		self.movement_state_machine = FiniteStateMachine(self)
@@ -45,45 +45,6 @@ class Player(EntityBase):
 
 
 	def handle_walk_state(self, FSM):
-		#print ('walk')
-		###
-		keyboard = bge.logic.keyboard.events
-		vel = self.getLinearVelocity()
-		move = [0,0,0]
-
-		#controls = bge.logic.globalDict['game'].control_options
-
-		### Keys
-		if keyboard[bge.events.LEFTSHIFTKEY]:
-			speed = self.run_speed
-		else:
-			speed = self.walk_speed
-		if keyboard[bge.events.WKEY]:
-			move[0] += speed
-		if keyboard[bge.events.SKEY]:
-			move[0] -= speed
-		if keyboard[bge.events.AKEY]:
-			move[1] -= speed
-		if keyboard[bge.events.DKEY]:
-			move[1] += speed
-
-		### Jump
-		pos1 = [self.position[0],self.position[1],self.position[2]-10]
-		ray = self.rayCast(pos1, self.position, 1, '', 0, 0, 0)
-
-		if ray[0] != None:
-			if keyboard[bge.events.SPACEKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
-				move[2] = 10
-
-		###
-		com = vel[2]+move[2]
-		t1 = move[1] * self.worldOrientation[2].copy()
-
-		self.localLinearVelocity = [move[1],move[0], com]
-
-		# Handle sound - would be connected to animation data I suppose, which frame the foot is on the ground
-		
-		""" Alternative movement code, always apply force along slope of the ground
 		keyboard = bge.logic.keyboard
 		
 		fx = 0.0
@@ -104,7 +65,7 @@ class Player(EntityBase):
 			hit_obj, hit_pos, hit_normal = self.rayCast(ray_end, self._data)        ### TEMP - needs fixing (self._data)
 			
 			# Direction along the xy plane to apply the force  (rotated 90 degrees, for when cross product is taken)
-			force_xy = Vector([fx, fy, 0]) * Matrix.Rotation(math.pi/2, 3, [0, 0, 1])
+			force_xy = Vector([fx, fy, 0]) * Matrix.Rotation(-math.pi/2, 3, [0, 0, 1])
 			
 			# Direction to apply force, taking into account slope of ground plane
 			force_xyz = 100 * hit_normal.cross(force_xy).normalized()
@@ -121,7 +82,6 @@ class Player(EntityBase):
 			if vel.magnitude > vel_limit:
 				vel.magnitude = vel_limit
 				self.worldLinearVelocity = vel
-		"""    
 
 	def handle_climb_state(self, FSM):
 		pass
