@@ -2,8 +2,8 @@ import sys
 from code import InteractiveConsole
 
 import bge
-import blf
 from bgl import *
+import blf
 
 # Console consts
 PROMPT = '>>> '

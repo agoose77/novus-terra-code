@@ -42,6 +42,7 @@ class BinarySearchNode:
     def insert(self, key, value, data_type=None):
         if data_type is None:
             data_type = type(self)
+            
         if value < self.value:
             if self.left_child is None:
                 self.left_child = data_type(key, value, self.depth+1)
@@ -50,7 +51,7 @@ class BinarySearchNode:
                 return self.left_child.insert(key, value, data_type)
                 
         elif value > self.value:
-            if self.right_child in None:
+            if self.right_child is None:
                 self.right_child = data_type(key, value, self.depth+1)
                 return self.right_child
             else:
@@ -69,9 +70,9 @@ class BinarySearchNode:
     def to_list(self):
         list = [self.key]
         if self.left_child:
-            list.extend(left_child.to_list())
+            list.extend(self.left_child.to_list())
         if self.right_child:
-            list.extend(right_child.to_list())
+            list.extend(self.right_child.to_list())
         return list
             
     def remove(self, key):

@@ -71,13 +71,14 @@ class EntityBase:
     
     @classmethod
     def from_pickled_entity(cls, pickled_entity):
-        entity = EntityBase(pickled_entity.object_name, pickled_entity.position,
-            pickled_entity.orientation, pickled_entity.id, pickled_entity.type)
+        if pickled_entity.id not in cls.entities.keys():
+            entity = EntityBase(pickled_entity.object_name, pickled_entity.position,
+                pickled_entity.orientation, pickled_entity.id, pickled_entity.type)
+                
+            entity.worldLinearVelocity = pickled_entity.linear_velocity
+            entity.worldAngularVelocity = pickled_entity.angular_velocity
             
-        entity.worldLinearVelocity = pickled_entity.linear_velocity
-        entity.worldAngularVelocity = pickled_entity.angular_velocity
-        
-        return entity
+            return entity
             
     def __getitem__(self, item):
         return self._data[item]
