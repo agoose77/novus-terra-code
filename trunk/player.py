@@ -7,18 +7,19 @@ from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
 from game import *
 from sound_manager import SoundManager
+from inventory import Inventory
 
 class Player(EntityBase):
 
 	def __init__(self):
-		EntityBase.__init__(self, 'Cube')
-		
+		EntityBase.__init__(self, 'player')
+
 		self.health = 100
 		self.hunger = 0.0
 		self.tiredness = 0.0 # - Right name? fatigue?
 		self.stats = []
 		self.items = []
-		
+
 		self.talking = False
 		self.is_in_combat = False
 		self.stored_state = None
@@ -26,11 +27,12 @@ class Player(EntityBase):
 		self.current_vehicle = None
 		self.walking_speed = 5
 		self.current_places = []
-		
+
 		self.walk_speed = 3.0
 		self.run_speed = 9.0
-		#self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
-		
+
+		self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
+
 		self.movement_state_machine = FiniteStateMachine(self)
 		self.movement_state_machine.add_state('walk', self.handle_walk_state) # add state
 		self.movement_state_machine.add_state('climb', self.handle_climb_state)
@@ -39,17 +41,18 @@ class Player(EntityBase):
 		#self.movement_state_machine.add_state('land', self.handle_land_state2)
 		self.movement_state_machine.add_state('vehicle', self.handle_vehicle_state)
 		self.movement_state_machine.add_state('none', self.handle_none_state)
-		
+
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
 		#self.movement_state_machine.add_transition('walk', 'fall', self.is_falling)
+		self.inventory= Inventory()
 
 
 	def handle_walk_state(self, FSM):
 		keyboard = bge.logic.keyboard
-		
+
 		fx = 0.0
 		fy = 0.0
-		
+
 		if keyboard.events[bge.events.WKEY] == bge.logic.KX_INPUT_ACTIVE:
 			fy += 1.0
 		if keyboard.events[bge.events.SKEY] == bge.logic.KX_INPUT_ACTIVE:
@@ -58,26 +61,26 @@ class Player(EntityBase):
 			fx -= 1.0
 		if keyboard.events[bge.events.DKEY] == bge.logic.KX_INPUT_ACTIVE:
 			fx += 1.0
-		
+
 		if fx or fy:
 			ray_end = self.worldPosition.copy()
 			ray_end.z -= 2.0
-			hit_obj, hit_pos, hit_normal = self.rayCast(ray_end, self._data)        ### TEMP - needs fixing (self._data)
-			
+			hit_obj, hit_pos, hit_normal = self.rayCast(ray_end, self._data)		### TEMP - needs fixing (self._data)
+
 			# Direction along the xy plane to apply the force  (rotated 90 degrees, for when cross product is taken)
 			force_xy = Vector([fx, fy, 0]) * Matrix.Rotation(-math.pi/2, 3, [0, 0, 1])
-			
+
 			# Direction to apply force, taking into account slope of ground plane
 			force_xyz = 100 * hit_normal.cross(force_xy).normalized()
-			
+
 			self.applyForce(force_xyz, True)
-			
+
 			# limit velocity
 			if keyboard.events[bge.events.LEFTSHIFTKEY] == bge.logic.KX_INPUT_ACTIVE:
 				vel_limit = self.run_speed
 			else:
 				vel_limit = self.walk_speed
-			
+
 			vel = self.worldLinearVelocity
 			if vel.magnitude > vel_limit:
 				vel.magnitude = vel_limit
@@ -99,13 +102,13 @@ class Player(EntityBase):
 	def is_grounded(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
 		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
-		
+
 		return bool(ray2[0])
 
 	def is_falling(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
 		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
-		
+
 		return not bool(ray2[0])
 
 
@@ -134,13 +137,36 @@ class Player(EntityBase):
 	###
 	def handle_interactions(self):
 		# cast ray from mouse into world, check if hasattr(hit_obj, 'on_interact')
-		pass
+		ray = self.camera.controllers[0].sensors['Ray']
+
+		hit = ray.hitObject
+
+		#if isinstance(ray, item):
+		#   pass
+
+		if hit != None:
+			if 'Item' in hit:
+
+                # Item
+				if hit['Item'] == 'ITEM':
+					print (hit['Item'].name)
+
+					keyboard = bge.logic.keyboard
+
+					if keyboard.events[bge.events.EKEY] == 1:
+					  self.inventory.add_item(hit['Item'].id)
+					  print ('added to inventory')
+					  print (self.inventory.items)
+					  hit.endObject() # replace with your enitybase one
+
+
 
 	def fast_travel(self, location):
 		self.position = location_id.position
 		# handle world cells
 
 	def handle_camera(self):
+		from game import Game
 		bge.logic.getCurrentScene().active_camera = self.camera # set active_camera
 
 		mpos = bge.logic.mouse.position
@@ -153,8 +179,8 @@ class Player(EntityBase):
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))
 		else:
-			mouse_mx = (mpos[0] - 0.5) * Game.MOUSE_SENSITIVITY # bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]
-			mouse_my = (mpos[1] - 0.5) * Game.MOUSE_SENSITIVITY
+			mouse_mx = (mpos[0] - 0.5) * bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]#MOUSE_SENSITIVITY # bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]
+			mouse_my = (mpos[1] - 0.5) * bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]#MOUSE_SENSITIVITY
 
 			cap = 1.5
 
@@ -176,7 +202,8 @@ class Player(EntityBase):
 	def main(self):
 		EntityBase.main(self)
 		self.movement_state_machine.main()
-		#self.handle_camera()
+		self.handle_camera()
+		self.handle_interactions()
 
 """
 ### Testing
