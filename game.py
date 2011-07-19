@@ -4,6 +4,7 @@ import bge
 
 from entity_base import EntityBase
 from player import Player
+from item import Item
 from savefile import Savefile
 from sound_manager import SoundManager
 from world import World
@@ -20,29 +21,30 @@ class Game:
     AIM_WEAPON_KEY = 8
     SHOOT_WEAPON_KEY = 9
     MOUSE_SENSITIVITY = 10
-    
+
     entity = {\
         'EntityBase': EntityBase,
         'Player': Player,
+        'Item': Item,
         }
-    
+
     def __init__(self):
         self.game_started = time.time()
         self.game_time = 0.0
         self.delta_time = 0.0001
-        
+
         self.graphics_options = {\
-            
+
             }
-            
+
         self.game_options = {\
-            
+
             }
-            
+
         self.sound_options = {\
-            
+
             }
-            
+
         self.control_options = {\
             Game.FORWARD_KEY: bge.events.WKEY,
             Game.BACKWARD_KEY: bge.events.SKEY,
@@ -56,23 +58,22 @@ class Game:
             Game.SHOOT_WEAPON_KEY: bge.events.LEFTMOUSE,
             Game.MOUSE_SENSITIVITY: 5.0,
             }
-        
+
         #self.current_savefile = self.get_last_played_savefile()
         #self.sound_manager = SoundManager()
         self.world = None
-        
-        bge.logic.getCurrentScene().replace('world')
-        
+
+        #bge.logic.getCurrentScene().replace('world')
+
     def main(self):
         self.delta_time = (time.time()-self.game_started) - self.game_time
         self.game_time += self.delta_time
-        
+
         if self.world == None:
             self.world = World()
-            self.world.create('novus_terra.world')
-            
+        #    self.world.create('novus_terra.world')
+
         self.world.main()
-        
+
     def get_last_played_savefile(self):
         return Savefile('/saves/blah')
-        
