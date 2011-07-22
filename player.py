@@ -6,6 +6,7 @@ from mathutils import Vector, Matrix
 from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
 from game import *
+from item import Item
 from sound_manager import SoundManager
 from inventory import Inventory
 
@@ -15,10 +16,20 @@ class Player(EntityBase):
 		EntityBase.__init__(self, 'player')
 
 		self.health = 100
+		self.faction = 1 # Default Faction = Humans
 		self.hunger = 0.0
 		self.tiredness = 0.0 # - Right name? fatigue?
 		self.stats = []
 		self.items = []
+		self.current_weapon= None
+		self.current_animations= {
+			'walk':None,
+            'run':None,
+            'reload':None,
+            'attack':None,
+            'switch':None,
+            'aim':None,
+		}
 
 		self.talking = False
 		self.is_in_combat = False
@@ -32,6 +43,7 @@ class Player(EntityBase):
 		self.run_speed = 9.0
 
 		self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
+		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
 
 		self.movement_state_machine = FiniteStateMachine(self)
 		self.movement_state_machine.add_state('walk', self.handle_walk_state) # add state
@@ -45,6 +57,36 @@ class Player(EntityBase):
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
 		#self.movement_state_machine.add_transition('walk', 'fall', self.is_falling)
 		self.inventory= Inventory()
+
+	def handle_animations(self):
+		pass
+
+	# Update Animations when current weapon changes
+	def update_animations(self):
+		self.current_animations['idle'] = self.current_weapon['name']+' idle'
+		self.current_animations['walk'] = self.current_weapon['name']+' walk'
+		self.current_animations['run'] = self.current_weapon['name']+' run'
+		self.current_animations['reload'] = self.current_weapon['name']+' reload'
+		self.current_animations['attack'] = self.current_weapon['name']+' attack'
+		self.current_animations['switch'] = self.current_weapon['name']+' switch'
+		self.current_animations['aim'] = self.current_weapon['name']+' aim'
+        #self.current_animations[''] = self.current_weapon['name']+' '
+
+
+	def equip_weapon(self,id):
+		print (self.inventory.items)
+		self.current_weapon = Item.items[id]
+		name = self.current_weapon.name
+
+		new = bge.logic.getCurrentScene().addObject(name,'weapon_location')
+		new.position = bge.logic.getCurrentScene().objects['weapon_location'].position
+		new.orientation =bge.logic.getCurrentScene().objects['weapon_location'].orientation
+		new.setParent(bge.logic.getCurrentScene().objects['weapon_location'])
+
+		# Update Animations
+
+		# Finished
+		print ('Equiped')
 
 
 	def handle_walk_state(self, FSM):
@@ -61,6 +103,9 @@ class Player(EntityBase):
 			fx -= 1.0
 		if keyboard.events[bge.events.DKEY] == bge.logic.KX_INPUT_ACTIVE:
 			fx += 1.0
+
+		if keyboard.events[bge.events.TKEY] == 1:
+			self.equip_weapon(8)
 
 		if fx or fy:
 			ray_end = self.worldPosition.copy()
@@ -85,6 +130,10 @@ class Player(EntityBase):
 			if vel.magnitude > vel_limit:
 				vel.magnitude = vel_limit
 				self.worldLinearVelocity = vel
+
+			# Animations
+			self.handle_animations()
+
 
 	def handle_climb_state(self, FSM):
 		pass
@@ -133,22 +182,48 @@ class Player(EntityBase):
 	def has_exited_none(self, FSM):
 		pass
 
-
-	###
-	def handle_interactions(self):
-		# cast ray from mouse into world, check if hasattr(hit_obj, 'on_interact')
-		ray = self.camera.controllers[0].sensors['Ray']
+	def handle_weapon(self):
+		ray = self.camera.controllers[0].sensors['weapon_ray']
+		ray.range = self.current_weapon.range
 
 		hit = ray.hitObject
+		mouse = bge.logic.mouse
+		keyboard = bge.logic.keyboard
 
-		#if isinstance(ray, item):
-		#   pass
+		# Reload
+		if keyboard.events[bge.events.RKEY] == 1:
+			pass
+
+		# SHOOT
+		if mouse.events[bge.events.LEFTMOUSE] == 1:
+			if hit != None:
+				if 'Faction' in hit:
+					if self.faction != hit['Faction']:
+						pass
+
+		# AIM
+		if mouse.events[bge.events.RIGHTMOUSE] == 1:
+			pass
+
+
+	def handle_interactions(self):
+		# cast ray from mouse into world, check if hasattr(hit_obj, 'on_interact')
+		ray = self.camera.controllers[0].sensors['interact_ray']
+		hit = ray.hitObject
 
 		if hit != None:
-			if 'Item' in hit:
 
-                # Item
-				if hit['Item'] == 'ITEM':
+			# Person
+			#if 'Faction' in hit:
+			#	if hit['Faction'] != self.faction:
+			#		mouse = bge.logic.mouse
+			#		if mouse.events[bge.events.LEFTMOUSE] == 1:
+			#			hit['Health'] -= 10
+
+			# Items
+			if 'Item' in hit:
+				# Item
+				if hit['Item']:
 					print (hit['Item'].name)
 
 					keyboard = bge.logic.keyboard
@@ -158,6 +233,17 @@ class Player(EntityBase):
 					  print ('added to inventory')
 					  print (self.inventory.items)
 					  hit.endObject() # replace with your enitybase one
+
+
+			# Small peice of code that can add a bunch of easy features
+			elif 'Toggle' in hit:
+				keyboard = bge.logic.keyboard
+
+				if keyboard.events[bge.events.EKEY] == 1:
+					if hit['Toogle'] == 1:
+						hit['Toogle'] = 0
+					elif hit['Toogle'] == 0:
+						hit['Toogle'] = 1
 
 
 
@@ -190,8 +276,6 @@ class Player(EntityBase):
 					self.camera.applyRotation([-mouse_my, 0, 0], 1) # Y
 					self.camera['ml_rotx'] += mouse_my
 
-
-
 	def remove_controls(self):
 		self.stored_state = self.movement_state_machine.current_state
 
@@ -204,6 +288,9 @@ class Player(EntityBase):
 		self.movement_state_machine.main()
 		self.handle_camera()
 		self.handle_interactions()
+
+		if self.current_weapon != None:
+			self.handle_weapon()
 
 """
 ### Testing
