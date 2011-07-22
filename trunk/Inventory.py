@@ -1,5 +1,9 @@
 from item import Item
 
+###
+# you named this file wrong, and it wont let me change it :(
+###
+
 class Inventory:
     def __init__(self):
         self.items = {}
@@ -22,6 +26,8 @@ class Inventory:
 
         #if self.current_items_count + amount * Item.items[item_id].size < self.max_items or\
         #        self.max_items == 1:
+
+        ### Test to fix name
         if self.current_items_count + amount < self.max_items or self.max_items == 1:
             if item_id in self.items.keys():
                 self.items[item_id] += amount

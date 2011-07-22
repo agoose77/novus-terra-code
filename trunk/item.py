@@ -11,6 +11,7 @@ class Item:
             modify_effects_percentage={}, modify_duration=-1, clip_size=0,damage=0,range=0,fire_mode=1):
         self.id = id
         self.type = type
+        self.on_interact= 0
 
         self.name = name
         self.description = description
