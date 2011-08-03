@@ -7,6 +7,9 @@
 # USed for getting vert is a proximity
 LEAF_SIZE = 128
 # 0.4
+
+import mathutils
+
 class kdNode(object):
 	__slots__ = 'verts', 'children', 'minx','miny','minz', 'maxx','maxy','maxz',  'medx','medy','medz'
 	def __init__(self, verts):
@@ -171,7 +174,8 @@ class kdNode(object):
 		else: # we are a leaf node. Test vert locations.
 			# Length only check
 			for v in self.verts:
-				length = (loc - v.co).length
+				vectco = mathutils.Vector(v.co) #convert the entry position to a vector
+				length = (loc - vectco).length
 				if length < range_val:
 					vertList.append(v) #vertList.append((v, length))
 					
