@@ -61,6 +61,8 @@ class CellManager:
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject("Monkey", "Cube")
 		new.position = thing.co
+		new.localScale = thing.scale
+		new.localOrientation = thing.rotation
 		return new
 	
 	def update(self, position):
