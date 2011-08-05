@@ -1,13 +1,18 @@
 import cell
 import pickle
-import bge
+try:
+	import bge
+except:
+	print("BGE import failed, normal if you are running the cell editor")
 
 class Prop:
-	def __init__(self, co=[0.0,0.0,0.0], scale=[1.0,1.0,1.0]):
+	def __init__(self, name="None", co=[0.0,0.0,0.0], scale=[1.0,1.0,1.0], dimensions=[1.0,1.0,1.0], rotation=[1.0,0.0,0.0]):
 		self.id = 0
-		self.name = "Monkey"
+		self.name = name
 		self.co = co
 		self.scale = scale
+		self.dimensions = dimensions
+		self.rotation = rotation
 		self.game_object = 0 #the BGE object pointer
 
 class Entity:
@@ -16,12 +21,24 @@ class Entity:
 		self.name = "Monkey"
 		self.co = [0.0,0.0,0.0]
 		
+class Lamp:
+	def __init__(self, name="None", co=[0.0,0.0,0.0], rotation=[1.0,0.0,0.0], type="POINT", color=[0.0,0.0,0.0], distance=0.5, energy=50):
+		self.id = 0
+		self.name = name
+		self.co = [0.0,0.0,0.0]
+		self.rotation = rotation
+		self.type = type
+		self.color = color
+		self.distance = distance
+		self.energy = energy
+		
 class Cell:
 	def __init__(self):
 		self.id = 0
 		self.name = ""
 		self.props = []
 		self.entities = [] #this needs consideration for save game state, probably just grab this from savefile unless it doesn't exist
+		self.lamps = []
 		self.terrain = 0 #string of terrain file to load if needed
 		self.blends = [] #list of string filenames that should be loaded before building cell
 		
