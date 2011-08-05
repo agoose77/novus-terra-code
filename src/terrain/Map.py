@@ -1,7 +1,6 @@
 from array import array
 import pickle, time
 from math import pow
-from terrain import rencode
 
 class Map:
 	def __init__(self,width,height,scale):
