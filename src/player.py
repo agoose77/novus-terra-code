@@ -18,7 +18,7 @@ class Player(EntityBase):
 		self.health = 100
 		self.faction = 1 # Default Faction = Humans
 		self.hunger = 0.0
-		self.tiredness = 0.0 # - Right name? fatigue?
+		self.fatigue = 0.0
 		self.stats = []
 		self.items = []
 		self.current_weapon= None
@@ -39,8 +39,8 @@ class Player(EntityBase):
 		self.walking_speed = 5
 		self.current_places = []
 
-		self.walk_speed = 3.0
-		self.run_speed = 9.0
+		self.walk_speed = 8.0
+		self.run_speed = 15.0
 
 		self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
 		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
@@ -57,6 +57,8 @@ class Player(EntityBase):
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
 		#self.movement_state_machine.add_transition('walk', 'fall', self.is_falling)
 		self.inventory= Inventory()
+
+		self.temp_pos = 1
 
 	def handle_animations(self):
 		pass
@@ -89,8 +91,42 @@ class Player(EntityBase):
 		print ('Equiped')
 
 
-	def handle_walk_state(self, FSM):
-		keyboard = bge.logic.keyboard
+	def handle_walk_state(self, FSM): # restored it to my temp movement because of error
+		keyboard = bge.logic.keyboard.events
+		vel = self.getLinearVelocity()
+		move = [0,0,0]
+
+		#controls = bge.logic.globalDict['game'].control_options
+
+		### Keys
+		if keyboard[bge.events.LEFTSHIFTKEY]:
+			speed = self.run_speed
+		else:
+			speed = self.walk_speed
+		if keyboard[bge.events.WKEY]:
+			move[0] += speed
+		if keyboard[bge.events.SKEY]:
+			move[0] -= speed
+		if keyboard[bge.events.AKEY]:
+			move[1] -= speed
+		if keyboard[bge.events.DKEY]:
+			move[1] += speed
+
+		### Jump
+		pos1 = [self.position[0],self.position[1],self.position[2]-10]
+		ray = self.rayCast(pos1, self.position, 1, '', 0, 0, 0)
+
+		if ray[0] != None:
+			if keyboard[bge.events.SPACEKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
+				move[2] = 10
+
+		###
+		com = vel[2]+move[2]
+		t1 = move[1] * self.worldOrientation[2].copy()
+
+		self.localLinearVelocity = [move[1],move[0], com]
+
+		'''
 
 		fx = 0.0
 		fy = 0.0
@@ -133,6 +169,7 @@ class Player(EntityBase):
 
 			# Animations
 			self.handle_animations()
+			'''
 
 
 	def handle_climb_state(self, FSM):
@@ -205,6 +242,34 @@ class Player(EntityBase):
 		if mouse.events[bge.events.RIGHTMOUSE] == 1:
 			pass
 
+	def handle_lights(self):
+		List = bge.logic.getCurrentScene().objects
+		l1 = []
+		l2 = []
+		l3 = []
+
+		for obj in bge.logic.getCurrentScene().objects:
+			if 'light1' in obj:
+				#List['Light1'].position = obj.position
+				com = [self.getDistanceTo(obj),obj]
+				l1.append(com)
+
+			elif 'light2' in obj:
+				com = [self.getDistanceTo(obj),obj]
+				l2.append(com)
+
+			#elif 'light3' in obj:
+			#	com = [self.getDistanceTo(obj),obj]
+			#	l3.append(com)
+
+		l1.sort()
+		l2.sort()
+		#l3.sort()
+
+		List['Light1'].position = l1[0][1].position
+		List['Light2'].position = l2[0][1].position
+		#List['Light3'].position = l1[0][1].position
+
 
 	def handle_interactions(self):
 		# cast ray from mouse into world, check if hasattr(hit_obj, 'on_interact')
@@ -213,27 +278,18 @@ class Player(EntityBase):
 
 		if hit != None:
 
-			# Person
-			#if 'Faction' in hit:
-			#	if hit['Faction'] != self.faction:
-			#		mouse = bge.logic.mouse
-			#		if mouse.events[bge.events.LEFTMOUSE] == 1:
-			#			hit['Health'] -= 10
-
 			# Items
 			if 'Item' in hit:
-				# Item
-				if hit['Item']:
-					print (hit['Item'].name)
+				print ('Tiem')
+				print (hit['Item'].name)
 
-					keyboard = bge.logic.keyboard
+				keyboard = bge.logic.keyboard
 
-					if keyboard.events[bge.events.EKEY] == 1:
-					  self.inventory.add_item(hit['Item'].id)
-					  print ('added to inventory')
-					  print (self.inventory.items)
-					  hit.endObject() # replace with your enitybase one
-
+				if keyboard.events[bge.events.EKEY] == 1:
+				  self.inventory.add_item(hit['Item'].id)
+				  print ('added to inventory')
+				  print (self.inventory.items)
+				  hit.endObject() #
 
 			# Small peice of code that can add a bunch of easy features
 			elif 'Toggle' in hit:
@@ -282,12 +338,19 @@ class Player(EntityBase):
 	def restore_controls(self):
 		self.movement_state_machine.current_state = self.stored_state
 
+	def temp_pos2(self):
+		if self.temp_pos == 1:
+			self.position = bge.logic.getCurrentScene().objects['player_location'].position
+			self.temp_pos = 2
+			#self.handle_lights()
+
 	###
 	def main(self):
 		EntityBase.main(self)
 		self.movement_state_machine.main()
 		self.handle_camera()
 		self.handle_interactions()
+		self.temp_pos2()
 
 		if self.current_weapon != None:
 			self.handle_weapon()
@@ -304,3 +367,5 @@ if not 'INIT' in own:
 # If created already
 else:
 	Player.main(bge.logic.globalDict['game'])"""
+
+
