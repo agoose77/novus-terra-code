@@ -11,12 +11,58 @@ bl_info = {
 	"tracker_url": "",
 	"category": "Add Mesh"}
 
-import sys
+import sys, os, pickle
 sys.path.append('./src/')
 
 import bpy
 import cell
 from cell.cell_manager import Prop, Lamp, Cell
+
+def index_blends(dir, output):
+		file_dict = {}
+		gen = os.walk(dir)
+		for each_tuple in gen:
+			if each_tuple[2] != []:
+				
+				for filename in each_tuple[2]:
+					if filename[-6:] == '.blend':
+						if each_tuple[0][-2:] != ".\\":
+							filename = "/"+filename
+						name = each_tuple[0]+filename
+						file_dict[ name ] = []
+						name2 = name.replace("\\", "/")
+						fo = open(name2, 'rb')
+						fd = str(fo.read())
+						
+						while 1:
+							if 'OB' in fd:
+								derived = ""
+								t = 0
+								#make sure it's a valid name
+								if fd[ fd.index("OB")-2: fd.index("OB")] == "00":
+									if fd[ fd.index("OB"): fd.index("OB")+6] != "OBJECT":
+										if fd[ fd.index("OB")+2+t ] not in ["\\", " ","?",".",")","("]:
+											#print( fd[ fd.index("OB")-4: fd.index("OB")+12 ])
+											#it's a valid name, so get it
+											while 1:
+												if fd[ fd.index("OB")+2+t ] not in ["\\", " "]:
+													
+													
+													derived += fd[ fd.index("OB")+2+t ]
+												else:
+													break
+												t += 1
+								fd = fd.replace("OB", "$$", 1)
+								if derived != "":
+									print(derived)
+									file_dict[name].append(derived)
+							else:
+								break
+						
+						
+		fo = open(output, 'wb')
+		pickle.dump(file_dict,fo)
+		fo.close()
 
 def bake_cell():
 	
@@ -25,7 +71,8 @@ def bake_cell():
 	print(bpy.context.scene.objects)
 	for object in bpy.data.objects:
 		split_name = object.name.split(".")[0]
-		if object.type in ["MESH", "EMPTY"]:
+		print( object.parent )
+		if object.type in ["MESH", "EMPTY", "ARMATURE"] and not object.parent:
 			props.append( Prop( split_name, list(object.location), list(object.scale), 
 									list(object.dimensions), list(object.rotation_euler)) )
 		elif object.type in ["LAMP"]:
@@ -38,10 +85,12 @@ def bake_cell():
 	newcell.lamps = lamps
 	filename=bpy.context.scene.myCollection2['filename'].string
 	newcell.save(filename)
+	print("## Indexing ./data/models")
+	index_blends("./data/models/", "./data/model_dict.data")
 ### Arguments
 args = {
 	
-		'filename':'new.cell',
+		'filename':'./data/cells/new.cell',
 	}
 
 
