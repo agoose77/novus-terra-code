@@ -1,5 +1,6 @@
 import cell
 import pickle
+import os
 try:
 	import bge
 except:
@@ -41,8 +42,11 @@ class Cell:
 		self.lamps = []
 		self.terrain = 0 #string of terrain file to load if needed
 		self.blends = [] #list of string filenames that should be loaded before building cell
-		
+		self.models = [] #list of string object names that are used in this cell
 	def save(self, filename): #this is for level creation and shouldn't be used at runtime
+		for entry in self.props:
+			if entry.name not in self.models:
+				self.models.append( entry.name )
 		fo = open(filename, 'wb')
 		pickle.dump(self,fo)
 	
@@ -50,16 +54,36 @@ class CellManager:
 	def __init__(self):
 		self.objects_in_game = []
 		
+		# this will map out what objects are in what blends
+		fo = open('./data/model_dict.data', 'rb')
+		self.blend_dict = pickle.load( fo )
+		
+		#needs a list of loaded libraries
+		#self.load should check libraries needed, diff that with what's loaded
+		
 	def load(self, filepath):
 		fo = open(filepath, 'rb')
 		self.cell = pickle.load(fo)
 		self.kdtree = cell.kdNode( self.cell.props )
 		print("cell "+filepath+" loaded.")
 		print( len(self.cell.props) )
+		self.load_libs()
+		
+	def load_libs(self):
+		libs = []
+		for entry in self.cell.models:
+			for key in self.blend_dict:
+				if entry in self.blend_dict[key]:
+					if key not in libs:
+						libs.append(key)
+		for entry in libs:
+			bge.logic.LibLoad(entry, "Scene", load_actions=1)
+			print(entry, " loaded..")
 	
 	def spawn(self, thing): #thing is either a prop or entity
 		scene = bge.logic.getCurrentScene()
-		new = scene.addObject("Monkey", "Cube")
+		new = scene.addObject(thing.name, "Cube")
+		print(thing.name)
 		new.position = thing.co
 		new.localScale = thing.scale
 		new.localOrientation = thing.rotation
@@ -67,7 +91,7 @@ class CellManager:
 	
 	def update(self, position):
 		found = []
-		self.kdtree.getVertsInRange(position, 20, found)
+		self.kdtree.getVertsInRange(position, 40, found)
 		#print(found)
 		to_remove = []
 		for entry in self.objects_in_game:
@@ -85,3 +109,4 @@ class CellManager:
 				self.objects_in_game.append(entry)
 				entry.game_object = self.spawn(entry)
 				
+	
