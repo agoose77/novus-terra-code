@@ -1,6 +1,7 @@
 import cell
 import pickle
 import os
+import time
 
 import tweener
 
@@ -62,6 +63,7 @@ class CellManager:
 		fo = open('./data/model_dict.data', 'rb')
 		self.blend_dict = pickle.load( fo )
 		
+		self.updatetime = time.time()
 		#needs a list of loaded libraries
 		#self.load should check libraries needed, diff that with what's loaded
 		
@@ -93,42 +95,37 @@ class CellManager:
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject(thing.name, "Cube")
 		new.color = [1.0,1.0,1.0,0.0]
-
+		tweener.singleton.add(new, "color[3]", 1.0, 1.0)
 		new.position = thing.co
 		new.localScale = thing.scale
 		new.localOrientation = thing.rotation
 		return new
 	
 	def update(self, position):
-		found = []
-		
-		for i in range( len(self.kdtrees) ):
-			self.kdtrees[i].getVertsInRange(position, pow(2,i)+i*20+1, found)
-		#print(found)
-		to_remove = []
-		for entry in self.objects_in_game:
-			if entry not in found:
-				try:
-					entry.game_object.endObject()
-				except:
-					pass
-				entry.game_object = 0
-				to_remove.append(entry)
-		for entry in to_remove:
-			self.objects_in_game.remove(entry)
-		for entry in found:
-			if entry not in self.objects_in_game:
-				self.objects_in_game.append(entry)
-				entry.game_object = self.spawn(entry)
-				
-		#hackish fadein, will redo later
-		for entry in self.objects_in_game:
-			try:
-				c = entry.game_object.color
-				c = [c[0],c[1],c[2],c[3]+.1]
-				entry.game_object.color = c
-				print(entry.color)
-			except:
-				pass
+		if time.time() - self.updatetime > .6:
+			self.updatetime = time.time()
+			
+			found = []
+			
+			for i in range( len(self.kdtrees) ):
+				self.kdtrees[i].getVertsInRange(position, pow(2,i)+i*20+1, found)
+			#print(found)
+			to_remove = []
+			for entry in self.objects_in_game:
+				if entry not in found:
+					
+					tweener.singleton.add(entry.game_object, "color[3]", -1.0, 1.0, callback=entry.game_object.endObject)
+					#entry.game_object.endObject()
+					
+					entry.game_object = 0
+					to_remove.append(entry)
+			for entry in to_remove:
+				self.objects_in_game.remove(entry)
+			for entry in found:
+				if entry not in self.objects_in_game:
+					self.objects_in_game.append(entry)
+					entry.game_object = self.spawn(entry)
+					
+
 				
 	

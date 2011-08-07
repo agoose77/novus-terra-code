@@ -3,59 +3,73 @@ import time
 
 class Testor:
 	def __init__(self):
-		self.v = 0.0
+		self.v = [0,0,0,0]
 
 class TweenManager:
 	def __init__(self):
 		self.tweens = WeakKeyDictionary()
 		
-	def tween(self, object, property, target, length=1.0, mode="Linear", callback=None):
-		original_value = object.__dict__[property]
-		self.tweens[object] = [property, original_value, target, time.time(), length, mode, callback]
+	def add(self, object, property, target, length=1.0, mode="Linear", callback=None):
+		new_tween = Tween(object, property, target, length=1.0, mode="Linear", callback=callback, parent=self.tweens)
+		self.tweens[new_tween] = new_tween
 		
 	def update(self):
-		print("?")
 		for key in self.tweens:
-			data = self.tweens[key]
-			t = time.time()-data[3] #time since start
-			b = data[1] #starting value
-			c = data[2] #target value
-			d = data[4]
-			
-			#everything is linear for now
-			updated = self.LINEAR(t,b,c,d)
-			print(updated, "!")
-			key.__dict__[data[0]] = updated
-			if updated == data[2]:
-				print("Tweener: removing tween for ",key)
-				self.tweens.pop(key)
-			
-			
-			
-	def LINEAR(self, t, b, c, d):
-		return c * t / d + b
+			key.update()
+
+class Tween:
+	"""
+	This is hackish for gettinga feature in, when done it will be able to tween 
+	any int or float properties (or slice of them in a list)
+	Will also have all the transition functions
+	"""
+	def __init__(self, object, property, target, length=1.0, mode="Linear", callback=None, parent=None):
+		self.parent = parent
+	
+		self.object = object
+		self.property = property #string such as '.length' or '[2]' or '.position[0]'
+		self.target = target
+		self.length = length
+		self.mode = mode
+		self.callback = callback
 		
-class Fader:
-	def __init__(self):
-		self.tweens = WeakKeyDictionary()
+		self.slot = None
+
 		
-	def fadein(self, object):
+		#handle [2]
+		if property[-1:] == "]":
+			self.slot = property[-2:-1]
+			self.property = property[:-3]
+		
+		self.starting_time = float(time.time())
+		if self.slot:
+			self.starting_value = eval("self.object."+self.property+"["+self.slot+"]")
+		else:
+			self.starting_value = eval("self.object."+self.property)
+
+		
+	def update(self):
+		
 		try:
-			c = object.color
-			c = [c[0],c[1],c[2],c[3]+.1]
-			if c[3] > 1.0:
-				self.tweens.pop(object)
+			if self.object:
+				pass
 		except:
-			pass
-	def add(self, object):
-		self.tweens[object] = 0
+			print("no object")
+			self.parent[self] = 0
+			return
 		
-	def update(self):
-		for key in self.tweens:
-			self.fadein(key)
+		changed = self.LINEAR( time.time()-self.starting_time, self.starting_value, self.target, self.length )
 			
-			
-			
-			
+		if self.slot:
+			l = self.object.color
+			l = [l[0], l[1], l[2], changed]
+			self.object.color = l
+		else:
+			pass
+		if time.time() >= self.starting_time+self.length:
+			if self.callback:
+				self.callback()
+			self.parent[self] = 0
+		
 	def LINEAR(self, t, b, c, d):
 		return c * t / d + b
