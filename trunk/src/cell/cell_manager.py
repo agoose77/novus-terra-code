@@ -1,6 +1,9 @@
 import cell
 import pickle
 import os
+
+import tweener
+
 try:
 	import bge
 except:
@@ -44,9 +47,10 @@ class Cell:
 		self.blends = [] #list of string filenames that should be loaded before building cell
 		self.models = [] #list of string object names that are used in this cell
 	def save(self, filename): #this is for level creation and shouldn't be used at runtime
-		for entry in self.props:
-			if entry.name not in self.models:
-				self.models.append( entry.name )
+		for thing in self.props:
+			for entry in thing:
+				if entry.name not in self.models:
+					self.models.append( entry.name )
 		fo = open(filename, 'wb')
 		pickle.dump(self,fo)
 	
@@ -64,9 +68,14 @@ class CellManager:
 	def load(self, filepath):
 		fo = open(filepath, 'rb')
 		self.cell = pickle.load(fo)
-		self.kdtree = cell.kdNode( self.cell.props )
+		#set up a range of kdtrees
+		print(len(self.cell.props), "<--props")
+		self.kdtrees = []
+		for pdata in self.cell.props:
+			print(len(pdata))
+			self.kdtrees.append( cell.kdNode( pdata ) )
+		print("---------")
 		print("cell "+filepath+" loaded.")
-		print( len(self.cell.props) )
 		self.load_libs()
 		
 	def load_libs(self):
@@ -83,7 +92,8 @@ class CellManager:
 	def spawn(self, thing): #thing is either a prop or entity
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject(thing.name, "Cube")
-		print(thing.name)
+		new.color = [1.0,1.0,1.0,0.0]
+
 		new.position = thing.co
 		new.localScale = thing.scale
 		new.localOrientation = thing.rotation
@@ -91,7 +101,9 @@ class CellManager:
 	
 	def update(self, position):
 		found = []
-		self.kdtree.getVertsInRange(position, 40, found)
+		
+		for i in range( len(self.kdtrees) ):
+			self.kdtrees[i].getVertsInRange(position, pow(2,i)+i*20+1, found)
 		#print(found)
 		to_remove = []
 		for entry in self.objects_in_game:
@@ -108,5 +120,15 @@ class CellManager:
 			if entry not in self.objects_in_game:
 				self.objects_in_game.append(entry)
 				entry.game_object = self.spawn(entry)
+				
+		#hackish fadein, will redo later
+		for entry in self.objects_in_game:
+			try:
+				c = entry.game_object.color
+				c = [c[0],c[1],c[2],c[3]+.1]
+				entry.game_object.color = c
+				print(entry.color)
+			except:
+				pass
 				
 	

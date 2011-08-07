@@ -65,21 +65,41 @@ def index_blends(dir, output):
 		fo.close()
 
 def bake_cell():
-	
-	props, lamps = [], []
+	props = []
+	for i in range(15):
+		props.append([])
+	lamps = []
 	print(bpy.data.objects)
 	print(bpy.context.scene.objects)
 	for object in bpy.data.objects:
 		split_name = object.name.split(".")[0]
-		print( object.parent )
 		if object.type in ["MESH", "EMPTY", "ARMATURE"] and not object.parent:
-			props.append( Prop( split_name, list(object.location), list(object.scale), 
-									list(object.dimensions), list(object.rotation_euler)) )
+		
+			#check dimesions and sort
+			dimensions = object.dimensions
+			best = 0
+			for entry in dimensions:
+				if entry > best:
+					best = entry
+			if object.type in ["EMPTY","ARMATURE"]:
+				best = 10
+				
+			for i in range( len(props) ):
+				if pow(2, i) > best:
+					print("best:",pow(2,i))
+					props[i].append( Prop( split_name, list(object.location), list(object.scale), 
+											list(object.dimensions), list(object.rotation_euler)) )
+					break
+					
+			
 		elif object.type in ["LAMP"]:
 			
 			lamp = bpy.data.lamps[object.name]
 			lamps.append( Lamp(split_name, list(object.location), list(object.rotation_euler), 
 								lamp.type, list(lamp.color), lamp.distance, lamp.energy) )
+								
+	for entry in props:
+				print (len(entry))
 	newcell = Cell()
 	newcell.props = props
 	newcell.lamps = lamps

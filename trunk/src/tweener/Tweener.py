@@ -11,7 +11,7 @@ class TweenManager:
 		
 	def tween(self, object, property, target, length=1.0, mode="Linear", callback=None):
 		original_value = object.__dict__[property]
-		self.tweens[object] = [property, original_value, target, time.time(), length, mode, callback, direction]
+		self.tweens[object] = [property, original_value, target, time.time(), length, mode, callback]
 		
 	def update(self):
 		print("?")
@@ -29,6 +29,31 @@ class TweenManager:
 			if updated == data[2]:
 				print("Tweener: removing tween for ",key)
 				self.tweens.pop(key)
+			
+			
+			
+	def LINEAR(self, t, b, c, d):
+		return c * t / d + b
+		
+class Fader:
+	def __init__(self):
+		self.tweens = WeakKeyDictionary()
+		
+	def fadein(self, object):
+		try:
+			c = object.color
+			c = [c[0],c[1],c[2],c[3]+.1]
+			if c[3] > 1.0:
+				self.tweens.pop(object)
+		except:
+			pass
+	def add(self, object):
+		self.tweens[object] = 0
+		
+	def update(self):
+		for key in self.tweens:
+			self.fadein(key)
+			
 			
 			
 			
