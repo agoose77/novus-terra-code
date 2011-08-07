@@ -10,7 +10,7 @@ LEAF_SIZE = 128
 
 import mathutils
 
-class kdNode(object):
+class kdNode():
 	__slots__ = 'verts', 'children', 'minx','miny','minz', 'maxx','maxy','maxz',  'medx','medy','medz'
 	def __init__(self, verts):
 		
@@ -22,6 +22,10 @@ class kdNode(object):
 		#	return
 		
 		# BOUNDS
+		
+		if len(self.verts) == 0:
+			return
+		
 		v= verts[0]
 		maxx,maxy,maxz= v.co
 		minx,miny,minz= maxx,maxy,maxz
@@ -155,7 +159,8 @@ class kdNode(object):
 		list that this function fills with verts that match
 		'''
 		xloc,yloc,zloc= loc
-		
+		if len(self.verts) == 0:
+			return
 		if self.children:
 			# Check if the bounds are in range_val,
 			for childNode in self.children:
