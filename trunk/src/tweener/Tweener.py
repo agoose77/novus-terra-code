@@ -19,32 +19,45 @@ class TweenManager:
 
 class Tween:
 	"""
-	This is hackish for gettinga feature in, when done it will be able to tween 
-	any int or float properties (or slice of them in a list)
-	Will also have all the transition functions
+	
+	property, will type check for float and int
+	if property is a string it could be one of the following:
+		"[*,*,1.0]" a list of any length   gameobject.position / rotation / color
+			parse this to determine the length of the list and what values are changing
+			check this with the target
 	"""
 	def __init__(self, object, property, target, length=1.0, mode="Linear", callback=None, parent=None):
 		self.parent = parent
 	
 		self.object = object
-		self.property = property #string such as '.length' or '[2]' or '.position[0]'
+		self.property = property #string such as 'length'
 		self.target = target
 		self.length = length
 		self.mode = mode
 		self.callback = callback
-		
-		self.slot = None
 
 		
-		#handle [2]
-		if property[-1:] == "]":
-			self.slot = property[-2:-1]
-			self.property = property[:-3]
 		self.starting_time = float(time.time())
-		if self.slot:
-			self.starting_value = eval("self.object."+self.property+"["+self.slot+"]")
-		else:
-			self.starting_value = eval("self.object."+self.property)
+		
+		#hack to get this to work with custom KX_Game object props
+
+		if self.property[-1:] != "]":
+			self.property = "."+self.property
+			
+		self.starting_value = eval("self.object"+self.property)
+		
+		if type(target) == str:
+			temp = []
+			target = target.strip("[")
+			target = target.strip("]")
+			split_type = target.split(",")
+			for entry in split_type:
+				try:
+					temp.append(float(entry))
+				except:
+					temp.append(entry)
+			self.target = temp
+			self.starting_value = list(self.starting_value)
 
 		
 	def update(self):
@@ -56,19 +69,21 @@ class Tween:
 			print("no object")
 			self.parent[self] = 0
 			return
+		#if it's one value apply it
+		#if it's a list, iterate through starting_value
 		
-		changed = self.LINEAR( time.time()-self.starting_time, self.starting_value, self.target, self.length )
-			
-		if self.slot:
-			l = self.object.color
-			if self.slot == "3":
-				l = [l[0], l[1], l[2], changed]
-				self.object.color = l
-			else:
-				l = [1.0,1.0,1.0]
-			
-		else:
-			pass
+		if type(self.starting_value) in [int, float]:
+			changed = self.LINEAR( time.time()-self.starting_time, self.starting_value, self.target-self.starting_value, self.length )
+			exec("self.object"+self.property+" = " + str(changed) )
+		elif type(self.target) == list:
+			#get the original value
+			l = self.starting_value
+			for i in range( len(self.target) ):
+				if type(self.target[i]) != str:
+					changed = self.LINEAR( time.time()-self.starting_time, self.starting_value[i], self.target[i]-self.starting_value[i], self.length )
+					l[i] = changed
+			exec("self.object"+self.property+" = " + str(l) )
+
 		if time.time() >= self.starting_time+self.length:
 			if self.callback:
 				self.callback()

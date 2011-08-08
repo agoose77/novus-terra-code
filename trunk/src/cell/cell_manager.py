@@ -39,6 +39,7 @@ class Lamp:
 		
 class Cell:
 	def __init__(self):
+		print("CELL INIT")
 		self.id = 0
 		self.name = ""
 		self.props = []
@@ -52,17 +53,15 @@ class Cell:
 			for entry in thing:
 				if entry.name not in self.models:
 					self.models.append( entry.name )
-		
-		for entry in self.lamps:
-			print(entry.name)
-			if entry.name not in self.models:
-					self.models.append( entry.name )
+		print(self.models)
 		fo = open(filename, 'wb')
 		pickle.dump(self,fo)
 	
 class CellManager:
 	def __init__(self):
-		self.objects_in_game = []
+		self.props_in_game = []
+		self.lamps_in_game = []
+		self.entities_in_game = []
 		
 		# this will map out what objects are in what blends
 		fo = open('./data/model_dict.data', 'rb')
@@ -98,24 +97,20 @@ class CellManager:
 			bge.logic.LibLoad(entry, "Scene", load_actions=1)
 			print(entry, " loaded..")
 	
-	def spawn(self, thing): #thing is either a prop or entity
+	def spawn_prop(self, thing): 
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject(thing.name, "Cube")
 		new.position = thing.co
-		##### HACKS
-		if isinstance(thing, cell.Lamp):
-			print(new.position)
-			print(new, type(new))
-
-			d = "color[2]"
-		else:
-			new.color = [1.0,1.0,1.0,0.0]
-			d = "color[3]"
-			new.localScale = thing.scale
-			
-			tweener.singleton.add(new, d, 1.0, 1.0)
+		new.color = [1.0,1.0,1.0,0.0]
+		new.localScale = thing.scale
+		new.localOrientation = thing.rotation
+		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 1.0)
+		return new
 		
-		
+	def spawn_lamp(self, thing): #thing is either a prop or entity
+		scene = bge.logic.getCurrentScene()
+		new = scene.addObject(thing.type, "Cube") #the main .blend should have light objects in another layer, the names should correspond to the type property
+		new.position = thing.co
 		new.localOrientation = thing.rotation
 		return new
 	
@@ -123,36 +118,39 @@ class CellManager:
 		if time.time() - self.updatetime > .6:
 			self.updatetime = time.time()
 			
-			found = []
-			
+			#lamps are seperated because they need a little different setup
+			found_props = []
+			found_lamps = []
 			for i in range( len(self.kdtrees) ):
-				self.kdtrees[i].getVertsInRange(position, pow(2,i)+i*20+1, found)
+				self.kdtrees[i].getVertsInRange(position, pow(2,i)+i*20+1, found_props)
 			#now add the lamps to this
-			self.lamp_kdtree.getVertsInRange(position, 100, found)
+			self.lamp_kdtree.getVertsInRange(position, 100, found_lamps)
+			
+			#loop for props
 			to_remove = []
-			for entry in self.objects_in_game:
-				if entry not in found:
-					#### HACKS
-					if isinstance(entry, cell.Lamp):
-						print("removing lamp")
-						d = "color[2]"
-						entry.game_object.endObject()
-					else:
-						print(entry.name, " is an object.")
-						d = "color[3]"
-						
-						tweener.singleton.add(entry.game_object, d, -1.0, 1.0, callback=entry.game_object.endObject)
-					
-					
+			for entry in self.props_in_game:
+				if entry not in found_props:
+					tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 1.0, callback=entry.game_object.endObject)
 					entry.game_object = 0
 					to_remove.append(entry)
 			for entry in to_remove:
-				self.objects_in_game.remove(entry)
-			for entry in found:
-				if entry not in self.objects_in_game:
-					self.objects_in_game.append(entry)
-					entry.game_object = self.spawn(entry)
-					
-
+				self.props_in_game.remove(entry)
+			for entry in found_props:
+				if entry not in self.props_in_game:
+					self.props_in_game.append(entry)
+					entry.game_object = self.spawn_prop(entry)
+			
+			#loop for lamps			
+			to_remove = []
+			for entry in self.lamps_in_game:
+				if entry not in found_lamps:
+					entry.game_object = 0
+					to_remove.append(entry)
+			for entry in to_remove:
+				self.lamps_in_game.remove(entry)
+			for entry in found_lamps:
+				if entry not in self.lamps_in_game:
+					self.lamps_in_game.append(entry)
+					entry.game_object = self.spawn_lamp(entry)
 				
 	
