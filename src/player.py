@@ -42,6 +42,9 @@ class Player(EntityBase):
 		self.walk_speed = 8.0
 		self.run_speed = 15.0
 
+		self.impants = []
+		self.effects = []
+
 		self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
 		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
 
