@@ -139,7 +139,7 @@ class CellManager:
 				if entry not in self.props_in_game:
 					self.props_in_game.append(entry)
 					entry.game_object = self.spawn_prop(entry)
-			
+"""
 			#loop for lamps			
 			to_remove = []
 			for entry in self.lamps_in_game:
@@ -152,5 +152,5 @@ class CellManager:
 				if entry not in self.lamps_in_game:
 					self.lamps_in_game.append(entry)
 					entry.game_object = self.spawn_lamp(entry)
-				
+"""
 	
