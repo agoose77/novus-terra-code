@@ -30,7 +30,7 @@ class Lamp:
 	def __init__(self, name="None", co=[0.0,0.0,0.0], rotation=[1.0,0.0,0.0], type="POINT", color=[0.0,0.0,0.0], distance=0.5, energy=50):
 		self.id = 0
 		self.name = name
-		self.co = [0.0,0.0,0.0]
+		self.co = co
 		self.rotation = rotation
 		self.type = type
 		self.color = color
@@ -52,6 +52,11 @@ class Cell:
 			for entry in thing:
 				if entry.name not in self.models:
 					self.models.append( entry.name )
+		
+		for entry in self.lamps:
+			print(entry.name)
+			if entry.name not in self.models:
+					self.models.append( entry.name )
 		fo = open(filename, 'wb')
 		pickle.dump(self,fo)
 	
@@ -71,11 +76,13 @@ class CellManager:
 		fo = open(filepath, 'rb')
 		self.cell = pickle.load(fo)
 		#set up a range of kdtrees
-		print(len(self.cell.props), "<--props")
+
 		self.kdtrees = []
 		for pdata in self.cell.props:
-			print(len(pdata))
 			self.kdtrees.append( cell.kdNode( pdata ) )
+			
+		#tree for lamps
+		self.lamp_kdtree = cell.kdNode( self.cell.lamps )
 		print("---------")
 		print("cell "+filepath+" loaded.")
 		self.load_libs()
@@ -94,10 +101,21 @@ class CellManager:
 	def spawn(self, thing): #thing is either a prop or entity
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject(thing.name, "Cube")
-		new.color = [1.0,1.0,1.0,0.0]
-		tweener.singleton.add(new, "color[3]", 1.0, 1.0)
 		new.position = thing.co
-		new.localScale = thing.scale
+		##### HACKS
+		if isinstance(thing, cell.Lamp):
+			print(new.position)
+			print(new, type(new))
+
+			d = "color[2]"
+		else:
+			new.color = [1.0,1.0,1.0,0.0]
+			d = "color[3]"
+			new.localScale = thing.scale
+			
+			tweener.singleton.add(new, d, 1.0, 1.0)
+		
+		
 		new.localOrientation = thing.rotation
 		return new
 	
@@ -109,13 +127,22 @@ class CellManager:
 			
 			for i in range( len(self.kdtrees) ):
 				self.kdtrees[i].getVertsInRange(position, pow(2,i)+i*20+1, found)
-			#print(found)
+			#now add the lamps to this
+			self.lamp_kdtree.getVertsInRange(position, 100, found)
 			to_remove = []
 			for entry in self.objects_in_game:
 				if entry not in found:
+					#### HACKS
+					if isinstance(entry, cell.Lamp):
+						print("removing lamp")
+						d = "color[2]"
+						entry.game_object.endObject()
+					else:
+						print(entry.name, " is an object.")
+						d = "color[3]"
+						
+						tweener.singleton.add(entry.game_object, d, -1.0, 1.0, callback=entry.game_object.endObject)
 					
-					tweener.singleton.add(entry.game_object, "color[3]", -1.0, 1.0, callback=entry.game_object.endObject)
-					#entry.game_object.endObject()
 					
 					entry.game_object = 0
 					to_remove.append(entry)

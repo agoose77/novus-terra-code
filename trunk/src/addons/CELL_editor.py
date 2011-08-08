@@ -38,11 +38,13 @@ def index_blends(dir, output):
 							if 'OB' in fd:
 								derived = ""
 								t = 0
+								
 								#make sure it's a valid name
 								if fd[ fd.index("OB")-2: fd.index("OB")] == "00":
+									#print( fd[ fd.index("OB")-4: fd.index("OB")+12 ])
 									if fd[ fd.index("OB"): fd.index("OB")+6] != "OBJECT":
 										if fd[ fd.index("OB")+2+t ] not in ["\\", " ","?",".",")","("]:
-											#print( fd[ fd.index("OB")-4: fd.index("OB")+12 ])
+											
 											#it's a valid name, so get it
 											while 1:
 												if fd[ fd.index("OB")+2+t ] not in ["\\", " "]:
@@ -215,8 +217,8 @@ def create_vars():
 			
 	for a in args:
 			
-		add = bpy.props.StringProperty(default = 'Default')		 
-		bpy.context.scene.myCollection2.add()		   
+		add = bpy.props.StringProperty(default = 'Default')   
+		bpy.context.scene.myCollection2.add()		 
 			
 		### Float
 		if isinstance(args[a], float) == True:

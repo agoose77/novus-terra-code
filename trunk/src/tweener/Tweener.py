@@ -40,7 +40,6 @@ class Tween:
 		if property[-1:] == "]":
 			self.slot = property[-2:-1]
 			self.property = property[:-3]
-		
 		self.starting_time = float(time.time())
 		if self.slot:
 			self.starting_value = eval("self.object."+self.property+"["+self.slot+"]")
@@ -62,8 +61,12 @@ class Tween:
 			
 		if self.slot:
 			l = self.object.color
-			l = [l[0], l[1], l[2], changed]
-			self.object.color = l
+			if self.slot == "3":
+				l = [l[0], l[1], l[2], changed]
+				self.object.color = l
+			else:
+				l = [1.0,1.0,1.0]
+			
 		else:
 			pass
 		if time.time() >= self.starting_time+self.length:
