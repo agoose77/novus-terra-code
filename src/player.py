@@ -1,3 +1,6 @@
+import sys
+sys.path.append('./src/')
+
 import math
 
 import bge
@@ -8,7 +11,7 @@ from finite_state_machine import FiniteStateMachine
 from game import *
 from item import Item
 from sound_manager import SoundManager
-from inventory import Inventory
+from Inventory import Inventory
 
 class Player(EntityBase):
 
@@ -316,10 +319,14 @@ class Player(EntityBase):
 
 		mpos = bge.logic.mouse.position
 
-		w = bge.render.getWindowWidth()
-		h = bge.render.getWindowHeight()
-
-		bge.render.setMousePosition(w//2, h//2)
+		w = bge.render.getWindowWidth() 
+		h = bge.render.getWindowHeight() 
+		
+		w,h = int(w), int(h)
+		w = (w - w%2)/2
+		h = (h - h%2)/2
+		print(h, w)
+		bge.render.setMousePosition(int(w), int(h))
 
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))

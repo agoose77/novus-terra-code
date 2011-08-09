@@ -110,6 +110,7 @@ class CellManager:
 	def spawn_lamp(self, thing): #thing is either a prop or entity
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject(thing.type, "Cube") #the main .blend should have light objects in another layer, the names should correspond to the type property
+		print(new)
 		new.position = thing.co
 		new.localOrientation = thing.rotation
 		return new
@@ -130,16 +131,18 @@ class CellManager:
 			to_remove = []
 			for entry in self.props_in_game:
 				if entry not in found_props:
-					tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 1.0, callback=entry.game_object.endObject)
-					entry.game_object = 0
-					to_remove.append(entry)
+					#ENTITY HACKS
+					if entry.name != "player_location":
+						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 1.0, callback=entry.game_object.endObject)
+						entry.game_object = 0
+						to_remove.append(entry)
 			for entry in to_remove:
 				self.props_in_game.remove(entry)
 			for entry in found_props:
 				if entry not in self.props_in_game:
 					self.props_in_game.append(entry)
 					entry.game_object = self.spawn_prop(entry)
-"""
+
 			#loop for lamps			
 			to_remove = []
 			for entry in self.lamps_in_game:
@@ -152,5 +155,5 @@ class CellManager:
 				if entry not in self.lamps_in_game:
 					self.lamps_in_game.append(entry)
 					entry.game_object = self.spawn_lamp(entry)
-"""
+
 	
