@@ -325,7 +325,7 @@ class Player(EntityBase):
 		w,h = int(w), int(h)
 		w = (w - w%2)/2
 		h = (h - h%2)/2
-		print(h, w)
+
 		bge.render.setMousePosition(int(w), int(h))
 
 		if not 'ml_rotx' in self.camera:

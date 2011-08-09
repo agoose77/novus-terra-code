@@ -71,7 +71,13 @@ class CellManager:
 		#needs a list of loaded libraries
 		#self.load should check libraries needed, diff that with what's loaded
 		
+		scene = bge.logic.getCurrentScene()
+		self.clean_object_list = []
+		for entry in scene.objects:
+			self.clean_object_list.append(entry)
+		
 	def load(self, filepath):
+		self.cleanup()
 		fo = open(filepath, 'rb')
 		self.cell = pickle.load(fo)
 		#set up a range of kdtrees
@@ -87,16 +93,57 @@ class CellManager:
 		self.load_libs()
 		
 	def load_libs(self):
+		liblist = bge.logic.LibList()
 		libs = []
+		accum = []
 		for entry in self.cell.models:
 			for key in self.blend_dict:
 				if entry in self.blend_dict[key]:
-					if key not in libs:
+					if key not in accum: #this is the list of all libraries needed for this cell including loaded
+						accum.append(key)
+					if key not in libs and str(self.convert_lib_name(key)) not in liblist: #this is the list of libraries to load
 						libs.append(key)
+		#print(libs)
+		for key in liblist:
+			if self.convert_back(key) not in accum:
+				print ("*", self.convert_back(key) )
+				#bge.logic.LibFree(key)
+
+		scene = bge.logic.getCurrentScene()
+		print(scene.objects)
+		print(scene.objectsInactive)
+		print("=======")
 		for entry in libs:
 			bge.logic.LibLoad(entry, "Scene", load_actions=1)
 			print(entry, " loaded..")
-	
+			
+	def convert_lib_name(self, given):
+		given = given.replace("/","\\")
+		given = given.replace(".\\", "./")
+		return given
+	def convert_back(self, given):
+		given = given.replace("\\","/")
+		return given
+	def cleanup(self):
+		for entry in self.props_in_game:
+			entry.game_object.endObject()
+		for entry in self.lamps_in_game:
+			entry.game_object.endObject()
+		for entry in self.entities_in_game:
+			entry.game_object.endObject()
+		self.props_in_game, self.lamps_in_game, self.entities_in_game = [], [], []
+		self.kdtrees = []
+		self.lamp_kdtree = None
+		
+		scene = bge.logic.getCurrentScene()
+		for entry in scene.objects:
+			if entry not in self.clean_object_list:
+				print("DIRTY:", entry)
+				entry.endObject()
+		print(self.clean_object_list)
+		print("$$$$$$ CLEANED UP $$$$$")
+		print(scene.objects)
+		
 	def spawn_prop(self, thing): 
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject(thing.name, "Cube")
@@ -110,12 +157,16 @@ class CellManager:
 	def spawn_lamp(self, thing): #thing is either a prop or entity
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject(thing.type, "Cube") #the main .blend should have light objects in another layer, the names should correspond to the type property
-		print(new)
 		new.position = thing.co
 		new.localOrientation = thing.rotation
 		return new
 	
 	def update(self, position):
+		#HACKS ENTITY HACKS HERE
+		scene = bge.logic.getCurrentScene()
+		if 'player' in scene.objects:
+			position = scene.objects['player'].position
+	
 		if time.time() - self.updatetime > .6:
 			self.updatetime = time.time()
 			

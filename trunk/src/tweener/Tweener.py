@@ -65,6 +65,9 @@ class Tween:
 		try:
 			if self.object:
 				pass
+			if self.object.invalid:
+				self.parent[self] = 0
+				return
 		except:
 			print("no object")
 			self.parent[self] = 0
