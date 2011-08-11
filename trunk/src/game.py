@@ -69,6 +69,7 @@ class Game:
         #bge.logic.getCurrentScene().replace('world')
 
     def main(self):
+
         self.delta_time = (time.time()-self.game_started) - self.game_time
         self.game_time += self.delta_time
 
