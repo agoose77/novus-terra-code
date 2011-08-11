@@ -5,6 +5,7 @@ import time
 
 import tweener
 
+
 try:
 	import bge
 except:
@@ -63,6 +64,8 @@ class CellManager:
 		self.lamps_in_game = []
 		self.entities_in_game = []
 		
+		self.ready_to_load = 0
+		
 		# this will map out what objects are in what blends
 		fo = open('./data/model_dict.data', 'rb')
 		self.blend_dict = pickle.load( fo )
@@ -75,11 +78,15 @@ class CellManager:
 		self.clean_object_list = []
 		for entry in scene.objects:
 			self.clean_object_list.append(entry)
-		
+	
 	def load(self, filepath):
 		self.cleanup()
 		fo = open(filepath, 'rb')
 		self.cell = pickle.load(fo)
+		
+		scene = bge.logic.getCurrentScene()
+		print(scene.objects)
+		print(scene.objectsInactive)
 		#set up a range of kdtrees
 
 		self.kdtrees = []
@@ -89,10 +96,15 @@ class CellManager:
 		#tree for lamps
 		self.lamp_kdtree = cell.kdNode( self.cell.lamps )
 		print("---------")
-		print("cell "+filepath+" loaded.")
+		print("Loading "+filepath+"...")
+		print("---------")
 		self.load_libs()
 		
+	def load_internal(self, filepath):
+			pass
+		
 	def load_libs(self):
+	
 		liblist = bge.logic.LibList()
 		libs = []
 		accum = []
@@ -104,18 +116,21 @@ class CellManager:
 					if key not in libs and str(self.convert_lib_name(key)) not in liblist: #this is the list of libraries to load
 						libs.append(key)
 		#print(libs)
+		fred = []
 		for key in liblist:
 			if self.convert_back(key) not in accum:
 				print ("*", self.convert_back(key) )
-				#bge.logic.LibFree(key)
-
+				bge.logic.LibFree(key)
 		scene = bge.logic.getCurrentScene()
-		print(scene.objects)
-		print(scene.objectsInactive)
+
+		
 		print("=======")
 		for entry in libs:
 			bge.logic.LibLoad(entry, "Scene", load_actions=1)
 			print(entry, " loaded..")
+			
+		print(scene.objectsInactive)
+		print(bge.logic.LibList())
 			
 	def convert_lib_name(self, given):
 		given = given.replace("/","\\")
@@ -125,28 +140,29 @@ class CellManager:
 		given = given.replace("\\","/")
 		return given
 	def cleanup(self):
-		for entry in self.props_in_game:
-			entry.game_object.endObject()
-		for entry in self.lamps_in_game:
-			entry.game_object.endObject()
-		for entry in self.entities_in_game:
-			entry.game_object.endObject()
 		self.props_in_game, self.lamps_in_game, self.entities_in_game = [], [], []
 		self.kdtrees = []
 		self.lamp_kdtree = None
 		
+		#ENTITY HACKS
+		import game, bge
+		if "game_init" in game.__dict__:
+			game.game_init == 0
+			
+		tweener.singleton.nuke() #probably paranoia
+		
 		scene = bge.logic.getCurrentScene()
 		for entry in scene.objects:
 			if entry not in self.clean_object_list:
-				print("DIRTY:", entry)
+				#print("DIRTY:", entry)
 				entry.endObject()
-		print(self.clean_object_list)
+
 		print("$$$$$$ CLEANED UP $$$$$")
-		print(scene.objects)
+
 		
 	def spawn_prop(self, thing): 
 		scene = bge.logic.getCurrentScene()
-		new = scene.addObject(thing.name, "Cube")
+		new = scene.addObject(thing.name, "CELL_MANAGER_HOOK")
 		new.position = thing.co
 		new.color = [1.0,1.0,1.0,0.0]
 		new.localScale = thing.scale
@@ -162,6 +178,7 @@ class CellManager:
 		return new
 	
 	def update(self, position):
+	
 		#HACKS ENTITY HACKS HERE
 		scene = bge.logic.getCurrentScene()
 		if 'player' in scene.objects:

@@ -16,6 +16,11 @@ class TweenManager:
 	def update(self):
 		for key in self.tweens:
 			key.update()
+			
+	def nuke(self):
+		for entry in self.tweens:
+			self.tweens[entry] = 0
+	
 
 class Tween:
 	"""
@@ -59,7 +64,7 @@ class Tween:
 			self.target = temp
 			self.starting_value = list(self.starting_value)
 
-		
+
 	def update(self):
 		
 		try:
