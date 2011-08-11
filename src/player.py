@@ -319,9 +319,9 @@ class Player(EntityBase):
 
 		mpos = bge.logic.mouse.position
 
-		w = bge.render.getWindowWidth() 
-		h = bge.render.getWindowHeight() 
-		
+		w = bge.render.getWindowWidth()
+		h = bge.render.getWindowHeight()
+
 		w,h = int(w), int(h)
 		w = (w - w%2)/2
 		h = (h - h%2)/2
