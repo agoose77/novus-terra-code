@@ -96,6 +96,7 @@ class CellManager:
 
 		self.kdtrees = []
 		for pdata in self.cell.props:
+			print(len(pdata), "!*&^$")
 			self.kdtrees.append( cell.kdNode( pdata ) )
 			
 		#tree for lamps
@@ -186,7 +187,7 @@ class CellManager:
 		new.color = [1.0,1.0,1.0,0.0]
 		new.localScale = thing.scale
 		new.localOrientation = thing.rotation
-		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 1.0)
+		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 2.0)
 		return new
 		
 	def spawn_lamp(self, thing): #thing is either a prop or entity
@@ -208,14 +209,14 @@ class CellManager:
 			terrain.qt_singleton.update_terrain(position)
 			terrain.cq_singleton.update()
 	
-		if time.time() - self.updatetime > .6:
+		if time.time() - self.updatetime > .4:
 			self.updatetime = time.time()
 			
 			#lamps are seperated because they need a little different setup
 			found_props = []
 			found_lamps = []
 			for i in range( len(self.kdtrees) ):
-				self.kdtrees[i].getVertsInRange(position, pow(2,i)+i*20+1, found_props)
+				self.kdtrees[i].getVertsInRange(position, pow(2,i)*6+i*60+1, found_props)
 			#now add the lamps to this
 			self.lamp_kdtree.getVertsInRange(position, 100, found_lamps)
 			
@@ -225,7 +226,7 @@ class CellManager:
 				if entry not in found_props:
 					#ENTITY HACKS
 					if entry.name != "player_location":
-						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 1.0, callback=entry.game_object.endObject)
+						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.game_object.endObject)
 						entry.game_object = 0
 						to_remove.append(entry)
 			for entry in to_remove:

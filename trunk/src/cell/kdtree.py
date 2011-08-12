@@ -159,8 +159,8 @@ class kdNode():
 		list that this function fills with verts that match
 		'''
 		xloc,yloc,zloc= loc
-		if len(self.verts) == 0:
-			return
+
+
 		if self.children:
 			# Check if the bounds are in range_val,
 			for childNode in self.children:
@@ -177,6 +177,8 @@ class kdNode():
 					#continue # Next please
 		
 		else: # we are a leaf node. Test vert locations.
+			if len(self.verts) == 0: #condition for an empty kdtree
+				return
 			# Length only check
 			for v in self.verts:
 				vectco = mathutils.Vector(v.co) #convert the entry position to a vector
