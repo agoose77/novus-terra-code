@@ -27,6 +27,7 @@ class Map_Manager:
 		self.save(filename)
 		
 	def load(self, filename):
+		print(filename)
 		self.map = pickle.load( open(filename, 'rb') )
 		self.filename = filename
 		print(filename, " loaded.")
@@ -46,7 +47,10 @@ class Map_Manager:
 		for i in range(self.map.width*self.map.height):
 			temp.append( [self.map.nx[i],self.map.ny[i],self.map.nz[i] ] )
 		new = open(filename, 'wb')
-		new.write(bytes(str(temp), 'UTF-8'))
+		print("FUCK YEAH")
+		for i in range(self.map.height):
+			new.write(bytes(str(temp[self.map.width*i:self.map.width*i + (self.map.width)])+'\n', 'UTF-8')) #have to seperate into lines for memory concerns
+		
 		new.close()
 		
 	
@@ -239,5 +243,5 @@ class Map_Manager:
 			v = mesh.getVertex(0, 1089+i)
 			v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],-100])
 	
-		#node.cube.reinstancePhysicsMesh()
+		node.cube.reinstancePhysicsMesh()
 		

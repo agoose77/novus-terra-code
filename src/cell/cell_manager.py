@@ -1,10 +1,12 @@
-import cell
 import pickle
 import os
 import time
 
-import tweener
+import bpy
 
+import tweener
+import terrain
+import cell
 
 try:
 	import bge
@@ -49,6 +51,7 @@ class Cell:
 		self.terrain = 0 #string of terrain file to load if needed
 		self.blends = [] #list of string filenames that should be loaded before building cell
 		self.models = [] #list of string object names that are used in this cell
+		self.terrain = None
 	def save(self, filename): #this is for level creation and shouldn't be used at runtime
 		for thing in self.props:
 			for entry in thing:
@@ -65,6 +68,8 @@ class CellManager:
 		self.entities_in_game = []
 		
 		self.ready_to_load = 0
+		
+		self.terrain = False
 		
 		# this will map out what objects are in what blends
 		fo = open('./data/model_dict.data', 'rb')
@@ -99,6 +104,20 @@ class CellManager:
 		print("Loading "+filepath+"...")
 		print("---------")
 		self.load_libs()
+		if "terrain" in self.cell.__dict__:
+			if self.cell.terrain:
+				self.load_terrain( self.cell.terrain)
+			else:
+				self.terrain = False
+	
+	def load_terrain(self, filename):
+		
+		
+		terrain.tr_singleton = terrain.Map_Manager() #should do this in cell manager init
+		terrain.tr_singleton.load(filename)
+		terrain.cq_singleton = terrain.Chunk_Que()
+		terrain.qt_singleton = terrain.Quadtree(2048, [0,0], 1, max_depth=7)
+		self.terrain = 1
 		
 	def load_internal(self, filepath):
 			pass
@@ -178,11 +197,16 @@ class CellManager:
 		return new
 	
 	def update(self, position):
-	
+		
 		#HACKS ENTITY HACKS HERE
 		scene = bge.logic.getCurrentScene()
 		if 'player' in scene.objects:
 			position = scene.objects['player'].position
+			
+		# TERRAIN
+		if self.terrain:
+			terrain.qt_singleton.update_terrain(position)
+			terrain.cq_singleton.update()
 	
 		if time.time() - self.updatetime > .6:
 			self.updatetime = time.time()

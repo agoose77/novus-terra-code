@@ -107,6 +107,8 @@ def bake_cell():
 	newcell = Cell()
 	newcell.props = props
 	newcell.lamps = lamps
+	if bpy.context.scene.myCollection2['terrain'].bool:
+		newcell.terrain = bpy.context.scene.myCollection2['terrain file path'].string
 	filename=bpy.context.scene.myCollection2['filename'].string
 	newcell.save(filename)
 	print("## Indexing ./data/models")
@@ -114,7 +116,11 @@ def bake_cell():
 ### Arguments
 args = {
 	
-		'filename':'./data/cells/new.cell',
+
+		'terrain file path':'./data/terrains/crosscrater.terrain',
+
+		'terrain':False,
+		'filename':'./data/cells/new.cell'
 	}
 
 
@@ -159,7 +165,7 @@ class OBJECT_PT_hello(bpy.types.Panel):
 		colL = split.column()
 		colR = split.column()
 
-		row.operator("scene.bakecell")
+		box.operator("scene.bakecell")
 
 		for arg in args:
 			prop = bpy.context.scene.myCollection2[arg]
@@ -220,7 +226,7 @@ def create_vars():
 	for a in args:
 			
 		add = bpy.props.StringProperty(default = 'Default')   
-		bpy.context.scene.myCollection2.add()		 
+		bpy.context.scene.myCollection2.add()		
 			
 		### Float
 		if isinstance(args[a], float) == True:
