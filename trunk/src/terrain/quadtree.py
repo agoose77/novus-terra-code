@@ -3,8 +3,13 @@ from math import floor, sqrt, pow
 from mathutils import Vector
 
 
-import bge, terrain
-scene = bge.logic.getCurrentScene()
+import terrain
+try:
+	import bge
+	scene = bge.logic.getCurrentScene()
+except:
+	pass
+
 
 
 
@@ -152,7 +157,7 @@ class Node(object):
 	
 	####### DEBUG VISUALIZATION
 	def spawnObject(self, objectName, worldPosition = [0.0, 0.0, 0.0]):
-		newObject = scene.addObject(objectName, "Empty")
+		newObject = scene.addObject(objectName, "CELL_MANAGER_HOOK")
 		newObject.worldPosition = worldPosition
 		return newObject
 		
@@ -216,40 +221,7 @@ class Node(object):
 					return self.children[2].get_node_from_point(point, depth-1)
 				else:
 					return self.children[3].get_node_from_point(point, depth-1)
-				
-	def get_neighbours(self, root_node):
-		cx = self.centre[0]
-		cy = self.centre[1]
-		r = self.radius
-		
-		n1 = root_node.get_node_from_point([cx+2*r, cy], self.depth)
-		n2 = root_node.get_node_from_point([cx-2*r, cy], self.depth)
-		n3 = root_node.get_node_from_point([cx, cy+2*r], self.depth)
-		n4 = root_node.get_node_from_point([cx, cy-2*r], self.depth)
-		n5 = root_node.get_node_from_point([cx+2*r, cy+2*r], self.depth)
-		n6 = root_node.get_node_from_point([cx+2*r, cy-2*r], self.depth)
-		n7 = root_node.get_node_from_point([cx-2*r, cy+2*r], self.depth)
-		n8 = root_node.get_node_from_point([cx-2*r, cy-2*r], self.depth)
-		
-		neighbours = []
-		if n1:
-			neighbours.append(n1)
-		if n2:
-			neighbours.append(n2)
-		if n3:
-			neighbours.append(n3)
-		if n4:
-			neighbours.append(n4)
-		if n5:
-			neighbours.append(n5)
-		if n6:
-			neighbours.append(n6)
-		if n7:
-			neighbours.append(n7)
-		if n8:
-			neighbours.append(n8)
-		
-		return neighbours
+
 		
 	def vis_neighbors(self, object):
 		if self.state == LEAF:
@@ -269,55 +241,3 @@ class Node(object):
 	
 	
 	lookup = { 0:[3], 1:[0,2], 2:[3], 3:[] }
-	
-	def handle_stitch(self):
-	
-		class side:
-			def __init__(self):
-				self.node = 0
-		
-		spot = self.spot
-		
-		bottom, right = side(), side()
-		if spot == 0:
-			right.node = self.parent.children[2]
-			right.depth_dif = 0
-		elif spot == 1:
-			right.node = self.parent.children[3]
-			right.depth_dif = 0
-			bottom.node = self.parent.children[0]
-			right.depth_dif = 0
-		elif spot == 3:
-			bottom.node = self.parent.children[2]
-			bottom.depth_dif = 0
-		
-		if bottom.node:
-			bottom.node.cube.color = [1.0,0.0,1.0,1.0]
-		if right.node:
-			right.node.cube.color = [1.0,0.0,1.0,1.0]
-			
-		# From here, we route these found sides off to match siblings
-		# Now we check if there are any unmatched
-		# 
-		# go up to the branch
-		# 	if a side is touching a sibling of the branch:
-		# 		if it is a leaf: 
-		#			match to the node -1 diff of depth using my spot
-		#		if it is a branch:
-		#			get node corresponding to my spot:
-		#				if it is a leaf:
-		#					match to it!
-		#				if it is a branch:
-		#					recurse it's side, gather the nodes, depths, and positions to match to me.
-		# 	unmatched sides still?:
-		#
-		#     
-		# Or, i could try to simplify it by checking points in the quadtree.
-		# It's simpler to find nodes, still have the mess at the end where you have to gather and sort. (and interpolate)
-		#
-		# check point slightly outside of bottom, right at the 0:
-		#	if node is my depth, stitch to it.
-		#	if node is higher depth: (bigger, less detail)
-		#		stitch to it based on depth and our positions
-		#	if node is lower depth:
-		#		somehow pull all the nodes and assign them to me
