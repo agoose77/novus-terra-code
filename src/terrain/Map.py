@@ -243,5 +243,6 @@ class Map_Manager:
 			v = mesh.getVertex(0, 1089+i)
 			v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],-100])
 	
-		node.cube.reinstancePhysicsMesh()
+		if node.depth == 7: #speed hack
+			node.cube.reinstancePhysicsMesh()
 		
