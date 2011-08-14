@@ -3,8 +3,12 @@ import sys
 sys.path.append('./src/bgui/') #the SVN external is all the bgui folders not just the module
 sys.path.append('./data/') #we have a theme folder in data
 
-import bgui
-import bge
+
+try:
+	import bge
+	import bgui
+except:
+	print("import bge failed, normal if you are running an addon")
 
 #import widgets from the ui module here
 from .loading import *

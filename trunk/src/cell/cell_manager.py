@@ -7,10 +7,11 @@ import bpy
 import tweener
 import terrain
 import cell
-import ui
+
 
 try:
 	import bge
+	import ui
 except:
 	print("BGE import failed, normal if you are running the cell editor")
 
