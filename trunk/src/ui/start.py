@@ -36,7 +36,7 @@ class Start(bgui.Widget):
 		#tweener.singleton.add(self, 'color', '[*,*,*,1]', length=2.0)
 		
 		self.input = bgui.TextInput(self.win, 'input', "crosscrater.cell", size=[160, 30], pos=[220, 120], pt_size=12,
-			input_options = bgui.BGUI_INPUT_NONE, options = bgui.BGUI_THEMED)
+			input_options = bgui.BGUI_INPUT_SELECT_ALL, options = bgui.BGUI_THEMED)
 		#self.input.activate()
 		self.input.on_enter_key = self.on_input_enter
 	

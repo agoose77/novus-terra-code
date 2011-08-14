@@ -112,7 +112,7 @@ class Node(object):
 
 	def update_terrain(self, focalpoint):
 		#print(self.dist(focalpoint,self.pos))
-		if self.dist2(focalpoint):
+		if self.dist(focalpoint):
 			#if I'm a leaf, split and check children
 			if self.state == LEAF:
 				if self.depth < self.max_depth:
