@@ -7,6 +7,7 @@ import bpy
 import tweener
 import terrain
 import cell
+import ui
 
 try:
 	import bge
@@ -74,10 +75,11 @@ class CellManager:
 		# this will map out what objects are in what blends
 		fo = open('./data/model_dict.data', 'rb')
 		self.blend_dict = pickle.load( fo )
-		
+		fo.close()
 		self.updatetime = time.time()
 		#needs a list of loaded libraries
 		#self.load should check libraries needed, diff that with what's loaded
+		self.load_state = 0 #1 when a cell has been loaded and stays that way
 		
 		scene = bge.logic.getCurrentScene()
 		self.clean_object_list = []
@@ -85,18 +87,23 @@ class CellManager:
 			self.clean_object_list.append(entry)
 	
 	def load(self, filepath):
+
+
 		self.cleanup()
-		fo = open(filepath, 'rb')
-		self.cell = pickle.load(fo)
-		
+		try:
+			fo = open(filepath, 'rb')
+			self.cell = pickle.load(fo)
+			fo.close
+		except:
+			return("Failure to load "+filepath)
 		scene = bge.logic.getCurrentScene()
-		print(scene.objects)
-		print(scene.objectsInactive)
+
+
 		#set up a range of kdtrees
 
 		self.kdtrees = []
 		for pdata in self.cell.props:
-			print(len(pdata), "!*&^$")
+
 			self.kdtrees.append( cell.kdNode( pdata ) )
 			
 		#tree for lamps
@@ -110,6 +117,11 @@ class CellManager:
 				self.load_terrain( self.cell.terrain)
 			else:
 				self.terrain = False
+		
+		tweener.singleton.add(ui.singleton.current, "color", "[*,*,*,0.0]", length=5.0, callback=ui.singleton.clear)
+		
+
+
 	
 	def load_terrain(self, filename):
 		
@@ -139,7 +151,7 @@ class CellManager:
 		fred = []
 		for key in liblist:
 			if self.convert_back(key) not in accum:
-				print ("*", self.convert_back(key) )
+				#print ("*", self.convert_back(key) )
 				bge.logic.LibFree(key)
 		scene = bge.logic.getCurrentScene()
 
@@ -149,8 +161,8 @@ class CellManager:
 			bge.logic.LibLoad(entry, "Scene", load_actions=1)
 			print(entry, " loaded..")
 			
-		print(scene.objectsInactive)
-		print(bge.logic.LibList())
+		#print(scene.objectsInactive)
+		#print(bge.logic.LibList())
 			
 	def convert_lib_name(self, given):
 		given = given.replace("/","\\")
@@ -166,9 +178,11 @@ class CellManager:
 		
 		#ENTITY HACKS
 		import game, bge
-		if "game_init" in game.__dict__:
-			game.game_init == 0
-			
+		game.init_game = 0
+		if 'game' in bge.logic.globalDict:
+			bge.logic.globalDict.pop('game')
+			#bge.logic.globalDict['game'].world.player = None
+
 		tweener.singleton.nuke() #probably paranoia
 		
 		scene = bge.logic.getCurrentScene()
@@ -198,7 +212,8 @@ class CellManager:
 		return new
 	
 	def update(self, position):
-		
+		if self.load_state == 0:
+			return
 		#HACKS ENTITY HACKS HERE
 		scene = bge.logic.getCurrentScene()
 		if 'player' in scene.objects:
