@@ -5,8 +5,12 @@ sys.path.append('./data/') #we have a theme folder in data
 
 import tweener
 import cell
-import bgui
-import bge
+
+try:
+	import bge
+	import bgui
+except:
+	print("import bge failed, normal if you are running an addon")
 
 class Loading(bgui.Widget):
 	"""Frame for storing other widgets"""
@@ -32,7 +36,7 @@ class Loading(bgui.Widget):
 		
 	def load(self, filename): #here we're completely hijacking the cell.singleton.load command to wrap it with fades	
 		self.loadfile = filename
-		tweener.singleton.add(self, 'color', '[*,*,*,1]', length=1.0, callback = self.load_internal)
+		tweener.singleton.add(self, 'color', '[*,*,*,1]', length=0.1, callback = self.load_internal)
 	def load_internal(self):
 		cell.singleton.load(self.loadfile)
 		cell.singleton.load_state = 1

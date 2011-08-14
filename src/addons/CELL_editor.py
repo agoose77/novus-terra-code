@@ -109,7 +109,7 @@ def bake_cell():
 	newcell.lamps = lamps
 	if bpy.context.scene.myCollection2['terrain'].bool:
 		newcell.terrain = bpy.context.scene.myCollection2['terrain file path'].string
-	filename=bpy.context.scene.myCollection2['filename'].string
+	filename=bpy.context.scene.myCollection2['cell_filename'].string
 	newcell.save(filename)
 	print("## Indexing ./data/models")
 	index_blends("./data/models/", "./data/model_dict.data")
@@ -120,7 +120,7 @@ args = {
 		'terrain file path':'./data/terrains/crosscrater.terrain',
 
 		'terrain':False,
-		'filename':'./data/cells/new.cell'
+		'cell_filename':'./data/cells/new.cell'
 	}
 
 
