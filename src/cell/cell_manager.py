@@ -125,7 +125,9 @@ class CellManager:
 
 	
 	def load_terrain(self, filename):
-		
+		bge.logic.addScene("background", 0)
+		scene = bge.logic.getCurrentScene()
+		new = scene.addObject('outdoor_sun_shadow', "CELL_MANAGER_HOOK")
 		
 		terrain.tr_singleton = terrain.Map_Manager() #should do this in cell manager init
 		terrain.tr_singleton.load(filename)
@@ -206,10 +208,14 @@ class CellManager:
 		return new
 		
 	def spawn_lamp(self, thing): #thing is either a prop or entity
+		print("spawning lamp")
 		scene = bge.logic.getCurrentScene()
-		new = scene.addObject(thing.type, "Cube") #the main .blend should have light objects in another layer, the names should correspond to the type property
+		new = scene.addObject(thing.type, "CELL_MANAGER_HOOK") #the main .blend should have light objects in another layer, the names should correspond to the type property
 		new.position = thing.co
 		new.localOrientation = thing.rotation
+		new.distance = thing.distance
+		new.energy = thing.energy
+		tweener.singleton.add(new, "color", str(thing.color), 2.0)
 		return new
 	
 	def update(self, position):
@@ -219,6 +225,10 @@ class CellManager:
 		scene = bge.logic.getCurrentScene()
 		if 'player' in scene.objects:
 			position = scene.objects['player'].position
+			
+		if 'outdoor_sun_shadow' in scene.objects:
+			print("setting sun")
+			scene.objects['outdoor_sun_shadow'].position = position
 			
 		# TERRAIN
 		if self.terrain:
@@ -256,6 +266,7 @@ class CellManager:
 			to_remove = []
 			for entry in self.lamps_in_game:
 				if entry not in found_lamps:
+					tweener.singleton.add(entry.game_object, "color", "[0,0,0.0]", 2.0, callback=entry.game_object.endObject)
 					entry.game_object = 0
 					to_remove.append(entry)
 			for entry in to_remove:
