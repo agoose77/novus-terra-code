@@ -10,11 +10,14 @@ class TweenManager:
 		self.tweens = WeakKeyDictionary()
 		
 	def add(self, object, property, target, length=1.0, mode="Linear", callback=None):
-		new_tween = Tween(object, property, target, length=1.0, mode="Linear", callback=callback, parent=self.tweens)
+		new_tween = Tween(object, property, target, length, mode="Linear", callback=callback, parent=self.tweens)
 		self.tweens[new_tween] = new_tween
 		
 	def update(self):
+		keys = []
 		for key in self.tweens:
+			keys.append(key)
+		for key in keys:
 			key.update()
 			
 	def nuke(self):
@@ -70,9 +73,7 @@ class Tween:
 		try:
 			if self.object:
 				pass
-			if self.object.invalid:
-				self.parent[self] = 0
-				return
+			
 		except:
 			print("no object")
 			self.parent[self] = 0
@@ -90,7 +91,11 @@ class Tween:
 				if type(self.target[i]) != str:
 					changed = self.LINEAR( time.time()-self.starting_time, self.starting_value[i], self.target[i]-self.starting_value[i], self.length )
 					l[i] = changed
-			exec("self.object"+self.property+" = " + str(l) )
+			try:
+				exec("self.object"+self.property+" = " + str(l) )
+			except:
+				self.parent[self] = 0
+				return
 
 		if time.time() >= self.starting_time+self.length:
 			if self.callback:

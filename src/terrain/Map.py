@@ -28,7 +28,9 @@ class Map_Manager:
 		
 	def load(self, filename):
 		print(filename)
-		self.map = pickle.load( open(filename, 'rb') )
+		fo = open(filename, 'rb')
+		self.map = pickle.load( fo )
+		fo.close
 		self.filename = filename
 		print(filename, " loaded.")
 		
