@@ -45,7 +45,17 @@ class Lamp:
 		self.spot_size = spot_size
 		self.spot_blend = spot_blend
 		self.spot_bias= spot_bias
-
+	
+	def kill(self):
+		cell.singleton.lamps_in_game.remove(self)
+		if self.type == "SPOT":
+			cell.singleton.spots.append(self.game_object.name)
+		if self.type == "POINT":
+			cell.singleton.points.append(self.game_object.name)
+		self.game_object.endObject()
+		self.game_object = False
+	
+	
 class Cell:
 	def __init__(self):
 		print("CELL INIT")
@@ -90,6 +100,17 @@ class CellManager:
 		self.clean_object_list = []
 		for entry in scene.objects:
 			self.clean_object_list.append(entry)
+			
+		#set up light que (in lieu of cucumber branch)	
+		self.spots = []
+		self.points = []
+		for entry in scene.objectsInactive:
+			if "SPOT" in entry.name:
+				self.spots.append(entry)
+			if "POINT" in entry.name:
+				self.points.append(entry)
+		print(self.spots)
+		print(self.points)
 
 	def load(self, filepath):
 
@@ -211,7 +232,17 @@ class CellManager:
 	def spawn_lamp(self, thing): #thing is either a prop or entity
 		print("spawning lamp")
 		scene = bge.logic.getCurrentScene()
-		new = scene.addObject(thing.type, "CELL_MANAGER_HOOK") #the main .blend should have light objects in another layer, the names should correspond to the type property
+		
+		#lightque things
+		chosen = 'POINT'
+		if thing.type == 'POINT':
+			if len(self.points) > 0:
+				chosen = self.points.pop(0)
+		elif thing.type == 'SPOT':
+			if len(self.spots) > 0:
+				chosen = self.spots.pop(0)
+				
+		new = scene.addObject(chosen, "CELL_MANAGER_HOOK") #the main .blend should have light objects in another layer, the names should correspond to the type property
 		new.position = thing.co
 		new.localOrientation = thing.rotation
 		new.distance = thing.distance
@@ -273,13 +304,12 @@ class CellManager:
 			to_remove = []
 			for entry in self.lamps_in_game:
 				if entry not in found_lamps:
-					tweener.singleton.add(entry.game_object, "color", "[0,0,0.0]", 2.0, callback=entry.game_object.endObject)
-					entry.game_object = 0
-					to_remove.append(entry)
-			for entry in to_remove:
-				self.lamps_in_game.remove(entry)
+					if entry.game_object:
+						tweener.singleton.add(entry.game_object, "color", "[0,0,0.0]", 2.0, callback=entry.kill)
 			for entry in found_lamps:
 				if entry not in self.lamps_in_game:
-					self.lamps_in_game.append(entry)
-					entry.game_object = self.spawn_lamp(entry)
+				
+					if ( entry.type == "POINT" and len(self.points) > 0 ) or ( entry.type == "SPOT" and len(self.spots) > 0 ):
+						self.lamps_in_game.append(entry)
+						entry.game_object = self.spawn_lamp(entry)
 
