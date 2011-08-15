@@ -13,6 +13,8 @@ from item import Item
 from sound_manager import SoundManager
 from Inventory import Inventory
 
+import ui
+
 class Player(EntityBase):
 
 	def __init__(self):
@@ -282,14 +284,26 @@ class Player(EntityBase):
 		ray = self.camera.controllers[0].sensors['interact_ray']
 		hit = ray.hitObject
 
+		keyboard = bge.logic.keyboard
+
 		if hit != None:
+
+			if 'Vec' in hit:
+				if keyboard.events[bge.events.EKEY]:
+					pass
+
+
+			if 'Door' in hit:
+				if keyboard.events[bge.events.EKEY]:
+					ui.singleton.show_loading('./data/cells/nextcell.cell')
+
 
 			# Items
 			if 'Item' in hit:
 				print ('Tiem')
 				print (hit['Item'].name)
 
-				keyboard = bge.logic.keyboard
+
 
 				if keyboard.events[bge.events.EKEY] == 1:
 				  self.inventory.add_item(hit['Item'].id)
