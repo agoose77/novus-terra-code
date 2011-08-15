@@ -16,7 +16,7 @@ except:
 	print("BGE import failed, normal if you are running the cell editor")
 
 class Prop:
-	def __init__(self, name="None", co=[0.0,0.0,0.0], scale=[1.0,1.0,1.0], dimensions=[1.0,1.0,1.0], rotation=[1.0,0.0,0.0]):
+	def __init__(self, name="None", co=[0.0,0.0,0.0], scale=[1.0,1.0,1.0], dimensions=[1.0,1.0,1.0], rotation=[1.0,0.0,0.0], properties1=[]):
 		self.id = 0
 		self.name = name
 		self.co = co
@@ -24,6 +24,7 @@ class Prop:
 		self.dimensions = dimensions
 		self.rotation = rotation
 		self.game_object = 0 #the BGE object pointer
+		self.properties = properties1
 
 class Entity:
 	def __init__(self):
@@ -45,7 +46,7 @@ class Lamp:
 		self.spot_size = spot_size
 		self.spot_blend = spot_blend
 		self.spot_bias= spot_bias
-	
+
 	def kill(self):
 		cell.singleton.lamps_in_game.remove(self)
 		if self.type == "SPOT":
@@ -54,8 +55,8 @@ class Lamp:
 			cell.singleton.points.append(self.game_object.name)
 		self.game_object.endObject()
 		self.game_object = False
-	
-	
+
+
 class Cell:
 	def __init__(self):
 		print("CELL INIT")
@@ -100,8 +101,8 @@ class CellManager:
 		self.clean_object_list = []
 		for entry in scene.objects:
 			self.clean_object_list.append(entry)
-			
-		#set up light que (in lieu of cucumber branch)	
+
+		#set up light que (in lieu of cucumber branch)
 		self.spots = []
 		self.points = []
 		for entry in scene.objectsInactive:
@@ -114,22 +115,22 @@ class CellManager:
 
 	def load(self, filepath):
 
-
 		self.cleanup()
+
 		try:
 			fo = open(filepath, 'rb')
 			self.cell = pickle.load(fo)
 			fo.close
 		except:
 			return("Failure to load "+filepath)
-		scene = bge.logic.getCurrentScene()
 
+		scene = bge.logic.getCurrentScene()
+		print (scene.objects)
 
 		#set up a range of kdtrees
-
 		self.kdtrees = []
-		for pdata in self.cell.props:
 
+		for pdata in self.cell.props:
 			self.kdtrees.append( cell.kdNode( pdata ) )
 
 		#tree for lamps
@@ -138,6 +139,7 @@ class CellManager:
 		print("Loading "+filepath+"...")
 		print("---------")
 		self.load_libs()
+
 		if "terrain" in self.cell.__dict__:
 			if self.cell.terrain:
 				self.load_terrain( self.cell.terrain)
@@ -203,7 +205,7 @@ class CellManager:
 
 		#ENTITY HACKS
 		import game, bge
-		game.init_game = 0
+
 		if 'game' in bge.logic.globalDict:
 			bge.logic.globalDict.pop('game')
 			#bge.logic.globalDict['game'].world.player = None
@@ -216,6 +218,7 @@ class CellManager:
 				#print("DIRTY:", entry)
 				entry.endObject()
 
+		game.init_game = 0
 		print("$$$$$$ CLEANED UP $$$$$")
 
 
@@ -226,13 +229,15 @@ class CellManager:
 		new.color = [1.0,1.0,1.0,0.0]
 		new.localScale = thing.scale
 		new.localOrientation = thing.rotation
+		for p in thing.properties:
+			new[p[0]] = p[1]
 		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 2.0)
 		return new
 
 	def spawn_lamp(self, thing): #thing is either a prop or entity
 		print("spawning lamp")
 		scene = bge.logic.getCurrentScene()
-		
+
 		#lightque things
 		chosen = 'POINT'
 		if thing.type == 'POINT':
@@ -241,7 +246,7 @@ class CellManager:
 		elif thing.type == 'SPOT':
 			if len(self.spots) > 0:
 				chosen = self.spots.pop(0)
-				
+
 		new = scene.addObject(chosen, "CELL_MANAGER_HOOK") #the main .blend should have light objects in another layer, the names should correspond to the type property
 		new.position = thing.co
 		new.localOrientation = thing.rotation
@@ -289,7 +294,7 @@ class CellManager:
 			for entry in self.props_in_game:
 				if entry not in found_props:
 					#ENTITY HACKS
-					if entry.name not in ["player_location","Spaceship","helicopter"]:
+					if entry.name not in ["player_location","Spaceship","helicopter",'Player']:
 						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.game_object.endObject)
 						entry.game_object = 0
 						to_remove.append(entry)
@@ -308,7 +313,7 @@ class CellManager:
 						tweener.singleton.add(entry.game_object, "color", "[0,0,0.0]", 2.0, callback=entry.kill)
 			for entry in found_lamps:
 				if entry not in self.lamps_in_game:
-				
+
 					if ( entry.type == "POINT" and len(self.points) > 0 ) or ( entry.type == "SPOT" and len(self.spots) > 0 ):
 						self.lamps_in_game.append(entry)
 						entry.game_object = self.spawn_lamp(entry)
