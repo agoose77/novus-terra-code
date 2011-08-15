@@ -30,9 +30,10 @@ class Entity:
 		self.id = 0
 		self.name = "Monkey"
 		self.co = [0.0,0.0,0.0]
-		
+
 class Lamp:
-	def __init__(self, name="None", co=[0.0,0.0,0.0], rotation=[1.0,0.0,0.0], type="POINT", color=[0.0,0.0,0.0], distance=0.5, energy=50):
+	def __init__(self, name="None", co=[0.0,0.0,0.0], rotation=[1.0,0.0,0.0], type="POINT", color=[0.0,0.0,0.0], distance=0.5, energy=50, spot_size=100, spot_blend=0.25, spot_bias=2.0):
+		print ('added Lamp 00000000000000000000000000000')
 		self.id = 0
 		self.name = name
 		self.co = co
@@ -41,7 +42,10 @@ class Lamp:
 		self.color = color
 		self.distance = distance
 		self.energy = energy
-		
+		self.spot_size = spot_size
+		self.spot_blend = spot_blend
+		self.spot_bias= spot_bias
+
 class Cell:
 	def __init__(self):
 		print("CELL INIT")
@@ -62,17 +66,17 @@ class Cell:
 		print(self.models)
 		fo = open(filename, 'wb')
 		pickle.dump(self,fo)
-	
+
 class CellManager:
 	def __init__(self):
 		self.props_in_game = []
 		self.lamps_in_game = []
 		self.entities_in_game = []
-		
+
 		self.ready_to_load = 0
-		
+
 		self.terrain = False
-		
+
 		# this will map out what objects are in what blends
 		fo = open('./data/model_dict.data', 'rb')
 		self.blend_dict = pickle.load( fo )
@@ -81,12 +85,12 @@ class CellManager:
 		#needs a list of loaded libraries
 		#self.load should check libraries needed, diff that with what's loaded
 		self.load_state = 0 #1 when a cell has been loaded and stays that way
-		
+
 		scene = bge.logic.getCurrentScene()
 		self.clean_object_list = []
 		for entry in scene.objects:
 			self.clean_object_list.append(entry)
-	
+
 	def load(self, filepath):
 
 
@@ -106,7 +110,7 @@ class CellManager:
 		for pdata in self.cell.props:
 
 			self.kdtrees.append( cell.kdNode( pdata ) )
-			
+
 		#tree for lamps
 		self.lamp_kdtree = cell.kdNode( self.cell.lamps )
 		print("---------")
@@ -118,28 +122,25 @@ class CellManager:
 				self.load_terrain( self.cell.terrain)
 			else:
 				self.terrain = False
-		
+
 		tweener.singleton.add(ui.singleton.current, "color", "[*,*,*,0.0]", length=5.0, callback=ui.singleton.clear)
-		
 
-
-	
 	def load_terrain(self, filename):
 		bge.logic.addScene("background", 0)
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject('outdoor_sun_shadow', "CELL_MANAGER_HOOK")
-		
+
 		terrain.tr_singleton = terrain.Map_Manager() #should do this in cell manager init
 		terrain.tr_singleton.load(filename)
 		terrain.cq_singleton = terrain.Chunk_Que()
 		terrain.qt_singleton = terrain.Quadtree(2048, [0,0], 1, max_depth=7)
 		self.terrain = 1
-		
+
 	def load_internal(self, filepath):
 			pass
-		
+
 	def load_libs(self):
-	
+
 		liblist = bge.logic.LibList()
 		libs = []
 		accum = []
@@ -158,15 +159,15 @@ class CellManager:
 				bge.logic.LibFree(key)
 		scene = bge.logic.getCurrentScene()
 
-		
+
 		print("=======")
 		for entry in libs:
 			bge.logic.LibLoad(entry, "Scene", load_actions=1)
 			print(entry, " loaded..")
-			
+
 		#print(scene.objectsInactive)
 		#print(bge.logic.LibList())
-			
+
 	def convert_lib_name(self, given):
 		given = given.replace("/","\\")
 		given = given.replace(".\\", "./")
@@ -178,7 +179,7 @@ class CellManager:
 		self.props_in_game, self.lamps_in_game, self.entities_in_game = [], [], []
 		self.kdtrees = []
 		self.lamp_kdtree = None
-		
+
 		#ENTITY HACKS
 		import game, bge
 		game.init_game = 0
@@ -187,7 +188,7 @@ class CellManager:
 			#bge.logic.globalDict['game'].world.player = None
 
 		tweener.singleton.nuke() #probably paranoia
-		
+
 		scene = bge.logic.getCurrentScene()
 		for entry in scene.objects:
 			if entry not in self.clean_object_list:
@@ -196,8 +197,8 @@ class CellManager:
 
 		print("$$$$$$ CLEANED UP $$$$$")
 
-		
-	def spawn_prop(self, thing): 
+
+	def spawn_prop(self, thing):
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject(thing.name, "CELL_MANAGER_HOOK")
 		new.position = thing.co
@@ -206,7 +207,7 @@ class CellManager:
 		new.localOrientation = thing.rotation
 		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 2.0)
 		return new
-		
+
 	def spawn_lamp(self, thing): #thing is either a prop or entity
 		print("spawning lamp")
 		scene = bge.logic.getCurrentScene()
@@ -215,9 +216,16 @@ class CellManager:
 		new.localOrientation = thing.rotation
 		new.distance = thing.distance
 		new.energy = thing.energy
+
+		if thing.type == 'SPOT':
+			new.type = 0
+			new.spotsize = thing.spot_size * 180 / 3.14
+			new.spotblend = thing.spot_blend
+			#new.bias = thing.spot_bias
+
 		tweener.singleton.add(new, "color", str(thing.color), 2.0)
 		return new
-	
+
 	def update(self, position):
 		if self.load_state == 0:
 			return
@@ -225,18 +233,18 @@ class CellManager:
 		scene = bge.logic.getCurrentScene()
 		if 'player' in scene.objects:
 			position = scene.objects['player'].position
-			
+
 		if 'outdoor_sun_shadow' in scene.objects:
 			scene.objects['outdoor_sun_shadow'].position = position
-			
+
 		# TERRAIN
 		if self.terrain:
 			terrain.qt_singleton.update_terrain(position)
 			terrain.cq_singleton.update()
-	
+
 		if time.time() - self.updatetime > .4:
 			self.updatetime = time.time()
-			
+
 			#lamps are seperated because they need a little different setup
 			found_props = []
 			found_lamps = []
@@ -244,7 +252,7 @@ class CellManager:
 				self.kdtrees[i].getVertsInRange(position, pow(2,i)*6+i*60+1, found_props)
 			#now add the lamps to this
 			self.lamp_kdtree.getVertsInRange(position, 100, found_lamps)
-			
+
 			#loop for props
 			to_remove = []
 			for entry in self.props_in_game:
@@ -261,7 +269,7 @@ class CellManager:
 					self.props_in_game.append(entry)
 					entry.game_object = self.spawn_prop(entry)
 
-			#loop for lamps			
+			#loop for lamps
 			to_remove = []
 			for entry in self.lamps_in_game:
 				if entry not in found_lamps:
@@ -275,4 +283,3 @@ class CellManager:
 					self.lamps_in_game.append(entry)
 					entry.game_object = self.spawn_lamp(entry)
 
-	
