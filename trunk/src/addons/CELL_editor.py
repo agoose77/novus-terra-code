@@ -23,13 +23,13 @@ def index_blends(dir, output):
 		gen = os.walk(dir)
 		for each_tuple in gen:
 			if each_tuple[2] != []:
-				
+
 				for filename in each_tuple[2]:
 					if filename[-6:] == '.blend':
 						if each_tuple[0][-2:] != ".\\":
 							filename = "/"+filename
 						name = each_tuple[0]+filename
-						
+
 						name2 = name.replace("\\", "/")
 						name2 = name2.replace("//", "/") #really no clue how this works anymore, it's also slow as shit
 						file_dict[ name2 ] = []
@@ -40,18 +40,18 @@ def index_blends(dir, output):
 							if 'OB' in fd:
 								derived = ""
 								t = 0
-								
+
 								#make sure it's a valid name
 								if fd[ fd.index("OB")-2: fd.index("OB")] == "00":
 									#print( fd[ fd.index("OB")-4: fd.index("OB")+12 ])
 									if fd[ fd.index("OB"): fd.index("OB")+6] != "OBJECT":
 										if fd[ fd.index("OB")+2+t ] not in ["\\", " ","?",".",")","("]:
-											
+
 											#it's a valid name, so get it
 											while 1:
 												if fd[ fd.index("OB")+2+t ] not in ["\\", " "]:
-													
-													
+
+
 													derived += fd[ fd.index("OB")+2+t ]
 												else:
 													break
@@ -62,8 +62,8 @@ def index_blends(dir, output):
 									file_dict[name2].append(derived)
 							else:
 								break
-						
-						
+
+
 		fo = open(output, 'wb')
 		pickle.dump(file_dict,fo)
 		fo.close()
@@ -78,7 +78,7 @@ def bake_cell():
 	for object in bpy.data.objects:
 		split_name = object.name.split(".")[0]
 		if object.type in ["MESH", "EMPTY", "ARMATURE"] and not object.parent:
-		
+
 			#check dimesions and sort
 			dimensions = object.dimensions
 			best = 0
@@ -87,21 +87,31 @@ def bake_cell():
 					best = entry
 			if object.type in ["EMPTY","ARMATURE"]:
 				best = 10
-				
+
 			for i in range( len(props) ):
 				if pow(2, i) > best:
 					print("best:",pow(2,i))
-					props[i].append( Prop( split_name, list(object.location), list(object.scale), 
-											list(object.dimensions), list(object.rotation_euler)) )
+					properties = []
+					for p in object.game.properties:
+						#properties.append({p.name:p.value})
+						properties.append([p.name, p.value])
+
+					props[i].append( Prop( split_name, list(object.location), list(object.scale),
+											list(object.dimensions), list(object.rotation_euler), properties) )
 					break
-					
-			
+
+
 		elif object.type in ["LAMP"]:
-			
+
 			lamp = bpy.data.lamps[object.name]
-			lamps.append( Lamp(split_name, list(object.location), list(object.rotation_euler), 
-								lamp.type, list(lamp.color), lamp.distance, lamp.energy) )
-								
+			if lamp.type == 'SPOT':
+				lamps.append( Lamp(split_name, list(object.location), list(object.rotation_euler),
+									lamp.type, list(lamp.color), lamp.distance, lamp.energy, spot_size=lamp.spot_size, spot_blend=lamp.spot_blend, spot_bias=lamp.shadow_buffer_bias) )
+
+			elif lamp.type == 'POINT':
+				lamps.append( Lamp(split_name, list(object.location), list(object.rotation_euler),
+									lamp.type, list(lamp.color), lamp.distance, lamp.energy) )
+
 	for entry in props:
 				print (len(entry))
 	newcell = Cell()
@@ -115,7 +125,7 @@ def bake_cell():
 	index_blends("./data/models/", "./data/model_dict.data")
 ### Arguments
 args = {
-	
+
 
 		'terrain file path':'./data/terrains/crosscrater.terrain',
 
@@ -127,14 +137,14 @@ args = {
 ### Operator
 
 class te_3(bpy.types.Operator):
-	
+
 	'''Bake a .cell file from scene.'''
-	
+
 	bl_idname = "scene.bakecell"
 	bl_label = "Bake Cell"
 
 	def execute(self, context):
-		bake_cell()   
+		bake_cell()
 		return {'FINISHED'}
 
 def register():
@@ -157,7 +167,7 @@ class OBJECT_PT_hello(bpy.types.Panel):
 		layout = self.layout
 
 		obj = context.object
-		
+
 		###
 		box = layout.box()
 		row = box.row()
@@ -169,19 +179,19 @@ class OBJECT_PT_hello(bpy.types.Panel):
 
 		for arg in args:
 			prop = bpy.context.scene.myCollection2[arg]
-				   
-			
+
+
 			colL.label(str(arg)+':')
-		
+
 			if isinstance(args[arg], float) == True:
 				colR.prop(prop, "float", text='')
-								
+
 			elif isinstance(args[arg], bool) == True:
 				colR.prop(prop, "bool", text='')
-				
+
 			elif isinstance(args[arg], int) == True:
 				colR.prop(prop, "int", text='')
-				
+
 			elif isinstance(args[arg], str) == True:
 				colR.prop(prop, "string", text='')
 
@@ -217,37 +227,37 @@ PropertyGroup.string = bpy.props.StringProperty()
 ###############################
 ### Create all variables - Operator
 def create_vars():
-	
+
 	### Reset the property
 	for each in bpy.context.scene.myCollection:
-		bpy.context.scene.myCollection.remove(0)	
-	
-			
+		bpy.context.scene.myCollection.remove(0)
+
+
 	for a in args:
-			
-		add = bpy.props.StringProperty(default = 'Default')   
-		bpy.context.scene.myCollection2.add()		
-			
+
+		add = bpy.props.StringProperty(default = 'Default')
+		bpy.context.scene.myCollection2.add()
+
 		### Float
 		if isinstance(args[a], float) == True:
 			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].name = str(a)
 			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].float = args[a]
-			
+
 		### Int
 		if isinstance(args[a], int) == True:
 			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].name = str(a)
 			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].int = args[a]
-				
+
 		### String
 		if isinstance(args[a], str) == True:
 			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].name = str(a)
 			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].string = args[a]
-				
+
 		### Bool
 		if isinstance(args[a], bool) == True:
 			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].name = str(a)
 			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].bool = args[a]
-				
+
 
 
 if __name__ == "__main__":

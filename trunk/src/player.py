@@ -284,9 +284,10 @@ class Player(EntityBase):
 
 
 		if hit != None:
-
 			if 'Door' in hit:
-				ui.singleton.show_loading('./data/cells/'+ hit['Door'] +'.cell')
+				print (hit['Door'])
+				if keyboard.events[bge.events.EKEY] == 1:
+					ui.singleton.show_loading('./data/cells/'+ hit['Door'] +'.cell')
 
 			if 'Vehicle' in hit:
 				if keyboard.events[bge.events.EKEY] == 1:
@@ -370,7 +371,7 @@ class Player(EntityBase):
 			self.handle_camera()
 
 		self.handle_interactions()
-		#self.temp_pos2()
+		self.temp_pos2()
 
 		if self.current_weapon != None:
 			self.handle_weapon()

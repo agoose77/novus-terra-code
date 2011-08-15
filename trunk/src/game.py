@@ -74,6 +74,7 @@ class Game:
         self.game_time += self.delta_time
 
         if self.world == None:
+            print ('TEsTSET =====================')
             self.world = World()
         #    self.world.create('novus_terra.world')
 
