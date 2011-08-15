@@ -227,7 +227,6 @@ class CellManager:
 			position = scene.objects['player'].position
 			
 		if 'outdoor_sun_shadow' in scene.objects:
-			print("setting sun")
 			scene.objects['outdoor_sun_shadow'].position = position
 			
 		# TERRAIN
@@ -251,7 +250,7 @@ class CellManager:
 			for entry in self.props_in_game:
 				if entry not in found_props:
 					#ENTITY HACKS
-					if entry.name != "player_location":
+					if entry.name not in ["player_location","Spaceship","helicopter"]:
 						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.game_object.endObject)
 						entry.game_object = 0
 						to_remove.append(entry)
