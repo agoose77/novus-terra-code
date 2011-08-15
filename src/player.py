@@ -29,11 +29,11 @@ class Player(EntityBase):
 		self.current_weapon= None
 		self.current_animations= {
 			'walk':None,
-            'run':None,
-            'reload':None,
-            'attack':None,
-            'switch':None,
-            'aim':None,
+			'run':None,
+			'reload':None,
+			'attack':None,
+			'switch':None,
+			'aim':None,
 		}
 
 		self.talking = False
@@ -43,6 +43,8 @@ class Player(EntityBase):
 		self.current_vehicle = None
 		self.walking_speed = 5
 		self.current_places = []
+		self.vehicle= None
+		self.want_exit_vehicle = False
 
 		self.walk_speed = 8.0
 		self.run_speed = 15.0
@@ -63,7 +65,8 @@ class Player(EntityBase):
 		self.movement_state_machine.add_state('none', self.handle_none_state)
 
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
-		#self.movement_state_machine.add_transition('walk', 'fall', self.is_falling)
+		self.movement_state_machine.add_transition('walk', 'vehicle', self.has_entered_vehicle)
+		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
 		self.inventory= Inventory()
 
 		self.temp_pos = 1
@@ -80,7 +83,7 @@ class Player(EntityBase):
 		self.current_animations['attack'] = self.current_weapon['name']+' attack'
 		self.current_animations['switch'] = self.current_weapon['name']+' switch'
 		self.current_animations['aim'] = self.current_weapon['name']+' aim'
-        #self.current_animations[''] = self.current_weapon['name']+' '
+		#self.current_animations[''] = self.current_weapon['name']+' '
 
 
 	def equip_weapon(self,id):
@@ -187,7 +190,16 @@ class Player(EntityBase):
 		pass#print ('fall')
 
 	def handle_vehicle_state(self, FSM):
-		pass
+		self.camera_on = False
+		bge.logic.getCurrentScene().active_camera = self.vehicle['Camera']
+
+		keyboard = bge.logic.keyboard
+
+		if keyboard.events[bge.events.LKEY] == 1:
+			self.camera_on = True
+			self.vehicle['Vehicle'] = False
+			self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
+			self.vehicle = None
 
 	def handle_none_state(self, FSM):
 		pass
@@ -213,10 +225,23 @@ class Player(EntityBase):
 		pass
 
 	def has_entered_vehicle(self, FSM):
-		pass
+		temp = False
+
+		if self.vehicle != None:
+			print ('test!')
+			temp = True
+
+		return temp
 
 	def has_exited_vehicle(self, FSM):
-		pass
+		temp = False
+		self.want_exit_vehicle= False
+
+		if self.vehicle == None:
+			print ('test!')
+			temp = True
+
+		return temp
 
 	def has_pressed_jumpkey(self, FSM):
 		pass
@@ -250,60 +275,28 @@ class Player(EntityBase):
 		if mouse.events[bge.events.RIGHTMOUSE] == 1:
 			pass
 
-	def handle_lights(self):
-		List = bge.logic.getCurrentScene().objects
-		l1 = []
-		l2 = []
-		l3 = []
-
-		for obj in bge.logic.getCurrentScene().objects:
-			if 'light1' in obj:
-				#List['Light1'].position = obj.position
-				com = [self.getDistanceTo(obj),obj]
-				l1.append(com)
-
-			elif 'light2' in obj:
-				com = [self.getDistanceTo(obj),obj]
-				l2.append(com)
-
-			#elif 'light3' in obj:
-			#	com = [self.getDistanceTo(obj),obj]
-			#	l3.append(com)
-
-		l1.sort()
-		l2.sort()
-		#l3.sort()
-
-		List['Light1'].position = l1[0][1].position
-		List['Light2'].position = l2[0][1].position
-		#List['Light3'].position = l1[0][1].position
-
 
 	def handle_interactions(self):
 		# cast ray from mouse into world, check if hasattr(hit_obj, 'on_interact')
 		ray = self.camera.controllers[0].sensors['interact_ray']
 		hit = ray.hitObject
-
 		keyboard = bge.logic.keyboard
+
 
 		if hit != None:
 
-			if 'Vec' in hit:
-				if keyboard.events[bge.events.EKEY]:
-					pass
-
-
 			if 'Door' in hit:
-				if keyboard.events[bge.events.EKEY]:
-					ui.singleton.show_loading('./data/cells/nextcell.cell')
+				ui.singleton.show_loading('./data/cells/'+ hit['Door'] +'.cell')
 
+			if 'Vehicle' in hit:
+				if keyboard.events[bge.events.EKEY] == 1:
+					hit['Vehicle'] = True
+					self.vehicle = hit
 
 			# Items
 			if 'Item' in hit:
 				print ('Tiem')
 				print (hit['Item'].name)
-
-
 
 				if keyboard.events[bge.events.EKEY] == 1:
 				  self.inventory.add_item(hit['Item'].id)
@@ -372,9 +365,12 @@ class Player(EntityBase):
 	def main(self):
 		EntityBase.main(self)
 		self.movement_state_machine.main()
-		self.handle_camera()
+
+		if self.camera_on == True:
+			self.handle_camera()
+
 		self.handle_interactions()
-		self.temp_pos2()
+		#self.temp_pos2()
 
 		if self.current_weapon != None:
 			self.handle_weapon()
