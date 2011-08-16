@@ -288,6 +288,7 @@ class Player(EntityBase):
 			if 'Door' in hit:
 				print (hit['Door'])
 				if keyboard.events[bge.events.EKEY] == 1:
+					print("HOLY DICKFUCK BATMAN")
 					ui.singleton.show_loading('./data/cells/'+ hit['Door'] +'.cell')
 
 			if 'Vehicle' in hit:
