@@ -190,6 +190,7 @@ class CellManager:
 		print(scene.objectsInactive)
 		print(bge.logic.LibList())
 
+
 	def convert_lib_name(self, given):
 		given = given.replace("/","\\")
 		given = given.replace(".\\", "./")
@@ -231,6 +232,7 @@ class CellManager:
 		print(self.spots)
 		print(self.points)
 		
+		#scene.restart()
 		print("$$$$$$ CLEANED UP $$$$$")
 
 
@@ -241,8 +243,9 @@ class CellManager:
 		new.color = [1.0,1.0,1.0,0.0]
 		new.localScale = thing.scale
 		new.localOrientation = thing.rotation
-		for p in thing.properties:
-			new[p[0]] = p[1]
+		if 'properties' in thing.__dict__:
+			for p in thing.properties:
+				new[p[0]] = p[1]
 		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 2.0)
 		return new
 
