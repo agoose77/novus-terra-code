@@ -25,7 +25,7 @@ class Prop:
 		self.rotation = rotation
 		self.game_object = 0 #the BGE object pointer
 		self.properties = properties1
-		
+
 	def kill(self):
 		cell.singleton.props_in_game.remove(self)
 		self.game_object.endObject()
@@ -107,7 +107,7 @@ class CellManager:
 		for entry in scene.objects:
 			self.clean_object_list.append(entry)
 
-		
+
 
 	def load(self, filepath):
 		print("cell_manager.load()")
@@ -220,7 +220,7 @@ class CellManager:
 				entry.endObject()
 
 		game.init_game = 0
-		
+
 		#set up light que (in lieu of cucumber branch)
 		self.spots = []
 		self.points = []
@@ -231,7 +231,7 @@ class CellManager:
 				self.points.append(entry)
 		print(self.spots)
 		print(self.points)
-		
+
 		#scene.restart()
 		print("$$$$$$ CLEANED UP $$$$$")
 
@@ -311,13 +311,14 @@ class CellManager:
 					#ENTITY HACKS
 					if entry.name not in ["player_location","Spaceship","helicopter",'Player']:
 						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
-						
+
 			for entry in found_props:
 				if entry not in self.props_in_game:
 					if entry.name in scene.objectsInactive:
 						self.props_in_game.append(entry)
 						entry.game_object = self.spawn_prop(entry)
 					else:
+						print (entry.name)
 						print( "ERROR: Trying to spawn a prop that doesn't have an object loaded")
 
 			#loop for lamps
