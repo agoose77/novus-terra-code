@@ -13,6 +13,7 @@ class World:
 	EXTERIOR_WORLD = 1
 
 	def __init__(self):
+		print("world.__init__()")
 		self.current_world_file = None
 		self.current_cell = None
 		self.loaded_libs = None
