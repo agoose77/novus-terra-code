@@ -25,7 +25,7 @@ class Prop:
 		self.rotation = rotation
 		self.game_object = 0 #the BGE object pointer
 		self.properties = properties1
-		
+
 	def kill(self):
 		cell.singleton.props_in_game.remove(self)
 		self.game_object.endObject()
@@ -107,7 +107,7 @@ class CellManager:
 		for entry in scene.objects:
 			self.clean_object_list.append(entry)
 
-		
+
 
 	def load(self, filepath):
 		print("cell_manager.load()")
@@ -143,9 +143,10 @@ class CellManager:
 				self.terrain = False
 
 		tweener.singleton.add(ui.singleton.current, "color", "[*,*,*,0.0]", length=5.0, callback=ui.singleton.clear)
+		print ('passed --------')
 
 	def load_terrain(self, filename):
-		print("cell_manager.load_terrain()")
+		print("cell_manager.load_terrain() 123")
 		bge.logic.addScene("background", 0)
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject('outdoor_sun_shadow', "CELL_MANAGER_HOOK")
@@ -220,7 +221,7 @@ class CellManager:
 				entry.endObject()
 
 		game.init_game = 0
-		
+
 		#set up light que (in lieu of cucumber branch)
 		self.spots = []
 		self.points = []
@@ -231,7 +232,7 @@ class CellManager:
 				self.points.append(entry)
 		print(self.spots)
 		print(self.points)
-		
+
 		#scene.restart()
 		print("$$$$$$ CLEANED UP $$$$$")
 
@@ -280,8 +281,10 @@ class CellManager:
 	def update(self, position):
 		if self.load_state == 0:
 			return
+
 		#HACKS ENTITY HACKS HERE
 		scene = bge.logic.getCurrentScene()
+
 		if 'player' in scene.objects:
 			position = scene.objects['player'].position
 
@@ -293,40 +296,40 @@ class CellManager:
 			terrain.qt_singleton.update_terrain(position)
 			terrain.cq_singleton.update()
 
-		if time.time() - self.updatetime > .4:
-			self.updatetime = time.time()
+		#if time.time() - self.updatetime > 0.5:
+		self.updatetime = time.time()
 
-			#lamps are seperated because they need a little different setup
-			found_props = []
-			found_lamps = []
-			for i in range( len(self.kdtrees) ):
-				self.kdtrees[i].getVertsInRange(position, pow(2,i)*6+i*60+1, found_props)
-			#now add the lamps to this
-			self.lamp_kdtree.getVertsInRange(position, 100, found_lamps)
+		#lamps are seperated because they need a little different setup
+		found_props = []
+		found_lamps = []
+		for i in range( len(self.kdtrees) ):
+			self.kdtrees[i].getVertsInRange(position, pow(2,i)*6+i*60+1, found_props)
+		#now add the lamps to this
+		self.lamp_kdtree.getVertsInRange(position, 100, found_lamps)
 
-			#loop for props
-			to_remove = []
-			for entry in self.props_in_game:
-				if entry not in found_props:
-					#ENTITY HACKS
-					if entry.name not in ["player_location","Spaceship","helicopter",'Player']:
-						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
-						
-			for entry in found_props:
-				if entry not in self.props_in_game:
-					self.props_in_game.append(entry)
-					entry.game_object = self.spawn_prop(entry)
+		#loop for props
+		to_remove = []
+		for entry in self.props_in_game:
+			if entry not in found_props:
+				#ENTITY HACKS
+				if entry.name not in ["player_location","Spaceship","helicopter",'Player']:
+					tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
 
-			#loop for lamps
-			to_remove = []
-			for entry in self.lamps_in_game:
-				if entry not in found_lamps:
-					if entry.game_object:
-						tweener.singleton.add(entry.game_object, "color", "[0,0,0.0]", 2.0, callback=entry.kill)
-			for entry in found_lamps:
-				if entry not in self.lamps_in_game:
+		for entry in found_props:
+			if entry not in self.props_in_game:
+				self.props_in_game.append(entry)
+				entry.game_object = self.spawn_prop(entry)
 
-					if ( entry.type == "POINT" and len(self.points) > 0 ) or ( entry.type == "SPOT" and len(self.spots) > 0 ):
-						self.lamps_in_game.append(entry)
-						entry.game_object = self.spawn_lamp(entry)
+		#loop for lamps
+		to_remove = []
+		for entry in self.lamps_in_game:
+			if entry not in found_lamps:
+				if entry.game_object:
+					tweener.singleton.add(entry.game_object, "color", "[0,0,0.0]", 2.0, callback=entry.kill)
+		for entry in found_lamps:
+			if entry not in self.lamps_in_game:
+
+				if ( entry.type == "POINT" and len(self.points) > 0 ) or ( entry.type == "SPOT" and len(self.spots) > 0 ):
+					self.lamps_in_game.append(entry)
+					entry.game_object = self.spawn_lamp(entry)
 
