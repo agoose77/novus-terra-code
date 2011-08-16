@@ -20,7 +20,7 @@ class Player(EntityBase):
 	def __init__(self):
 		print("player.__init__()")
 		EntityBase.__init__(self, 'player')
-		
+
 		self.health = 100
 		self.faction = 1 # Default Faction = Humans
 		self.hunger = 0.0
@@ -193,10 +193,14 @@ class Player(EntityBase):
 	def handle_vehicle_state(self, FSM):
 		self.camera_on = False
 		bge.logic.getCurrentScene().active_camera = self.vehicle['Camera']
+		#self.position
+		self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
 
 		keyboard = bge.logic.keyboard
 
-		if keyboard.events[bge.events.LKEY] == 1:
+		if keyboard.events[bge.events.EKEY] == 1:
+			#self.removeParent()
+			#self.restoreDynamics()
 			self.camera_on = True
 			self.vehicle['Vehicle'] = False
 			self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
@@ -294,7 +298,10 @@ class Player(EntityBase):
 			if 'Vehicle' in hit:
 				if keyboard.events[bge.events.EKEY] == 1:
 					hit['Vehicle'] = True
+					#self.suspendDynamics()
 					self.vehicle = hit
+					self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
+					#self.setParent(self.vehicle)
 
 			# Items
 			if 'Item' in hit:
