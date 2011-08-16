@@ -18,8 +18,9 @@ import ui
 class Player(EntityBase):
 
 	def __init__(self):
+		print("player.__init__()")
 		EntityBase.__init__(self, 'player')
-
+		
 		self.health = 100
 		self.faction = 1 # Default Faction = Humans
 		self.hunger = 0.0

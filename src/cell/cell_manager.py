@@ -25,6 +25,11 @@ class Prop:
 		self.rotation = rotation
 		self.game_object = 0 #the BGE object pointer
 		self.properties = properties1
+		
+	def kill(self):
+		cell.singleton.props_in_game.remove(self)
+		self.game_object.endObject()
+		self.game_object = False
 
 class Entity:
 	def __init__(self):
@@ -102,19 +107,10 @@ class CellManager:
 		for entry in scene.objects:
 			self.clean_object_list.append(entry)
 
-		#set up light que (in lieu of cucumber branch)
-		self.spots = []
-		self.points = []
-		for entry in scene.objectsInactive:
-			if "SPOT" in entry.name:
-				self.spots.append(entry)
-			if "POINT" in entry.name:
-				self.points.append(entry)
-		print(self.spots)
-		print(self.points)
+		
 
 	def load(self, filepath):
-
+		print("cell_manager.load()")
 		self.cleanup()
 
 		try:
@@ -149,6 +145,7 @@ class CellManager:
 		tweener.singleton.add(ui.singleton.current, "color", "[*,*,*,0.0]", length=5.0, callback=ui.singleton.clear)
 
 	def load_terrain(self, filename):
+		print("cell_manager.load_terrain()")
 		bge.logic.addScene("background", 0)
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject('outdoor_sun_shadow', "CELL_MANAGER_HOOK")
@@ -163,7 +160,9 @@ class CellManager:
 			pass
 
 	def load_libs(self):
-
+		scene = bge.logic.getCurrentScene()
+		print(scene.objects)
+		print("cell_manager.load_libs()")
 		liblist = bge.logic.LibList()
 		libs = []
 		accum = []
@@ -188,8 +187,8 @@ class CellManager:
 			bge.logic.LibLoad(entry, "Scene", load_actions=1)
 			print(entry, " loaded..")
 
-		#print(scene.objectsInactive)
-		#print(bge.logic.LibList())
+		print(scene.objectsInactive)
+		print(bge.logic.LibList())
 
 	def convert_lib_name(self, given):
 		given = given.replace("/","\\")
@@ -199,6 +198,7 @@ class CellManager:
 		given = given.replace("\\","/")
 		return given
 	def cleanup(self):
+		print("cell_manager.cleanup()")
 		self.props_in_game, self.lamps_in_game, self.entities_in_game = [], [], []
 		self.kdtrees = []
 		self.lamp_kdtree = None
@@ -219,6 +219,18 @@ class CellManager:
 				entry.endObject()
 
 		game.init_game = 0
+		
+		#set up light que (in lieu of cucumber branch)
+		self.spots = []
+		self.points = []
+		for entry in scene.objectsInactive:
+			if "SPOT" in entry.name:
+				self.spots.append(entry)
+			if "POINT" in entry.name:
+				self.points.append(entry)
+		print(self.spots)
+		print(self.points)
+		
 		print("$$$$$$ CLEANED UP $$$$$")
 
 
@@ -295,11 +307,8 @@ class CellManager:
 				if entry not in found_props:
 					#ENTITY HACKS
 					if entry.name not in ["player_location","Spaceship","helicopter",'Player']:
-						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.game_object.endObject)
-						entry.game_object = 0
-						to_remove.append(entry)
-			for entry in to_remove:
-				self.props_in_game.remove(entry)
+						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
+						
 			for entry in found_props:
 				if entry not in self.props_in_game:
 					self.props_in_game.append(entry)
