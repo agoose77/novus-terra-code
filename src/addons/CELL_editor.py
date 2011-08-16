@@ -67,8 +67,16 @@ def index_blends(dir, output):
 		fo = open(output, 'wb')
 		pickle.dump(file_dict,fo)
 		fo.close()
+		return file_dict
 
 def bake_cell():
+	print("## Indexing ./data/models")
+	blends = index_blends("./data/models/", "./data/model_dict.data")
+	known_objects = []
+	for blend in blends:
+		for entry in blends[blend]:
+			if entry not in known_objects:
+				known_objects.append(entry)
 	props = []
 	for i in range(15):
 		props.append([])
@@ -95,7 +103,10 @@ def bake_cell():
 					for p in object.game.properties:
 						#properties.append({p.name:p.value})
 						properties.append([p.name, p.value])
-
+					
+					if split_name not in known_objects:
+						split_name = "WTF" #yes this is actually important
+					print(split_name)
 					props[i].append( Prop( split_name, list(object.location), list(object.scale),
 											list(object.dimensions), list(object.rotation_euler), properties) )
 					break
@@ -120,9 +131,10 @@ def bake_cell():
 	if bpy.context.scene.myCollection2['terrain'].bool:
 		newcell.terrain = bpy.context.scene.myCollection2['terrain file path'].string
 	filename=bpy.context.scene.myCollection2['cell_filename'].string
+	
+
+	
 	newcell.save(filename)
-	print("## Indexing ./data/models")
-	index_blends("./data/models/", "./data/model_dict.data")
 ### Arguments
 args = {
 
