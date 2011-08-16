@@ -229,21 +229,26 @@ class Map_Manager:
 					pass
 				
 				t += 1
-				"""
+				if c >= self.map.width*self.map.height:
+					c = 0
 				if i == 0:
-					top_cache.append(self.map.buffer[c])
-				if i == 32:
-					bottom_cache.append(self.map.buffer[c])
+					top_cache.append(self.map.buffer[c]* self.map.scale*.005 -.03)
+				elif i == 32:
+					bottom_cache.append(self.map.buffer[c]* self.map.scale*.005-.03)
 				if j == 0:
-					left_cache.append(self.map.buffer[c])
-				if j == 32:
-					right_cache.append(self.map.buffer[c])
-				"""
+					left_cache.append(self.map.buffer[c]* self.map.scale*.005-.03)
+				elif j == 32:
+					right_cache.append(self.map.buffer[c]* self.map.scale*.005-.03)
+				
+				
 		#Now lets set the skirt
 		#1089 - left - top - right - bottom
+		right_cache.reverse()
+		total = top_cache + bottom_cache + [bottom_cache[32]]*2 + [bottom_cache[0]]*2 + [top_cache[32]]*2 + left_cache + right_cache
+		
 		for i in range(136):
 			v = mesh.getVertex(0, 1089+i)
-			v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],-100])
+			v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],total[i]])
 	
 		if node.depth == 7: #speed hack
 			node.cube.reinstancePhysicsMesh()
