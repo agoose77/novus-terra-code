@@ -1,3 +1,8 @@
+import bge
+import sys
+sys.path.append( bge.logic.expandPath("//src//bgui"))
+
+
 import sys
 sys.path.append('./src/')
 sys.path.append('./src/bgui/') #the SVN external is all the bgui folders not just the module
@@ -31,11 +36,15 @@ class Start(bgui.Widget):
 			options = bgui.BGUI_THEMED)
 		# Setup an on_click callback for the image
 		self.button.on_click = self.start_game
-		blurb = "NOVUS TERRA : Alpha v0.2"
+		
+	
+		
+		
+		blurb = "NOVUS TERRA : Alpha v0.2 : Thanks for waiting!"
 		self.lbl = bgui.Label(self.win, 'label',text=blurb, pos=[100, 180], options = bgui.BGUI_THEMED )
 		#tweener.singleton.add(self, 'color', '[*,*,*,1]', length=2.0)
 		
-		self.input = bgui.TextInput(self.win, 'input', "terrain.cell", size=[160, 30], pos=[220, 120], pt_size=12,
+		self.input = bgui.TextInput(self.win, 'input', "barracks.cell", size=[160, 30], pos=[220, 120], pt_size=12,
 			input_options = bgui.BGUI_INPUT_SELECT_ALL, options = bgui.BGUI_THEMED)
 		#self.input.activate()
 		self.input.on_enter_key = self.on_input_enter
@@ -48,6 +57,16 @@ class Start(bgui.Widget):
 		except:
 			self.lbl.color = [1.0,0,0,1]
 			self.lbl.text = "ERROR: cell "+self.input.text+" not found."
+			
+	def start_vehicle(self, data):
+		try:
+			fo = open('./data/cells/vehicle.cell')
+			fo.close()
+			self.parent.show_loading('./data/cells/vehicle.cell')
+		except:
+			self.lbl.color = [1.0,0,0,1]
+			self.lbl.text = "ERROR: cell "+'./data/cells/vehicle.cell'+" not found."
+			
 	def on_input_enter(self, widget):
 		widget.deactivate()
 		widget.frozen = 1
