@@ -136,11 +136,12 @@ class Node(object):
 				
 	
 	def remove_chunk(self, node):
-		terrain.cq_singleton.available.append( node.cube.name )
-		if node in terrain.cq_singleton.need_update:
-			terrain.cq_singleton.need_update.remove(node)
-		node.cube.endObject()
-		node.cube = 0
+		if type(node.cube) != int:
+			terrain.cq_singleton.available.append( node.cube.name )
+			if node in terrain.cq_singleton.need_update:
+				terrain.cq_singleton.need_update.remove(node)
+			node.cube.endObject()
+			node.cube = 0
 	
 	def add_chunk(self):
 		chunkname = terrain.cq_singleton.get_chunk()

@@ -12,8 +12,9 @@ import cell
 try:
 	import bge
 	import ui
+	import mathutils
 except:
-	print("BGE import failed, normal if you are running the cell editor")
+	print("BGE imports failed, normal if you are running the cell editor")
 
 class Prop:
 	def __init__(self, name="None", co=[0.0,0.0,0.0], scale=[1.0,1.0,1.0], dimensions=[1.0,1.0,1.0], rotation=[1.0,0.0,0.0], properties1=[]):
@@ -200,6 +201,8 @@ class CellManager:
 		return given
 	def cleanup(self):
 		print("cell_manager.cleanup()")
+		if 'entity_hack' in self.__dict__:
+			self.__dict__.pop('entity_hack')
 		self.props_in_game, self.lamps_in_game, self.entities_in_game = [], [], []
 		self.kdtrees = []
 		self.lamp_kdtree = None
@@ -277,14 +280,21 @@ class CellManager:
 		tweener.singleton.add(new, "color", str(thing.color), 2.0)
 		return new
 
-	def update(self, position):
+	def update(self):
 		if self.load_state == 0:
 			return
 		#HACKS ENTITY HACKS HERE
 		scene = bge.logic.getCurrentScene()
+		position = 0
 		if 'player' in scene.objects:
 			position = scene.objects['player'].position
-
+		else:
+			for entry in self.cell.props:
+				for prop in entry:
+					if prop.name == "player_location":
+						position = mathutils.Vector( prop.co )
+		if position == 0:
+			position = mathutils.Vector([0,0,0])
 		if 'outdoor_sun_shadow' in scene.objects:
 			scene.objects['outdoor_sun_shadow'].position = position
 
@@ -309,7 +319,7 @@ class CellManager:
 			for entry in self.props_in_game:
 				if entry not in found_props:
 					#ENTITY HACKS
-					if entry.name not in ["player_location","Spaceship","helicopter",'Player']:
+					if entry.name not in ["player_location","Spaceship","helicopter",'Player', 'Vehicle']:
 						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
 
 			for entry in found_props:
