@@ -21,12 +21,17 @@ class Player(EntityBase):
 		print("player.__init__()")
 		EntityBase.__init__(self, 'player')
 
+		# Player Stats
 		self.health = 100
-		self.faction = 1 # Default Faction = Humans
+		self.faction = 1 		# Default Faction = Humans
 		self.hunger = 0.0
 		self.fatigue = 0.0
-		self.stats = []
-		self.items = []
+		self.walk_speed = 8.0
+		self.run_speed = 15.0
+
+		self.impants = []
+		self.stats = {'temp':'temp'}
+
 		self.current_weapon= None
 		self.current_animations= {
 			'walk':None,
@@ -41,37 +46,37 @@ class Player(EntityBase):
 		self.is_in_combat = False
 		self.stored_state = None
 		self.camera_on = True
+
+		# Vehicle
 		self.current_vehicle = None
-		self.walking_speed = 5
-		self.current_places = []
 		self.vehicle= None
-		self.want_exit_vehicle = False
-
-		self.walk_speed = 8.0
-		self.run_speed = 15.0
-
-		self.impants = []
-		self.effects = []
 
 		self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
 		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
 
+		# FSM States
 		self.movement_state_machine = FiniteStateMachine(self)
-		self.movement_state_machine.add_state('walk', self.handle_walk_state) # add state
-		self.movement_state_machine.add_state('climb', self.handle_climb_state)
-		#self.movement_state_machine.add_state('jump', self.handle_jump_state)
+		self.movement_state_machine.add_state('walk', self.handle_walk_state)
 		self.movement_state_machine.add_state('fall', self.handle_fall_state)
-		#self.movement_state_machine.add_state('land', self.handle_land_state2)
 		self.movement_state_machine.add_state('vehicle', self.handle_vehicle_state)
 		self.movement_state_machine.add_state('none', self.handle_none_state)
 
+		# FSM Transitions
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
 		self.movement_state_machine.add_transition('walk', 'vehicle', self.has_entered_vehicle)
 		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
+
+		# Inventory
 		self.inventory= Inventory()
 
+		# HACKS
 		self.temp_pos = 1
+		self.set_loc = [child for child in self.childrenRecursive if 'set_loc' in child][0]
+		self.lev = None
 
+
+	### ### ###
+	# Animations
 	def handle_animations(self):
 		pass
 
@@ -103,18 +108,17 @@ class Player(EntityBase):
 		print ('Equiped')
 
 
-	def handle_walk_state(self, FSM): # restored it to my temp movement because of error
+	def handle_walk_state(self, FSM):
 		keyboard = bge.logic.keyboard.events
 		vel = self.getLinearVelocity()
 		move = [0,0,0]
-
-		#controls = bge.logic.globalDict['game'].control_options
 
 		### Keys
 		if keyboard[bge.events.LEFTSHIFTKEY]:
 			speed = self.run_speed
 		else:
 			speed = self.walk_speed
+
 		if keyboard[bge.events.WKEY]:
 			move[0] += speed
 		if keyboard[bge.events.SKEY]:
@@ -126,7 +130,7 @@ class Player(EntityBase):
 
 		### Jump
 		pos1 = [self.position[0],self.position[1],self.position[2]-10]
-		ray = self.rayCast(pos1, self.position, 1, '', 0, 0, 0)
+		ray = self.rayCast(pos1, self.position, 2, '', 0, 0, 0)
 
 		if ray[0] != None:
 			if keyboard[bge.events.SPACEKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
@@ -134,12 +138,9 @@ class Player(EntityBase):
 
 		###
 		com = vel[2]+move[2]
-		t1 = move[1] * self.worldOrientation[2].copy()
-
 		self.localLinearVelocity = [move[1],move[0], com]
 
-		'''
-
+		''' - a101 movement code - get errors
 		fx = 0.0
 		fy = 0.0
 
@@ -182,71 +183,55 @@ class Player(EntityBase):
 			# Animations
 			self.handle_animations()
 			'''
-
-
-	def handle_climb_state(self, FSM):
-		pass
-
 	def handle_fall_state(self, FSM):
-		pass#print ('fall')
+		pass
 
 	def handle_vehicle_state(self, FSM):
-		self.camera_on = False
-		bge.logic.getCurrentScene().active_camera = self.vehicle['Camera']
-		#self.position
-		self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
-
 		keyboard = bge.logic.keyboard
 
+		bge.logic.getCurrentScene().active_camera = self.vehicle['Camera']
+
+
+		# HACK
+		self.camera_on = False # Turn off player camera
+		self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
+		#self.visible
+
+		# Get out of vehicle
 		if keyboard.events[bge.events.EKEY] == 1:
-			#self.removeParent()
-			#self.restoreDynamics()
 			self.camera_on = True
 			self.vehicle['Vehicle'] = False
-			self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
+			self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10] # add player above the vehicle
 			self.vehicle = None
 
+	# ???
 	def handle_none_state(self, FSM):
 		pass
-
 
 	def is_grounded(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
 		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
-
 		return bool(ray2[0])
 
 	def is_falling(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
 		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
-
 		return not bool(ray2[0])
 
-
-	def has_entered_ladder(self, FSM):
-		pass
-
-	def has_exited_ladder(self, FSM):
-		pass
-
 	def has_entered_vehicle(self, FSM):
-		temp = False
-
-		if self.vehicle != None:
-			print ('test!')
-			temp = True
-
-		return temp
+		#temp = False
+		#if self.vehicle != None:
+		#	print ('test!')
+		#	temp = True
+		return bool(self.vehicle)#temp
 
 	def has_exited_vehicle(self, FSM):
-		temp = False
-		self.want_exit_vehicle= False
-
-		if self.vehicle == None:
-			print ('test!')
-			temp = True
-
-		return temp
+		#temp = False
+		#self.want_exit_vehicle= False
+		#if self.vehicle == None:
+		#	print ('test!')
+		#	temp = True
+		return bool(self.vehicle)#temp
 
 	def has_pressed_jumpkey(self, FSM):
 		pass
@@ -272,9 +257,7 @@ class Player(EntityBase):
 		# SHOOT
 		if mouse.events[bge.events.LEFTMOUSE] == 1:
 			if hit != None:
-				if 'Faction' in hit:
-					if self.faction != hit['Faction']:
-						pass
+				pass
 
 		# AIM
 		if mouse.events[bge.events.RIGHTMOUSE] == 1:
@@ -282,7 +265,7 @@ class Player(EntityBase):
 
 
 	def handle_interactions(self):
-		# cast ray from mouse into world, check if hasattr(hit_obj, 'on_interact')
+  	# cast ray from mouse into world, check if hasattr(hit_obj, 'on_interact')
 		ray = self.camera.controllers[0].sensors['interact_ray']
 		hit = ray.hitObject
 		keyboard = bge.logic.keyboard
@@ -292,16 +275,13 @@ class Player(EntityBase):
 			if 'Door' in hit:
 				print (hit['Door'])
 				if keyboard.events[bge.events.EKEY] == 1:
-					print("HOLY DICKFUCK BATMAN")
 					ui.singleton.show_loading('./data/cells/'+ hit['Door'] +'.cell')
 
 			if 'Vehicle' in hit:
 				if keyboard.events[bge.events.EKEY] == 1:
 					hit['Vehicle'] = True
-					#self.suspendDynamics()
 					self.vehicle = hit
 					self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
-					#self.setParent(self.vehicle)
 
 			# Items
 			if 'Item' in hit:
@@ -312,7 +292,20 @@ class Player(EntityBase):
 				  self.inventory.add_item(hit['Item'].id)
 				  print ('added to inventory')
 				  print (self.inventory.items)
-				  hit.endObject() #
+				  hit.endObject()
+
+			# pickup
+			if 'pick' in hit:
+				if keyboard.events[bge.events.TKEY] == 1:
+					if self.lev != None:
+						self.lev.removeParent()
+						self.lev= None
+
+					else:
+						hit.position = self.set_loc.position
+						hit.setParent(self.set_loc)
+						self.lev= hit
+
 
 			# Small peice of code that can add a bunch of easy features
 			elif 'Toggle' in hit:
@@ -323,7 +316,6 @@ class Player(EntityBase):
 						hit['Toogle'] = 0
 					elif hit['Toogle'] == 0:
 						hit['Toogle'] = 1
-
 
 
 	def fast_travel(self, location):
