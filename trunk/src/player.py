@@ -9,6 +9,7 @@ from mathutils import Vector, Matrix
 from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
 from game import *
+from game import Game
 from item import Item
 from sound_manager import SoundManager
 from Inventory import Inventory
@@ -323,7 +324,6 @@ class Player(EntityBase):
 		# handle world cells
 
 	def handle_camera(self):
-		from game import Game
 		bge.logic.getCurrentScene().active_camera = self.camera # set active_camera
 
 		mpos = bge.logic.mouse.position
