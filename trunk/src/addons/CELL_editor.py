@@ -103,7 +103,7 @@ def bake_cell():
 					for p in object.game.properties:
 						#properties.append({p.name:p.value})
 						properties.append([p.name, p.value])
-					
+
 					if split_name not in known_objects:
 						split_name = "WTF" #yes this is actually important
 					print(split_name)
@@ -128,13 +128,14 @@ def bake_cell():
 	newcell = Cell()
 	newcell.props = props
 	newcell.lamps = lamps
-	if bpy.context.scene.myCollection2['terrain'].bool:
-		newcell.terrain = bpy.context.scene.myCollection2['terrain file path'].string
-	filename=bpy.context.scene.myCollection2['cell_filename'].string
-	
+	if bpy.context.scene.cell_props['terrain'].bool:
+		newcell.terrain = bpy.context.scene.cell_props['terrain file path'].string
+	filename=bpy.context.scene.cell_props['cell_filename'].string
 
-	
+
 	newcell.save(filename)
+
+
 ### Arguments
 args = {
 
@@ -146,8 +147,8 @@ args = {
 	}
 
 
-### Operator
 
+### Operator
 class te_3(bpy.types.Operator):
 
 	'''Bake a .cell file from scene.'''
@@ -167,9 +168,9 @@ def unregister():
 
 register()
 
-### Panel
 
-class OBJECT_PT_hello(bpy.types.Panel):
+### Panel
+class OBJECT_PT_cell_editor(bpy.types.Panel):
 	bl_label = "Cell Editor - v0.1"
 	bl_space_type = "PROPERTIES"
 	bl_region_type = "WINDOW"
@@ -190,7 +191,7 @@ class OBJECT_PT_hello(bpy.types.Panel):
 		box.operator("scene.bakecell")
 
 		for arg in args:
-			prop = bpy.context.scene.myCollection2[arg]
+			prop = bpy.context.scene.cell_props[arg]
 
 
 			colL.label(str(arg)+':')
@@ -208,11 +209,11 @@ class OBJECT_PT_hello(bpy.types.Panel):
 				colR.prop(prop, "string", text='')
 
 def register():
-	bpy.utils.register_class(OBJECT_PT_hello)
+	bpy.utils.register_class(OBJECT_PT_cell_editor)
 
 
 def unregister():
-	bpy.utils.unregister_class(OBJECT_PT_hello)
+	bpy.utils.unregister_class(OBJECT_PT_cell_editor)
 
 ### Property group
 
@@ -223,11 +224,11 @@ bpy.utils.register_class(PropertyGroup)
 
 
 ###
-bpy.types.Scene.myCollection = bpy.props.CollectionProperty(type = PropertyGroup)
-bpy.types.Scene.myCollection_index = bpy.props.IntProperty(min = -1, default = -1)
+#bpy.types.Scene.myCollection = bpy.props.CollectionProperty(type = PropertyGroup)
+#bpy.types.Scene.myCollection_index = bpy.props.IntProperty(min = -1, default = -1)
 
-bpy.types.Scene.myCollection2 = bpy.props.CollectionProperty(type = PropertyGroup)
-bpy.types.Scene.myCollection2_index = bpy.props.IntProperty(min = -1, default = -1)
+bpy.types.Scene.cell_props = bpy.props.CollectionProperty(type = PropertyGroup)
+bpy.types.Scene.cell_props_index = bpy.props.IntProperty(min = -1, default = -1)
 
 ##
 PropertyGroup.int = bpy.props.IntProperty()
@@ -241,34 +242,34 @@ PropertyGroup.string = bpy.props.StringProperty()
 def create_vars():
 
 	### Reset the property
-	for each in bpy.context.scene.myCollection:
-		bpy.context.scene.myCollection.remove(0)
+	for each in bpy.context.scene.cell_props:
+		bpy.context.scene.cell_props.remove(0)
 
 
 	for a in args:
 
 		add = bpy.props.StringProperty(default = 'Default')
-		bpy.context.scene.myCollection2.add()
+		bpy.context.scene.cell_props.add()
 
 		### Float
 		if isinstance(args[a], float) == True:
-			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].name = str(a)
-			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].float = args[a]
+			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
+			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].float = args[a]
 
 		### Int
 		if isinstance(args[a], int) == True:
-			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].name = str(a)
-			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].int = args[a]
+			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
+			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].int = args[a]
 
 		### String
 		if isinstance(args[a], str) == True:
-			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].name = str(a)
-			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].string = args[a]
+			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
+			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].string = args[a]
 
 		### Bool
 		if isinstance(args[a], bool) == True:
-			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].name = str(a)
-			bpy.context.scene.myCollection2[len(bpy.context.scene.myCollection2)-1].bool = args[a]
+			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
+			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].bool = args[a]
 
 
 
