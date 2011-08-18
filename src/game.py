@@ -23,7 +23,7 @@ class Game:
 	RUN_KEY = 7
 	AIM_WEAPON_KEY = 8
 	SHOOT_WEAPON_KEY = 9
-	MOUSE_SENSITIVITY = 10
+	MOUSE_SENSITIVITY = 6
 
 	entity = {\
 		'EntityBase': EntityBase,
