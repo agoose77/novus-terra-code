@@ -8,8 +8,8 @@ from mathutils import Vector, Matrix
 
 from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
-from game import *
-from game import Game
+#from game import Game
+#from game import *
 from item import Item
 from sound_manager import SoundManager
 from Inventory import Inventory
@@ -340,8 +340,8 @@ class Player(EntityBase):
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))
 		else:
-			mouse_mx = (mpos[0] - 0.5) * bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]#MOUSE_SENSITIVITY # bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]
-			mouse_my = (mpos[1] - 0.5) * bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]#MOUSE_SENSITIVITY
+			mouse_mx = (mpos[0] - 0.5) * 3#bge.logic.globalDict['game'].control_options[1]#MOUSE_SENSITIVITY # bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]
+			mouse_my = (mpos[1] - 0.5) * 3#bge.logic.globalDict['game'].control_options[1]#MOUSE_SENSITIVITY
 
 			cap = 1.5
 
