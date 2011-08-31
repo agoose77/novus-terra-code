@@ -8,8 +8,8 @@ import bge
 from entity_base import EntityBase
 from player import Player
 from item import Item
-from savefile import Savefile
-from sound_manager import SoundManager
+#from savefile import Savefile
+#from sound_manager import SoundManager
 from world import World
 
 class Game:
