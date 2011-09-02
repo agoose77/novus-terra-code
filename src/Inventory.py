@@ -1,9 +1,5 @@
 from item import Item
 
-###
-# you named this file wrong, and it wont let me change it :(
-###
-
 class Inventory:
     def __init__(self):
         self.items = {}
