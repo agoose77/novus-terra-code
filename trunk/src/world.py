@@ -23,7 +23,7 @@ class World:
 		self.entity_loading_queue = None
 
 		self.player = Player()
-		self.player.worldPosition = [15,15,5]
+		#self.player.worldPosition = [15,15,5] - WHY?
 
 		self.world_time = 0.0
 		self.world_time_rate = 1.0
@@ -34,6 +34,7 @@ class World:
 
 		###
 		self.gravity = Vector([0,0, -9.8])
+		self.world_effects = {'mist color':[0.0,0.0,0.0]}
 		self.current_weather = None
 		self.last_weather_change = 0.0
 

@@ -249,6 +249,9 @@ class CellManager:
 		if 'properties' in thing.__dict__:
 			for p in thing.properties:
 				new[p[0]] = p[1]
+				if p == 'ITEM':
+					print ('ITEM')
+
 		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 2.0)
 		return new
 

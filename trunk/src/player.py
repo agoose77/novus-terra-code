@@ -1,6 +1,6 @@
 import sys
 sys.path.append('./src/')
-
+#import pyglet
 import math
 
 import bge
@@ -68,7 +68,8 @@ class Player(EntityBase):
 		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
 
 		# Inventory
-		self.inventory= Inventory()
+		self.inventory = Inventory()
+		self.sounds = SoundManager()
 
 		# HACKS
 		self.temp_pos = 1
@@ -245,7 +246,7 @@ class Player(EntityBase):
 
 	def handle_weapon(self):
 		ray = self.camera.controllers[0].sensors['weapon_ray']
-		ray.range = self.current_weapon.range
+		ray.range = 200#self.current_weapon.range
 
 		hit = ray.hitObject
 		mouse = bge.logic.mouse
@@ -257,8 +258,19 @@ class Player(EntityBase):
 
 		# SHOOT
 		if mouse.events[bge.events.LEFTMOUSE] == 1:
+			self.sounds.play_sound('shoot_temp.ogg')
 			if hit != None:
-				pass
+
+				# Impact Effects
+				new = bge.logic.getCurrentScene().addObject('B_Hole', bge.logic.getCurrentController().owner, 100)
+				new.position = ray.hitPosition
+				new.alignAxisToVect(ray.hitNormal, 2, 1.0)
+				new.setParent(hit)
+				#print ('HITTED')
+				#print (hit)
+				if 'physics' in hit:
+					hit['physics'] = 1
+					#print ('SEt true')
 
 		# AIM
 		if mouse.events[bge.events.RIGHTMOUSE] == 1:
@@ -283,6 +295,7 @@ class Player(EntityBase):
 					hit['Vehicle'] = True
 					self.vehicle = hit
 					self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
+
 
 			# Items
 			if 'Item' in hit:
@@ -374,8 +387,11 @@ class Player(EntityBase):
 		self.handle_interactions()
 		self.temp_pos2()
 
-		if self.current_weapon != None:
-			self.handle_weapon()
+		#self.sounds.play_sound('walk_grass.ogg', wait=True)
+
+		#if self.current_weapon != None:
+		self.handle_weapon()
+		self.sounds.main()
 
 """
 ### Testing

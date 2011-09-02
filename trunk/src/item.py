@@ -23,5 +23,3 @@ class Item:
 
 	def activate_item(self):
 		pass
-
-

@@ -8,33 +8,25 @@ from paths import PATH_SOUNDS, PATH_MUSIC
 class SoundManager:
 
 	def __init__(self):
-		self.sounds = {}
-		self.playing_sound_effect_handles = []
-		self.playing_mucis_handle = None
-	
-	def load_sounds(self):
-		# load all sound files into memory
-		
-		for sound in os.listdir(PATH_SOUNDS):
-			self.sounds[sound] = aud.Factory.file(PATH_SOUNDS+sound).buffer()
-	
-	def play_sound(self, sound_name, position, type):
-		'''
-		types:
-		'''
-		
-		if sound_name in self.sounds.keys():
-			# sound is already loaded into memory
-			factory = self.sounds[sound_name]
-			handle = aud.device().play(factory)
-			self.playing_sound_effect_handles.append(handle)
+		self.sounds = []
+		self.handles = []
+
+	def play_sound(self, sound_name, type='play', wait=False):
+
+		info = {'Sound':sound_name,'Type':type}
+
+		if wait == True:
+			print ('Tre')
+			print (self.sounds)
+			print (self.handles)
+
+			if info in self.sounds:
+				print('He!')
+			else:
+				self.sounds.append(info)
 		else:
-			# sound is not loaded into memory, likely music
-			factory = aud.Factory.file(PATH_MUSIC+sound_name)
-			handle = aud.device.play().play(factory)
-			self.playing_music_handle = handle
-		
-		handle.location = position
+			self.sounds.append(info)
+
 
 	def stop_sound(self, sound_handle):
 		sound_handle.stop()
@@ -43,3 +35,19 @@ class SoundManager:
 		for handle in self.playing_sounds_effect_handles:
 			self.playing_sound_effect_handles.remove(handle)
 			handle.stop()
+
+	def main(self):
+		device = aud.device()
+
+		for sound in self.sounds:
+			if sound['Type'] == 'play':
+				handle = aud.Factory(PATH_SOUNDS+sound['Sound'])
+				h = device.play(handle)
+				sound['Handle'] = h
+				self.handles.append(h)
+				self.sounds.remove(sound)
+
+			for handle in self.handles:
+				#if sound['Handle'] != None:
+				if handle.status == False:
+					self.sounds.remove(handle)
