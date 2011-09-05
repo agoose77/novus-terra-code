@@ -58,16 +58,21 @@ class World:
 
 	def handle_time(self):
 		self.world_time += self.world_time_scale
-		bge.logic.getCurrentScene().objects[self.outside_lighting_ctrl]['time'] = self.world_time
 
-		if self.world_time > 120:
-			sky = bge.logic.getCurrentScene().objects[self.sky_dome]
+		### Exterior Cells only
+		print (cell.singleton.terrain)
 
-			mesh = sky.meshes[0]
-			amount = mesh.getVertexArrayLength(0)
-			for a in range(0, amount):
-				v = mesh.getVertex(0,a)
-				v.setRGBA([0,1,0,1])
+		if cell.singleton.terrain == True:
+			bge.logic.getCurrentScene().objects[self.outside_lighting_ctrl]['time'] = self.world_time
+
+			if self.world_time > 120:
+				sky = bge.logic.getCurrentScene().objects[self.sky_dome]
+
+				mesh = sky.meshes[0]
+				amount = mesh.getVertexArrayLength(0)
+				for a in range(0, amount):
+					v = mesh.getVertex(0,a)
+					v.setRGBA([0,1,0,1])
 
 
 	def main(self):
