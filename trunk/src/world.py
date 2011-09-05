@@ -7,6 +7,7 @@ from mathutils import Vector
 from dialogue_system import DialogueSystem
 from player import Player
 import game
+import cell
 
 class World:
 
@@ -58,7 +59,6 @@ class World:
 		self.world_time += self.world_time_rate
 
 
-
 	def main(self):
 
 		#JPLUR ENTITY HACKS
@@ -67,4 +67,5 @@ class World:
 
 		self.handle_time()
 		self.handle_weather()
+		#print (cell.singleton.terrain)
 
