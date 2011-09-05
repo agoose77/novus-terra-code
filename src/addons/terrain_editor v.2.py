@@ -259,7 +259,7 @@ def display_section():
 	terrain.focus[0] += offset[0]
 	terrain.focus[1] -= offset[1]
 	terrain.focus[2] = terrain.focus[0]+offset[2]
-	terrain.focus[3] = terrain.focus[1]+offset[3]
+	terrain.focus[3] = terrain.focus[1]-offset[3]
 	terrain.true_focus = [ offset[4],offset[5] ]
 	print( offset, "!!!!!!!" )
 	
@@ -343,7 +343,7 @@ def bake_world():
 	y1 = terrain.true_focus[1] #-int(terrain.tr_singleton.map.height/2)
 	terrain.tr_singleton.writeRect(data, x1,y1,
 									terrain.focus[2],terrain.focus[3] )
-
+	print(x1,y1, terrain.focus[2],terrain.focus[3] )
 def save_normals():
 	terrain.tr_singleton.save_normal_list( terrain.tr_singleton.filename[:-8]+"_norms.txt")
 
