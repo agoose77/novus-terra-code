@@ -22,15 +22,26 @@ terrain.tr_singleton = terrain.Map_Manager()
 
 ### Properties
 
-### Arguments
-args = {
-
-
-		'terrain file path':'./data/terrains/crosscrater.terrain',
-
-		'terrain':False,
-		'cell_filename':'./data/cells/new.cell'
+args1 = {
+	
+		'filename':'new.terrain',
+		'width':4096,
+		'height':4096,
+		'scale':1.0,
 	}
+
+args2 = {
+		'x':0,
+		'y':0,
+		'size':256, 
+	}
+	
+args3 = {
+		'xyscale':1.0,
+		'zscale':1.0
+	}
+
+arg_com = [args1, args2, args3]
 
 class PropertyGroup(bpy.types.PropertyGroup):
 	pass
@@ -38,11 +49,8 @@ bpy.utils.register_class(PropertyGroup)
 
 
 ###
-bpy.types.Scene.myCollection = bpy.props.CollectionProperty(type = PropertyGroup)
-bpy.types.Scene.myCollection_index = bpy.props.IntProperty(min = -1, default = -1)
-
-bpy.types.Scene.myCollection2 = bpy.props.CollectionProperty(type = PropertyGroup)
-bpy.types.Scene.myCollection2_index = bpy.props.IntProperty(min = -1, default = -1)
+bpy.types.Scene.terrain_props = bpy.props.CollectionProperty(type = PropertyGroup)
+bpy.types.Scene.terrain_props_index = bpy.props.IntProperty(min = -1, default = -1)
 
 ##
 PropertyGroup.int = bpy.props.IntProperty()
@@ -51,24 +59,46 @@ PropertyGroup.bool = bpy.props.BoolProperty(default = False)
 PropertyGroup.string = bpy.props.StringProperty()
 
 
-
-
 ###############################
 ### Create all variables - Operator
 def create_vars():
-	args1 = {
-	
-		'filename':'new.terrain',
-		'width':4096,
-		'height':4096
-	}
 
-	args2 = {
-		#'Load Props':True,
-		'x':-128,
-		'y':128,
-		'size':128,	
-	}
+	### Reset the property
+	for each in bpy.context.scene.terrain_props:
+		bpy.context.scene.terrain_props.remove(0)
+
+
+	for args in arg_com:
+		for a in args:
+	
+			add = bpy.props.StringProperty(default = 'Default')
+			bpy.context.scene.terrain_props.add()
+	
+			### Float
+			if isinstance(args[a], float) == True:
+				bpy.context.scene.terrain_props[len(bpy.context.scene.terrain_props)-1].name = str(a)
+				bpy.context.scene.terrain_props[len(bpy.context.scene.terrain_props)-1].float = args[a]
+	
+			### Int
+			if isinstance(args[a], int) == True:
+				bpy.context.scene.terrain_props[len(bpy.context.scene.terrain_props)-1].name = str(a)
+				bpy.context.scene.terrain_props[len(bpy.context.scene.terrain_props)-1].int = args[a]
+	
+			### String
+			if isinstance(args[a], str) == True:
+				bpy.context.scene.terrain_props[len(bpy.context.scene.terrain_props)-1].name = str(a)
+				bpy.context.scene.terrain_props[len(bpy.context.scene.terrain_props)-1].string = args[a]
+	
+			### Bool
+			if isinstance(args[a], bool) == True:
+				bpy.context.scene.terrain_props[len(bpy.context.scene.terrain_props)-1].name = str(a)
+				bpy.context.scene.terrain_props[len(bpy.context.scene.terrain_props)-1].bool = args[a]
+	
+
+
+
+
+
 	
 
 ###############################
@@ -105,9 +135,9 @@ def CreateMeshUsingMatrix(VertIndices, Verts):
 	new_object = bpy.data.objects.new(name, mesh)
 	new_object.data = mesh
 
-	d = terrain.focus
+	d = terrain.true_focus
 	x,y = d[0], d[1]
-	new_object.location = [x, y,0]
+	new_object.location = [x*terrain.tr_singleton.map.scale, y*terrain.tr_singleton.map.scale,0]
 
 
 	terrain.current = new_object
@@ -143,11 +173,15 @@ def CreateMeshUsingMatrix(VertIndices, Verts):
 	for i, uv in enumerate(uvtex.data):
 		uvs = uv.uv1, uv.uv2, uv.uv3, uv.uv4
 		for j, v_idx in enumerate(mesh.faces[i].vertices):
-
+			w = terrain.tr_singleton.map.width
+			h = terrain.tr_singleton.map.height
+			ms = terrain.tr_singleton.map.scale
 			# apply the location of the vertex as a UV
-			sc = 1/float(terrain.tr_singleton.map.width)
-			x = terrain.focus[0]*sc+.5
-			y = terrain.focus[1]*sc+.5
+			sc = 1/float(w*ms)
+
+			x = terrain.true_focus[0]*sc + .5/ms
+			y = terrain.true_focus[1]*sc + .5/ms
+
 			v = mesh.vertices[v_idx].co.xy
 			v = v * sc
 			v[0] += x
@@ -184,7 +218,9 @@ def startASCIIimport(data):
 		xVal = 0
 		vertRow = []
 		for item in height_x:
-			t_vertice = (xy_val[xVal], -xy_val[yVal], heightMatrix[yVal][xVal]*.1)
+			t_vertice = (xy_val[xVal]*terrain.tr_singleton.map.scale, 
+						-xy_val[yVal]*terrain.tr_singleton.map.scale, 
+						heightMatrix[yVal][xVal]*(.01)*terrain.tr_singleton.map.scale)
 			rawVertCollection.append(t_vertice)
 
 			vertRow.append(vertNum)
@@ -194,6 +230,7 @@ def startASCIIimport(data):
 		VertIndices.append(vertRow)
 
 	# done here, lets make a mesh!
+	print( terrain.tr_singleton.map.scale)
 	CreateMeshUsingMatrix(VertIndices, rawVertCollection)
 
 ###############################
@@ -201,8 +238,8 @@ def startASCIIimport(data):
 def display_section():
 
 
-	loc = [bpy.context.scene.myCollection2['x'].int,bpy.context.scene.myCollection2['y'].int]
-	size = bpy.context.scene.myCollection2['size'].int
+	loc = [bpy.context.scene.terrain_props['x'].int,bpy.context.scene.terrain_props['y'].int]
+	size = bpy.context.scene.terrain_props['size'].int
 	#now organize this so it's giving top left and bottom right corners
 	focus = []
 
@@ -213,8 +250,22 @@ def display_section():
 	terrain.focus = focus
 	p = focus
 
-	data = terrain.tr_singleton.readRect_addon(p[0],p[1],p[2],p[3])
-
+	returned = terrain.tr_singleton.readRect_addon(p[0],p[1],p[2],p[3])
+	
+	data = returned[0]
+	offset = returned[1]
+	#keeping the section in the right place if it was requesting out of map info
+	terrain.true_focus = [ terrain.focus[0],terrain.focus[1] ]
+	terrain.focus[0] += offset[0]
+	terrain.focus[1] -= offset[1]
+	terrain.focus[2] = terrain.focus[0]+offset[2]
+	terrain.focus[3] = terrain.focus[1]+offset[3]
+	terrain.true_focus = [ offset[4],offset[5] ]
+	print( offset, "!!!!!!!" )
+	
+	width = len(data[0])
+	height = len(data)
+	
 
 	startASCIIimport(data)
 
@@ -223,14 +274,37 @@ def display_section():
 
 ###############################
 def new_terrain():
-	name=bpy.context.scene.myCollection2['filename'].string
-	width=bpy.context.scene.myCollection2['width'].int
-	height=bpy.context.scene.myCollection2['height'].int
-	terrain.tr_singleton.new(width,height, "./data/terrains/"+name, .1)
+	name=bpy.context.scene.terrain_props['filename'].string
+	width=bpy.context.scene.terrain_props['width'].int
+	height=bpy.context.scene.terrain_props['height'].int
+	scale=bpy.context.scene.terrain_props['scale'].float
+	terrain.tr_singleton.new(width,height, "./data/terrains/"+name, scale)
 
-def load_terrain():
-	name=bpy.context.scene.myCollection2['filename'].string
-	terrain.tr_singleton.load("./data/terrains/"+name)
+def load_terrain(filename):
+	terrain.tr_singleton.load(filename)
+	
+def load_png(filepathr):
+	print(filepathr)
+	bpy.ops.image.open('INVOKE_DEFAULT', filepath=filepathr) 
+	img =  bpy.data.images[ filepathr.split('\\')[-1:][0] ] 
+	print(dir(img), img, img.size[0], img.size[1])
+	terrain.tr_singleton.new(img.size[0], img.size[1], "./data/terrains/"+img.name.split('.')[0]+'.terrain', 1.0)
+	print("DEPTH: ", img.depth)
+	pix = list(img.pixels)
+	pix.reverse()
+	print(pix[0:20])
+	for i in range( img.size[0] * img.size[1] ):
+		#if i%10000 == 0: print(i)
+		terrain.tr_singleton.map.buffer[i] = int( (pix[i*4+3]*2-1)* 32760 )
+	
+def apply_scale():
+	terrain.tr_singleton.map.scale = bpy.context.scene.terrain_props['xyscale'].float
+	for i in range(len(terrain.tr_singleton.map.buffer)):
+		terrain.tr_singleton.map.buffer[i] = int(float(terrain.tr_singleton.map.buffer[i])* bpy.context.scene.terrain_props['zscale'].float )
+		
+	#terrain.tr_singleton.save(terrain.tr_singleton.filename)
+	#terrain.tr_singleton.load(terrain.tr_singleton.filename)
+	print('finished scaling..')
 
 def create_texture():
 	if 'Terrain' not in bpy.data.materials.keys():
@@ -256,7 +330,7 @@ def bake_world():
 	height = []
 	normals = []
 	for v in d.vertices:
-		height.append( int(v.co[2]*(1/terrain.tr_singleton.map.scale)) )
+		height.append( int(v.co[2]*100/terrain.tr_singleton.map.scale) )
 
 		tt = []
 		for i in range(3):
@@ -265,7 +339,9 @@ def bake_world():
 
 
 	data = [height, normals]
-	terrain.tr_singleton.writeRect(data, terrain.focus[0],terrain.focus[1],
+	x1 = terrain.true_focus[0] #-int(terrain.tr_singleton.map.width/2)
+	y1 = terrain.true_focus[1] #-int(terrain.tr_singleton.map.height/2)
+	terrain.tr_singleton.writeRect(data, x1,y1,
 									terrain.focus[2],terrain.focus[3] )
 
 def save_normals():
@@ -392,9 +468,31 @@ def unregister():
 
 register()
 
+class te_3(bpy.types.Operator):
+
+	'''Changes the scale of the current .terrain'''
+
+	bl_idname = "scene.applyscale"
+	bl_label = "Apply Scale"
+
+	def execute(self, context):
+		apply_scale()
+		return {'FINISHED'}
+
+def register():
+	bpy.utils.register_class(te_3)
+
+def unregister():
+	bpy.utils.unregister_class(te_3)
+
+register()
+
 ### LOAD
 
 class terrain_open(bpy.types.Operator, ImportHelper):
+	
+	'''Open an existing .terrain file.'''
+	
 	bl_idname = "scene.testopen"
 	bl_label = "Load .terrain file"
 
@@ -407,8 +505,7 @@ class terrain_open(bpy.types.Operator, ImportHelper):
 
 	def execute(self, context):
 		import bpy, os
-		readBvhFile(context, self.properties.filepath, 
-			context.scene.MyBvhRot90, context.scene.MyBvhScale)
+		load_terrain( self.properties.filepath ) ### 
 		return{'FINISHED'}  
 
 	def invoke(self, context, event):
@@ -422,6 +519,43 @@ def unregister():
 	bpy.utils.unregister_class(terrain_open)
 
 register()
+
+### LOAD PNG
+
+class png_open(bpy.types.Operator):
+	
+	'''Open a 32bit .tif file as a new .terrain'''
+	
+	bl_idname = "scene.pngopen"
+	bl_label = "Load .tif file"
+
+	# From ImportHelper. Filter filenames.
+
+	filename_ext = ".tif"
+	filter_glob = bpy.props.StringProperty(default="*.tif", options={'HIDDEN'})
+
+	filepath = bpy.props.StringProperty(name="File Path", 
+		maxlen=1024, default="")
+
+	def execute(self, context):
+		import bpy, os
+		load_png( self.properties.filepath ) ### 
+		return{'FINISHED'}  
+
+	def invoke(self, context, event):
+		context.window_manager.fileselect_add(self)
+		return {'RUNNING_MODAL'}  
+	
+def register():
+	bpy.utils.register_class(png_open)
+
+def unregister():
+	bpy.utils.unregister_class(png_open)
+
+register()
+
+
+
 
 
 ### Panel
@@ -447,7 +581,8 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 
 		colR.operator("scene.new_terrain", icon='NEW')
 		colL.operator("scene.testopen", icon='FILE_FOLDER')
-
+		colL.operator("scene.pngopen", icon='FILE_FOLDER')
+		
 		row = colR.row()
 		colR.prop
 
@@ -458,8 +593,8 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 		split = colR.split(percentage=0.4)
 		colL = split.column()
 		colR = split.column()
-		for arg in com[0]:
-			prop = bpy.context.scene.myCollection2[arg]
+		for arg in arg_com[0]:
+			prop = bpy.context.scene.terrain_props[arg]
 
 			row = box.row()
 
@@ -468,16 +603,16 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 
 			colL.label(str(arg)+':')
 
-			if isinstance(args[arg], float) == True:
+			if isinstance(args1[arg], float) == True:
 				colR.prop(prop, "float", text='')
 
-			elif isinstance(args[arg], bool) == True:
+			elif isinstance(args1[arg], bool) == True:
 				colR.prop(prop, "bool", text='')
 
-			elif isinstance(args[arg], int) == True:
+			elif isinstance(args1[arg], int) == True:
 				colR.prop(prop, "int", text='')
 
-			elif isinstance(args[arg], str) == True:
+			elif isinstance(args1[arg], str) == True:
 				colR.prop(prop, "string", text='')
 
 
@@ -492,13 +627,9 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 		colL.label('Display Section:')
 		colR.operator("scene.display_section")
 
-		###
-		import variables
-		args = variables.world_vars()
 
-
-		for arg in args:
-			prop = bpy.context.scene.myCollection2[arg]
+		for arg in arg_com[1]:
+			prop = bpy.context.scene.terrain_props[arg]
 
 			row = box.row()
 
@@ -508,18 +639,55 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 
 			colL.label(str(arg)+':')
 
-			if isinstance(args[arg], float) == True:
+			if isinstance(args2[arg], float) == True:
 				colR.prop(prop, "float", text='')
 
-			elif isinstance(args[arg], bool) == True:
+			elif isinstance(args2[arg], bool) == True:
 				colR.prop(prop, "bool", text='')
 
-			elif isinstance(args[arg], int) == True:
+			elif isinstance(args2[arg], int) == True:
 				colR.prop(prop, "int", text='')
 
-			elif isinstance(args[arg], str) == True:
+			elif isinstance(args2[arg], str) == True:
 				colR.prop(prop, "string", text='')
+		
+		
+				
+		### ALTER SCALE
+		box = layout.box()
+		row = box.row()
+		split = row.split(percentage=0.4)
+		colL = split.column()
+		colR = split.column()
 
+
+
+
+		for arg in arg_com[2]:
+			prop = bpy.context.scene.terrain_props[arg]
+
+			row = box.row()
+
+			split = row.split(percentage=0.4)
+			colL = split.column()
+			colR = split.column()
+
+			colL.label(str(arg)+':')
+
+			if isinstance(args3[arg], float) == True:
+				colR.prop(prop, "float", text='')
+
+			elif isinstance(args3[arg], bool) == True:
+				colR.prop(prop, "bool", text='')
+
+			elif isinstance(args3[arg], int) == True:
+				colR.prop(prop, "int", text='')
+
+			elif isinstance(args3[arg], str) == True:
+				colR.prop(prop, "string", text='')
+				
+		colL.label('Change scale:')
+		colR.operator("scene.applyscale")
 
 
 		###
@@ -534,34 +702,6 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 
 		colL.label('Save Normals as text:')
 		colR.operator("scene.save_norms")
-
-		###
-		import variables
-		args = variables.bake_vars()
-
-
-		for arg in args:
-			prop = bpy.context.scene.myCollection2[arg]
-
-			row = box.row()
-
-			split = row.split(percentage=0.4)
-			colL = split.column()
-			colR = split.column()
-
-			colL.label(str(arg)+':')
-
-			if isinstance(args[arg], float) == True:
-				colR.prop(prop, "float", text='')
-
-			elif isinstance(args[arg], bool) == True:
-				colR.prop(prop, "bool", text='')
-
-			elif isinstance(args[arg], int) == True:
-				colR.prop(prop, "int", text='')
-
-			elif isinstance(args[arg], str) == True:
-				colR.prop(prop, "string", text='')
 
 		###
 		box = layout.box()
@@ -587,4 +727,5 @@ def unregister():
 
 
 if __name__ == "__main__":
+	create_vars()
 	register()
