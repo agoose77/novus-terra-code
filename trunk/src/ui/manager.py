@@ -1,11 +1,3 @@
-import sys, bge
-sys.path.append( bge.logic.expandPath("//src//bgui"))
-
-
-sys.path.append('./src/bgui/') #the SVN external is all the bgui folders not just the module
-sys.path.append('./data/') #we have a theme folder in data
-
-
 try:
 	import bge
 	import bgui
@@ -15,13 +7,14 @@ except:
 #import widgets from the ui module here
 from .loading import *
 from .start import *
+from paths import *
 
 FONTPATH = './data/fonts/'
 
 class System(bgui.System):
 	def __init__(self):
 		# Initiate the system
-		bgui.System.__init__(self, './data/themes/default')
+		bgui.System.__init__(self, safepath('./data/themes/default'))
 		
 		# Use a frame to store all of our widgets
 		self.frame = bgui.Frame(self, 'window', border=0)

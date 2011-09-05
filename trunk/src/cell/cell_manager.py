@@ -13,6 +13,7 @@ try:
 	import bge
 	import ui
 	import mathutils
+	from paths import *
 except:
 	print("BGE imports failed, normal if you are running the cell editor")
 

@@ -1,10 +1,4 @@
 import sys, bge
-sys.path.append( bge.logic.expandPath("//src//bgui"))
-
-
-sys.path.append('./src/')
-sys.path.append('./src/bgui/') #the SVN external is all the bgui folders not just the module
-sys.path.append('./data/') #we have a theme folder in data
 
 import tweener
 import cell
