@@ -1,5 +1,6 @@
 import sys
 sys.path.append('./src/')
+sys.path.append('./src/owyl/')
 #import pyglet
 import math
 
@@ -8,6 +9,8 @@ from mathutils import Vector, Matrix
 
 from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
+from behavior_tree import BehaviorTree
+
 #from game import Game
 #from game import *
 from item import Item
@@ -16,6 +19,12 @@ from Inventory import Inventory
 
 import ui
 
+
+###
+import owyl
+from owyl import blackboard
+
+###
 class Player(EntityBase):
 
 	def __init__(self):
@@ -29,6 +38,9 @@ class Player(EntityBase):
 		self.fatigue = 0.0
 		self.walk_speed = 8.0
 		self.run_speed = 15.0
+
+		self.bb = blackboard
+	#	self.tree = self.build_tree()
 
 		self.impants = []
 		self.stats = {'temp':'temp'}
@@ -67,6 +79,11 @@ class Player(EntityBase):
 		self.movement_state_machine.add_transition('walk', 'vehicle', self.has_entered_vehicle)
 		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
 
+		# BF
+		#self.b_tree = BehaviorTree(self)
+		#self.b_tree.add_condition('Hungry', self.if_hungry)
+		#self.b_tree.add_action('Hungry', self.test123)
+
 		# Inventory
 		self.inventory = Inventory()
 		self.sounds = SoundManager()
@@ -78,9 +95,17 @@ class Player(EntityBase):
 
 
 	### ### ###
+	def if_hungry(self):
+		return True
+
 	# Animations
 	def handle_animations(self):
 		pass
+
+	def test123(self):
+		print ('TESTSETISEJTISDNFIDIFSDHf')
+
+
 
 	# Update Animations when current weapon changes
 	def update_animations(self):
@@ -283,12 +308,16 @@ class Player(EntityBase):
 		hit = ray.hitObject
 		keyboard = bge.logic.keyboard
 
+		if keyboard.events[bge.events.BKEY] == 1:
+			self.build_tree()
 
 		if hit != None:
 			if 'Door' in hit:
 				print (hit['Door'])
 				if keyboard.events[bge.events.EKEY] == 1:
 					ui.singleton.show_loading('./data/cells/'+ hit['Door'] +'.cell')
+					self.position = bge.logic.getCurrentScene.objects[hit['Start Object']].position
+					self.orientation = bge.logic.getCurrentScene.objects[hit['Start Object']].orientation
 
 			if 'Vehicle' in hit:
 				if keyboard.events[bge.events.EKEY] == 1:
@@ -352,6 +381,7 @@ class Player(EntityBase):
 
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))
+
 		else:
 			mouse_mx = (mpos[0] - 0.5) * 3#bge.logic.globalDict['game'].control_options[1]#MOUSE_SENSITIVITY # bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]
 			mouse_my = (mpos[1] - 0.5) * 3#bge.logic.globalDict['game'].control_options[1]#MOUSE_SENSITIVITY
@@ -380,6 +410,7 @@ class Player(EntityBase):
 	def main(self):
 		EntityBase.main(self)
 		self.movement_state_machine.main()
+		#self.b_tree.main()
 
 		if self.camera_on == True:
 			self.handle_camera()
