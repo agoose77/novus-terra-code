@@ -109,7 +109,6 @@ class CellManager:
 			self.clean_object_list.append(entry)
 
 
-
 	def load(self, filepath):
 		print("cell_manager.load()")
 		self.cleanup()
