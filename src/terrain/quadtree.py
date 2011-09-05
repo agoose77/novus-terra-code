@@ -3,12 +3,17 @@ from math import floor, sqrt, pow
 from mathutils import Vector
 
 
+
+
 import terrain
 try:
 	import bge
 	scene = bge.logic.getCurrentScene()
-except:
-	pass
+	from paths import *
+except: #running the addon
+	def anon(filename, arg1):
+		return open(filename, arg1)
+	safeopen = anon
 
 
 
@@ -179,7 +184,7 @@ class Node(object):
 		d = sqrt(pow(x, 2) + pow(y,2))
 
 
-		if d < self.size*1.6:
+		if d < self.size*1.8:
 			return True
 
 	def remove(self, object):
