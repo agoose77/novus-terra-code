@@ -1,12 +1,20 @@
 from array import array
 import pickle, time
 from math import pow
+try:
+	import bge
+	scene = bge.logic.getCurrentScene()
+	from paths import *
+except: #running the addon
+	def anon(filename, arg1):
+		return open(filename, arg1)
+	safeopen = anon
 
 class Map:
 	def __init__(self,width,height,scale):
 		self.width = width
 		self.height = height
-		self.scale = .1
+		self.scale = scale
 		#height
 		self.buffer = array('h', [0]*self.width*self.height)
 		#normals
@@ -28,7 +36,7 @@ class Map_Manager:
 		
 	def load(self, filename):
 		print(filename)
-		fo = open(filename, 'rb')
+		fo = safeopen(filename, 'rb')
 		self.map = pickle.load( fo )
 		fo.close
 		self.filename = filename
@@ -40,9 +48,6 @@ class Map_Manager:
 		#data = [self.map.width, self.map.height, self.map.scale, list(self.map.buffer), list(self.map.nx), list(self.map.ny), list(self.map.nz)]
 		#f = open(filename+'.rc', 'wb')
 		#f.write( rencode.dumps(data) )
-		
-	def fart(self):
-		return "poop"
 		
 	def save_normal_list(self, filename):
 		temp = []
@@ -76,15 +81,24 @@ class Map_Manager:
 			y1 = y2
 			y2 = temp
 		
-		if x1 < 0: x1 = 0
-		if y1 < 0: y1 = 0
+		offset = [0,0]
+		
+		if x1 < 0: 
+			offset[0] = abs(x1)
+			x1 = 0
+		if y1 < 0: 
+			offset[1] = abs(y1)
+			y1 = 0
 		if x2 > self.map.width: x2 = self.map.width
 		if y2 > self.map.height: y2 = self.map.height
 		width = abs(x2 - x1)
 		height = abs(y2 - y1)
+		print( 'popcop:',x1,y1)
+		xy = self.translate_xy_terrain_back( [x1,y1] )
+		offset += [width,height,xy[0],xy[1]] #really funky order
 		l = []
 		
-		
+		#also needs to return the size and top left
 		
 		for i in range(height):
 			temp = []
@@ -101,7 +115,7 @@ class Map_Manager:
 			l.append(temp)
 		
 			
-		return l
+		return [l, offset]
 		
 	def writeRect(self, data, x1,y1,x2,y2, sample=1):
 		#data is [height, normals]
@@ -128,6 +142,8 @@ class Map_Manager:
 		for i in range(height):
 			for j in range(width):
 				c = x1 + (y1+(i*sample))*self.map.width + (j*sample) 
+				if data[0][t] < -32766: data[0][t] = -32766
+				if data[0][t] > 32766: data[0][t] = 32766
 				self.map.buffer[ c ] = data[0][t]
 				self.map.nx[ c ] = data[1][t][0]
 				self.map.ny[ c ] = data[1][t][1]
@@ -157,6 +173,16 @@ class Map_Manager:
 		h = self.map.height
 		
 		xy[0] = xy[0]+int(w/2)
+		xy[1] = -xy[1]+int(h/2)
+		return xy
+		
+	def translate_xy_terrain_back(self, xy):
+		#blender coo are +x-y centered on 0,0
+		#map coo are +x+y
+		w = self.map.width	
+		h = self.map.height
+		
+		xy[0] = xy[0]-int(w/2)
 		xy[1] = -xy[1]+int(h/2)
 		return xy
 		
@@ -232,13 +258,13 @@ class Map_Manager:
 				if c >= self.map.width*self.map.height:
 					c = 0
 				if i == 0:
-					top_cache.append(self.map.buffer[c]* self.map.scale*.005 -.03)
+					top_cache.append(self.map.buffer[c]* self.map.scale*.005 - (.0002*node.size))
 				elif i == 32:
-					bottom_cache.append(self.map.buffer[c]* self.map.scale*.005-.03)
+					bottom_cache.append(self.map.buffer[c]* self.map.scale*.005-(.0002*node.size))
 				if j == 0:
-					left_cache.append(self.map.buffer[c]* self.map.scale*.005-.03)
+					left_cache.append(self.map.buffer[c]* self.map.scale*.005-(.0002*node.size))
 				elif j == 32:
-					right_cache.append(self.map.buffer[c]* self.map.scale*.005-.03)
+					right_cache.append(self.map.buffer[c]* self.map.scale*.005-(.0002*node.size))
 				
 				
 		#Now lets set the skirt

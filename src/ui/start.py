@@ -1,17 +1,11 @@
 import bge
 import sys
-sys.path.append( bge.logic.expandPath("//src//bgui"))
-
-
-import sys
-sys.path.append('./src/')
-sys.path.append('./src/bgui/') #the SVN external is all the bgui folders not just the module
-sys.path.append('./data/') #we have a theme folder in data
 
 import tweener
 import cell
 import bgui
 import bge
+from paths import *
 
 class Start(bgui.Widget):
 	"""Frame for storing other widgets"""
@@ -29,7 +23,7 @@ class Start(bgui.Widget):
 		self.bg.colors = [(0,0,0,1) for i in range(4)]
 		self.win = bgui.Frame(self, 'win', size=[741, 450], pos=[0,700],
 			options=bgui.BGUI_THEMED|bgui.BGUI_CENTERED)
-		self.win.img = bgui.Image(self.win, 'image', './data/textures/nt.png', size=[731, 235], pos=[5, 210],
+		self.win.img = bgui.Image(self.win, 'image', safepath('./data/textures/nt.png'), size=[731, 235], pos=[5, 210],
 			options = bgui.BGUI_THEMED|bgui.BGUI_CENTERX|bgui.BGUI_CACHE)
 			
 		self.button = bgui.FrameButton(self.win, 'button', text='ENTER GAME', size=[110, 30], pos=[100, 120],
@@ -51,7 +45,7 @@ class Start(bgui.Widget):
 	
 	def start_game(self, data):
 		try:
-			fo = open('./data/cells/'+self.input.text)
+			fo = safeopen('./data/cells/'+self.input.text, 'rb')
 			fo.close()
 			self.parent.show_loading('./data/cells/'+self.input.text)
 		except:
@@ -60,7 +54,7 @@ class Start(bgui.Widget):
 			
 	def start_vehicle(self, data):
 		try:
-			fo = open('./data/cells/vehicle.cell')
+			fo = safeopen('./data/cells/vehicle.cell', 'rb')
 			fo.close()
 			self.parent.show_loading('./data/cells/vehicle.cell')
 		except:
