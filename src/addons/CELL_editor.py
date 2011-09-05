@@ -125,9 +125,23 @@ def bake_cell():
 
 	for entry in props:
 				print (len(entry))
+
+    ### Cell FX Settings
+	FX = {}
+
+	FX['Bloom'] = bpy.context.scene.cell_props['Bloom'].float
+	FX['HDR'] = bpy.context.scene.cell_props['HDR'].float
+	FX['CC'] = bpy.context.scene.cell_props['Color Tint'].float
+
+	FX['Color R'] = bpy.context.scene.cell_props['Color R'].float
+	FX['Color B'] = bpy.context.scene.cell_props['Color B'].float
+	FX['Color G'] = bpy.context.scene.cell_props['Color G'].float
+
 	newcell = Cell()
 	newcell.props = props
 	newcell.lamps = lamps
+	newcell.fx = FX
+
 	if bpy.context.scene.cell_props['terrain'].bool:
 		newcell.terrain = bpy.context.scene.cell_props['terrain file path'].string
 	filename=bpy.context.scene.cell_props['cell_filename'].string
@@ -146,6 +160,16 @@ args = {
 		'cell_filename':'./data/cells/new.cell'
 	}
 
+fx_args = {
+
+		'HDR':False,
+        'Bloom': True,
+
+        'Color Tint':True,
+		'Color R': 1.0,
+        'Color B': 1.0,
+        'Color G': 1.0,
+	}
 
 
 ### Operator
@@ -208,10 +232,34 @@ class OBJECT_PT_cell_editor(bpy.types.Panel):
 			elif isinstance(args[arg], str) == True:
 				colR.prop(prop, "string", text='')
 
+
+        ###
+		box = layout.box()
+		row = box.row()
+		split = row.split(percentage=0.4)
+		colL = split.column()
+		colR = split.column()
+
+		for arg in fx_args:
+			prop = bpy.context.scene.cell_props[arg]
+
+			colL.label(str(arg)+':')
+
+			if isinstance(fx_args[arg], float) == True:
+				colR.prop(prop, "float", text='')
+
+			elif isinstance(fx_args[arg], bool) == True:
+				colR.prop(prop, "bool", text='')
+
+			elif isinstance(fx_args[arg], int) == True:
+				colR.prop(prop, "int", text='')
+
+			elif isinstance(fx_args[arg], str) == True:
+				colR.prop(prop, "string", text='')
+
+
 def register():
 	bpy.utils.register_class(OBJECT_PT_cell_editor)
-
-
 def unregister():
 	bpy.utils.unregister_class(OBJECT_PT_cell_editor)
 
@@ -230,6 +278,10 @@ bpy.utils.register_class(PropertyGroup)
 bpy.types.Scene.cell_props = bpy.props.CollectionProperty(type = PropertyGroup)
 bpy.types.Scene.cell_props_index = bpy.props.IntProperty(min = -1, default = -1)
 
+###
+bpy.types.Scene.cell_FX_props = bpy.props.CollectionProperty(type = PropertyGroup)
+bpy.types.Scene.cell_FX_props = bpy.props.IntProperty(min = -1, default = -1)
+
 ##
 PropertyGroup.int = bpy.props.IntProperty()
 PropertyGroup.float = bpy.props.FloatProperty()
@@ -245,31 +297,35 @@ def create_vars():
 	for each in bpy.context.scene.cell_props:
 		bpy.context.scene.cell_props.remove(0)
 
+	arg_list = []
+	arg_list.append(args)
+	arg_list.append(fx_args)
 
-	for a in args:
+	for arg in arg_list:
+		for a in arg:
 
-		add = bpy.props.StringProperty(default = 'Default')
-		bpy.context.scene.cell_props.add()
+			add = bpy.props.StringProperty(default = 'Default')
+			bpy.context.scene.cell_props.add()
 
-		### Float
-		if isinstance(args[a], float) == True:
-			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
-			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].float = args[a]
+			### Float
+			if isinstance(arg[a], float) == True:
+				bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
+				bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].float = arg[a]
 
-		### Int
-		if isinstance(args[a], int) == True:
-			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
-			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].int = args[a]
+			### Int
+			if isinstance(arg[a], int) == True:
+				bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
+				bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].int = arg[a]
 
-		### String
-		if isinstance(args[a], str) == True:
-			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
-			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].string = args[a]
+			### String
+			if isinstance(arg[a], str) == True:
+				bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
+				bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].string = arg[a]
 
-		### Bool
-		if isinstance(args[a], bool) == True:
-			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
-			bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].bool = args[a]
+			### Bool
+			if isinstance(arg[a], bool) == True:
+				bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].name = str(a)
+				bpy.context.scene.cell_props[len(bpy.context.scene.cell_props)-1].bool = arg[a]
 
 
 
