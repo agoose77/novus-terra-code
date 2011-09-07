@@ -295,7 +295,10 @@ def load_png(filepathr):
 	print(pix[0:20])
 	for i in range( img.size[0] * img.size[1] ):
 		#if i%10000 == 0: print(i)
-		terrain.tr_singleton.map.buffer[i] = int( (pix[i*4+3]*2-1)* 32760 )
+		try:
+			terrain.tr_singleton.map.buffer[i] = int( (pix[i*4+3]-.5)* 32760 )
+		except:
+			print("!!!!!!!!!", (pix[i*4+3]*2-1), (pix[i*4+3]-.5)* 32760 )
 	
 def apply_scale():
 	terrain.tr_singleton.map.scale = bpy.context.scene.terrain_props['xyscale'].float
