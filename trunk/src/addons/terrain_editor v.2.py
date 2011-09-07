@@ -336,7 +336,10 @@ def bake_world():
 		for i in range(3):
 			tt.append( int(v.normal[i]*127) )
 		normals.append( tt )
-
+	
+	# sometimes normals are missing (like in a published map )
+	terrain.tr_singleton.reset_norms()
+		
 
 	data = [height, normals]
 	x1 = terrain.true_focus[0] #-int(terrain.tr_singleton.map.width/2)
