@@ -154,7 +154,48 @@ class CellManager:
 		terrain.tr_singleton = terrain.Map_Manager() #should do this in cell manager init
 		terrain.tr_singleton.load(filename)
 		terrain.cq_singleton = terrain.Chunk_Que()
-		terrain.qt_singleton = terrain.Quadtree(2048, [0,0], 1, max_depth=7)
+		width = terrain.tr_singleton.map.width
+		height = terrain.tr_singleton.map.height
+		best = width
+		if height > best: best = height
+		## 4096 7
+		## 2048 6
+		## 1024 5
+		## 512  4
+		## 256  3
+		## 128  2
+		## 64   1
+		size, depth = 32, 0
+		
+		if best <= 4099:
+			size = 4096
+			depth = 7
+		if best <= 2048:
+			size = 2048
+			depth = 6
+		if best <= 1024:
+			size = 1024
+			depth = 5
+		if best <= 512:
+			size = 512
+			depth = 4
+		if best <= 256:
+			size = 256
+			depth = 3
+		if best <= 128:
+			size = 128
+			depth = 2	
+		if best <= 64:
+			size = 64
+			depth = 1
+		
+		
+		
+		
+		
+		
+		print( "()()(): ", size, depth, terrain.tr_singleton.map.scale )
+		terrain.qt_singleton = terrain.Quadtree(int(size/2), [0,0], 1, max_depth=depth, scale = terrain.tr_singleton.map.scale)
 		self.terrain = 1
 
 	def load_internal(self, filepath):
@@ -296,6 +337,8 @@ class CellManager:
 				for prop in entry:
 					if prop.name == "player_location":
 						position = mathutils.Vector( prop.co )
+		if 'explorer' in scene.objects:
+			position = scene.objects['explorer'].position
 		if position == 0:
 			position = mathutils.Vector([0,0,0])
 		if 'outdoor_sun_shadow' in scene.objects:
@@ -322,7 +365,7 @@ class CellManager:
 			for entry in self.props_in_game:
 				if entry not in found_props:
 					#ENTITY HACKS
-					if entry.name not in ["player_location","Spaceship","helicopter",'Player', 'Vehicle']:
+					if entry.name not in ["player_location","Spaceship","helicopter",'Player', 'Vehicle', 'explorer']:
 						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
 
 			for entry in found_props:

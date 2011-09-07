@@ -60,7 +60,11 @@ class Map_Manager:
 		
 		new.close()
 		
-	
+	def reset_norms(self):
+		array_len = self.map.width*self.map.height
+		self.map.nx = array('b', [0]*array_len)
+		self.map.ny = array('b', [0]*array_len)
+		self.map.nz = array('b', [0]*array_len)
 		
 	def readRect_addon(self, x1,y1,x2,y2, sample=1):
 		#this returns a 2D list array
@@ -217,7 +221,8 @@ class Map_Manager:
 			return
 		#### this used to be read_chunk
 		trans = self.translate_xy_terrain([x,y])
-		x,y = trans[0],trans[1] 
+		x,y = trans[0],trans[1]
+		
 		#chunks are always be 32^2, and are centered on the x,y
 		depth = node.max_depth-node.depth #1 most detail, 0 lowest
 		sample = int(pow(2,depth))
@@ -250,7 +255,7 @@ class Map_Manager:
 				except:
 					print( ":(  ", t, self.translate_vertex_order(t) )
 				try:
-					v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],self.map.buffer[ c ]* self.map.scale*.005])
+					v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],self.map.buffer[ c ]* node.scale *.01]) #?
 				except:
 					pass
 				
@@ -258,13 +263,13 @@ class Map_Manager:
 				if c >= self.map.width*self.map.height:
 					c = 0
 				if i == 0:
-					top_cache.append(self.map.buffer[c]* self.map.scale*.005 - (.0002*node.size))
+					top_cache.append(self.map.buffer[c]* node.scale*.0085 - (.0002*node.size* node.scale))
 				elif i == 32:
-					bottom_cache.append(self.map.buffer[c]* self.map.scale*.005-(.0002*node.size))
+					bottom_cache.append(self.map.buffer[c]* node.scale*.0085-(.0002*node.size* node.scale))
 				if j == 0:
-					left_cache.append(self.map.buffer[c]* self.map.scale*.005-(.0002*node.size))
+					left_cache.append(self.map.buffer[c]* node.scale*.0085-(.0002*node.size* node.scale))
 				elif j == 32:
-					right_cache.append(self.map.buffer[c]* self.map.scale*.005-(.0002*node.size))
+					right_cache.append(self.map.buffer[c]* node.scale*.0085-(.0002*node.size* node.scale))
 				
 				
 		#Now lets set the skirt
@@ -276,6 +281,6 @@ class Map_Manager:
 			v = mesh.getVertex(0, 1089+i)
 			v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],total[i]])
 	
-		if node.depth == 7: #speed hack
+		if node.depth == node.max_depth: 
 			node.cube.reinstancePhysicsMesh()
 		

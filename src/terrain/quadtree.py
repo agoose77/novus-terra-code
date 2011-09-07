@@ -54,9 +54,9 @@ class Chunk_Que:
 
 class Quadtree(object):
 
-	def __init__(self, size=2056, pos=[0,0], debug=1, max_depth=7):
-
-		self.root = Node(pos, size, debug, max_depth=max_depth)
+	def __init__(self, size=2056, pos=[0,0], debug=1, max_depth=7, scale=1.0):
+		print("MY SCALE: ", scale)
+		self.root = Node(pos, size, debug, max_depth=max_depth, scale=scale)
 
 
 		max_size = terrain.tr_singleton.map.width
@@ -80,8 +80,8 @@ class Quadtree(object):
 
 
 class Node(object):
-	def __init__(self, pos, size, debug, depth=0, max_depth=7):
-
+	def __init__(self, pos, size, debug, depth=0, max_depth=7, scale=1.0):
+		self.scale = scale
 		self.pos = pos
 		self.size = size
 		self.data = []
@@ -110,14 +110,16 @@ class Node(object):
 
 		for i in range(4):
 			position = [self.pos[0] + oct_map[i][0]*self.size/2, self.pos[1] + oct_map[i][1]*self.size/2]
-			self.children.append( Node(pos=position, size=self.size/2, debug=self.debug, depth=self.depth+1, max_depth=self.max_depth) )
+			self.children.append( Node(pos=position, size=self.size/2, debug=self.debug, depth=self.depth+1, max_depth=self.max_depth, scale = self.scale) )
 			child = self.children[len(self.children)-1]
 			child.parent = self
 			child.spot = i #let me know my order of creation ergo placement in parent
 
 	def update_terrain(self, focalpoint):
+		#scale hacks
+		focalpoint2 = [ focalpoint[0], focalpoint[1] ]
 		#print(self.dist(focalpoint,self.pos))
-		if self.dist(focalpoint):
+		if self.dist(focalpoint2):
 			#if I'm a leaf, split and check children
 			if self.state == LEAF:
 				if self.depth < self.max_depth:
@@ -150,8 +152,10 @@ class Node(object):
 
 	def add_chunk(self):
 		chunkname = terrain.cq_singleton.get_chunk()
-		self.cube = self.spawnObject(chunkname, [self.pos[0],self.pos[1],0] )
-		self.cube.localScale = [self.size, self.size, 200]
+		
+		self.cube = self.spawnObject(chunkname, [self.pos[0]*self.scale,self.pos[1]*self.scale,0] )
+		print( self.scale, self.pos[0]*self.scale,self.pos[1]*self.scale )
+		self.cube.localScale = [self.size*self.scale, self.size*self.scale, 1] #?
 		#add to que to wait for vertex adjustment
 		terrain.cq_singleton.need_update.append( self )
 
@@ -169,22 +173,22 @@ class Node(object):
 
 
 	def dist2(self, point):
-		x1, y1 = self.pos[0], self.pos[1]
+		x1, y1 = self.pos[0]*self.scale, self.pos[1]*self.scale
 		x2, y2 = point[0], point[1]
-		range = 2*self.size+self.size*.3
+		range = 2*self.size+self.size*.3*self.scale
 
 		if abs(x1-x2) < range and abs(y1-y2) < range:
 			return True
 
 	def dist(self, p1):
-		p2 = [self.pos[0], self.pos[1]]
+		p2 = [self.pos[0]*self.scale, self.pos[1]*self.scale]
 		x = p1[0] - p2[0]
 		y = p1[1] - p2[1]
 
 		d = sqrt(pow(x, 2) + pow(y,2))
 
 
-		if d < self.size*1.8:
+		if d < self.size*1.8*self.scale:
 			return True
 
 	def remove(self, object):
