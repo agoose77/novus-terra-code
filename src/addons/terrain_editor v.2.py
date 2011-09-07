@@ -300,7 +300,12 @@ def load_png(filepathr):
 def apply_scale():
 	terrain.tr_singleton.map.scale = bpy.context.scene.terrain_props['xyscale'].float
 	for i in range(len(terrain.tr_singleton.map.buffer)):
-		terrain.tr_singleton.map.buffer[i] = int(float(terrain.tr_singleton.map.buffer[i])* bpy.context.scene.terrain_props['zscale'].float )
+		new = int(float(terrain.tr_singleton.map.buffer[i])* bpy.context.scene.terrain_props['zscale'].float)
+		if new < -32767: 
+			new = -32767
+		if new > 32767: 
+			new = 32767
+		terrain.tr_singleton.map.buffer[i] = new
 		
 	#terrain.tr_singleton.save(terrain.tr_singleton.filename)
 	#terrain.tr_singleton.load(terrain.tr_singleton.filename)
