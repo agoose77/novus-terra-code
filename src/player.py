@@ -19,11 +19,6 @@ from Inventory import Inventory
 
 import ui
 
-
-###
-import owyl
-from owyl import blackboard
-
 ###
 class Player(EntityBase):
 
@@ -38,9 +33,6 @@ class Player(EntityBase):
 		self.fatigue = 0.0
 		self.walk_speed = 8.0
 		self.run_speed = 15.0
-
-		self.bb = blackboard
-	#	self.tree = self.build_tree()
 
 		self.impants = []
 		self.stats = {'temp':'temp'}
@@ -79,11 +71,6 @@ class Player(EntityBase):
 		self.movement_state_machine.add_transition('walk', 'vehicle', self.has_entered_vehicle)
 		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
 
-		# BF
-		#self.b_tree = BehaviorTree(self)
-		#self.b_tree.add_condition('Hungry', self.if_hungry)
-		#self.b_tree.add_action('Hungry', self.test123)
-
 		# Inventory
 		self.inventory = Inventory()
 		self.sounds = SoundManager()
@@ -93,19 +80,9 @@ class Player(EntityBase):
 		self.set_loc = [child for child in self.childrenRecursive if 'set_loc' in child][0]
 		self.lev = None
 
-
-	### ### ###
-	def if_hungry(self):
-		return True
-
 	# Animations
 	def handle_animations(self):
 		pass
-
-	def test123(self):
-		print ('TESTSETISEJTISDNFIDIFSDHf')
-
-
 
 	# Update Animations when current weapon changes
 	def update_animations(self):
@@ -210,6 +187,7 @@ class Player(EntityBase):
 			# Animations
 			self.handle_animations()
 			'''
+
 	def handle_fall_state(self, FSM):
 		pass
 
@@ -246,19 +224,10 @@ class Player(EntityBase):
 		return not bool(ray2[0])
 
 	def has_entered_vehicle(self, FSM):
-		#temp = False
-		#if self.vehicle != None:
-		#	print ('test!')
-		#	temp = True
-		return bool(self.vehicle)#temp
+		return bool(self.vehicle)
 
 	def has_exited_vehicle(self, FSM):
-		#temp = False
-		#self.want_exit_vehicle= False
-		#if self.vehicle == None:
-		#	print ('test!')
-		#	temp = True
-		return bool(self.vehicle)#temp
+		return bool(self.vehicle)
 
 	def has_pressed_jumpkey(self, FSM):
 		pass
@@ -295,7 +264,6 @@ class Player(EntityBase):
 				#print (hit)
 				if 'physics' in hit:
 					hit['physics'] = 1
-					#print ('SEt true')
 
 		# AIM
 		if mouse.events[bge.events.RIGHTMOUSE] == 1:
@@ -423,18 +391,4 @@ class Player(EntityBase):
 		#if self.current_weapon != None:
 		self.handle_weapon()
 		self.sounds.main()
-
-"""
-### Testing
-own = bge.logic.getCurrentController().owner
-
-# Creat Entity
-if not 'INIT' in own:
-	bge.logic.globalDict['game'] = Player()
-	own['INIT'] = ''
-
-# If created already
-else:
-	Player.main(bge.logic.globalDict['game'])"""
-
 

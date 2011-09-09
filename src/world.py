@@ -17,6 +17,8 @@ class World:
 
 	def __init__(self):
 		print("world.__init__()")
+
+		# Needed?
 		self.current_world_file = None
 		self.current_cell = None
 		self.loaded_libs = None
@@ -34,12 +36,38 @@ class World:
 		self.outside_lighting_ctrl = 'outdoor_sun_shadow'
 		self.sky_dome = 'sky_dome'
 		self.atmosphere_ctrl = 'atmosphere_time'
+		self.fx_object = 'FX'
+		self.fx_motion_blur = 'FX BLUR'
 
 		###
 		self.gravity = Vector([0,0, -9.8])
 		self.world_effects = {'mist color':[0.0,0.0,0.0], 'tint':[0.0,0.0,0.0]}
-		self.current_weather = None
-		self.last_weather_change = 1.0
+
+		self.fx = {
+			'HDR':True,
+            'Bloom':True,
+            'DOF':False,
+            'SSAO':False,
+            'SSAA':False,
+            'Color':True,
+            'Motion Blur':True,
+			'Color settings':[1.0, 1.0, 1.0],
+		}
+
+	# Hackity hack :P
+	def filters(self):
+		### Set FX to cell settings
+		#self.fx = cell.singleton.fx - DISABLED for now
+
+		fx_obj = bge.logic.getCurrentScene().objects[self.fx_object]
+		blur_obj = bge.logic.getCurrentScene().objects[self.fx_motion_blur]
+
+		for fx in self.fx:
+			if fx != 'Motion Blur':
+				fx_obj[fx] = self.fx[fx]
+			else:
+				blur_obj[fx] = self.fx[fx]
+
 
 
 	def handle_time(self):
@@ -51,12 +79,18 @@ class World:
 			self.world_time = 1.0
 
         ### HACK - set the Time prop for all the lighting effects
-		atmos = bge.logic.getSceneList()[0].objects[self.atmosphere_ctrl]
-		lighting = bge.logic.getCurrentScene().objects[self.outside_lighting_ctrl]
-		sun = bge.logic.getCurrentScene().objects['Sun_Main']
-		lighting['Time'] = self.world_time
-		atmos['Time'] = self.world_time
-		sun['Time'] = self.world_time
+		if cell.singleton.terrain != False:
+			print ('Exterior')
+			try:
+				atmos = bge.logic.getSceneList()[0].objects[self.atmosphere_ctrl]
+				lighting = bge.logic.getCurrentScene().objects[self.outside_lighting_ctrl]
+				sun = bge.logic.getCurrentScene().objects['Sun_Main']
+				lighting['Time'] = self.world_time
+				atmos['Time'] = self.world_time
+				sun['Time'] = self.world_time
+
+			except:
+				print ('Problem in world.py')
 
 
 	def main(self):
@@ -64,6 +98,7 @@ class World:
 		#JPLUR ENTITY HACKS
 		if game.init_game == 1:
 			self.player.main()
+			self.filters()
 
 		self.handle_time()
 
