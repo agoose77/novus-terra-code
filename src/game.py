@@ -37,16 +37,25 @@ class Game:
 		self.game_time = 0.0
 		self.delta_time = 0.0001
 
-		self.graphics_options = {\
-
+		self.graphics_options = {
+			'HDR':True,
+            'Bloom':True,
+            'DOF':False,
+            'SSAO':False,
+            'SSAA':False,
+            'Color':True,
+            'Motion Blur':True,
 			}
 
-		self.game_options = {\
-
+		self.game_options = {
+        	'Difficulty':1,
+            'Hardcore':False,
 			}
 
-		self.sound_options = {\
-
+		self.sound_options = {
+			'Effect Volume':1.0,
+            'Music Volume':1.0,
+            'Voice Volume':1.0,
 			}
 
 		self.control_options = {\
@@ -75,7 +84,6 @@ class Game:
 		self.game_time += self.delta_time
 
 		if self.world == None:
-			print ('TEsTSET =====================')
 			self.world = World()
 		#    self.world.create('novus_terra.world')
 
