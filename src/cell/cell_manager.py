@@ -208,6 +208,7 @@ class CellManager:
 		liblist = bge.logic.LibList()
 		libs = []
 		accum = []
+		print(self.blend_dict)
 		for entry in self.cell.models:
 			for key in self.blend_dict:
 				if entry in self.blend_dict[key]:
@@ -215,7 +216,7 @@ class CellManager:
 						accum.append(key)
 					if key not in libs and str(self.convert_lib_name(key)) not in liblist: #this is the list of libraries to load
 						libs.append(key)
-		#print(libs)
+		print(libs)
 		fred = []
 		for key in liblist:
 			if self.convert_back(key) not in accum:
@@ -223,7 +224,8 @@ class CellManager:
 				bge.logic.LibFree(key)
 		scene = bge.logic.getCurrentScene()
 
-
+		if self.cell.terrain:
+			libs.append( './data/models/CHUNKS.blend' )
 		print("=======")
 		for entry in libs:
 			bge.logic.LibLoad(entry, "Scene", load_actions=1)
