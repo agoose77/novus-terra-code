@@ -166,7 +166,7 @@ class CellManager:
 		## 128  2
 		## 64   1
 		size, depth = 32, 0
-		
+
 		if best <= 4099:
 			size = 4096
 			depth = 7
@@ -184,16 +184,16 @@ class CellManager:
 			depth = 3
 		if best <= 128:
 			size = 128
-			depth = 2	
+			depth = 2
 		if best <= 64:
 			size = 64
 			depth = 1
-		
-		
-		
-		
-		
-		
+
+
+
+
+
+
 		print( "()()(): ", size, depth, terrain.tr_singleton.map.scale )
 		terrain.qt_singleton = terrain.Quadtree(int(size/2), [0,0], 1, max_depth=depth, scale = terrain.tr_singleton.map.scale)
 		self.terrain = 1
