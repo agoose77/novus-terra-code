@@ -63,10 +63,11 @@ class World:
 		blur_obj = bge.logic.getCurrentScene().objects[self.fx_motion_blur]
 
 		for fx in self.fx:
-			if fx != 'Motion Blur':
-				fx_obj[fx] = self.fx[fx]
-			else:
-				blur_obj[fx] = self.fx[fx]
+			if Game.graphics_options[fx] == True:
+				if fx != 'Motion Blur':
+					fx_obj[fx] = self.fx[fx]
+				else:
+					blur_obj[fx] = self.fx[fx]
 
 
 
@@ -98,7 +99,7 @@ class World:
 		#JPLUR ENTITY HACKS
 		if game.init_game == 1:
 			self.player.main()
-			self.filters()
+		#	self.filters()
 
 		self.handle_time()
 
