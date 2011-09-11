@@ -1,7 +1,8 @@
 
 import pickle
-
+from paths import PATH_SOUNDS, PATH_MUSIC
 import bge
+import aud
 import random
 from mathutils import Vector
 
@@ -29,7 +30,7 @@ class World:
 		self.player = Player()
 
 		self.world_time = 0.0
-		self.world_time_scale = 0.30
+		self.world_time_scale = 0.05
 
 		### Light
 		self.light_sources = None
@@ -70,11 +71,12 @@ class World:
 					blur_obj[fx] = self.fx[fx]
 
 
-
 	def handle_time(self):
 
 		# Add timescale to current time
 		if self.world_time < 240:
+			#import Rasterizer
+			#Rasterizer.setMistColor([0.1,0.9,0.1])
 			self.world_time += self.world_time_scale
 		else:
 			self.world_time = 1.0
@@ -98,8 +100,13 @@ class World:
 
 		#JPLUR ENTITY HACKS
 		if game.init_game == 1:
+			print ('INIT Game')
 			self.player.main()
-		#	self.filters()
+        #	self.filters()
+
+			# MUSIC
+			#sound = aud.Factory(PATH_SOUNDS+'music_1.ogg')
+			#handle = aud.device().play(sound)
 
 		self.handle_time()
 

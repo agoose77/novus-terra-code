@@ -11,25 +11,13 @@ class SoundManager:
 		self.sounds = []
 		self.handles = []
 
-	def play_sound(self, sound_name, type='play', wait=False):
+	def play_sound(self, sound_name, object, type='play', multi=False):
+		info = {'Name':sound_name, 'Own':object, 'Type':type, 'Multi':multi}
 
-		info = {'Sound':sound_name,'Type':type}
-
-		if wait == True:
-			print ('Tre')
-			print (self.sounds)
-			print (self.handles)
-
-			if info in self.sounds:
-				print('He!')
-			else:
-				self.sounds.append(info)
-		else:
+		if not info in self.sounds:
 			self.sounds.append(info)
-
-
-	def stop_sound(self, sound_handle):
-		sound_handle.stop()
+		else:
+			print ('TESTHIFINF')
 
 	def stop_all_sounds(self):
 		for handle in self.playing_sounds_effect_handles:
@@ -40,14 +28,18 @@ class SoundManager:
 		device = aud.device()
 
 		for sound in self.sounds:
-			if sound['Type'] == 'play':
-				handle = aud.Factory(PATH_SOUNDS+sound['Sound'])
-				h = device.play(handle)
-				sound['Handle'] = h
-				self.handles.append(h)
-				self.sounds.remove(sound)
+			if sound['Multi'] == False:
+				if not sound['Name'] in self.handles:
+					if sound['Type'] == 'play':
+						handle = aud.Factory(PATH_SOUNDS+sound['Name'])
+						h = device.play(handle)
+						self.handles.append([h, sound])
 
-			for handle in self.handles:
-				#if sound['Handle'] != None:
-				if handle.status == False:
-					self.sounds.remove(handle)
+		for handle in self.handles:
+			status = handle[0].status
+			print (status)
+
+			if status == False:
+				#self.sounds.remove(handle[1])
+				#self.handles.remove(handle)
+				print ('DO')

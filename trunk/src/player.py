@@ -4,6 +4,9 @@ sys.path.append('./src/owyl/')
 #import pyglet
 import math
 
+import aud
+from paths import PATH_SOUNDS, PATH_MUSIC
+
 import bge
 from mathutils import Vector, Matrix
 
@@ -33,6 +36,7 @@ class Player(EntityBase):
 		self.fatigue = 0.0
 		self.walk_speed = 8.0
 		self.run_speed = 15.0
+		self.walk_temp = 0.0
 
 		self.impants = []
 		self.stats = {'temp':'temp'}
@@ -73,7 +77,7 @@ class Player(EntityBase):
 
 		# Inventory
 		self.inventory = Inventory()
-		self.sounds = SoundManager()
+		self.sound= SoundManager()
 
 		# HACKS
 		self.temp_pos = 1
@@ -144,6 +148,15 @@ class Player(EntityBase):
 		com = vel[2]+move[2]
 		self.localLinearVelocity = [move[1],move[0], com]
 
+		if move[0] != 0 or move[1] != 0:
+			self.walk_temp += 1
+
+			if self.walk_temp > 40:
+				print ('TESTETSETEST1233 SOUND')
+				SoundManager.play_sound('walk_grass.ogg')
+				self.walk_temp = 0
+
+
 		''' - a101 movement code - get errors
 		fx = 0.0
 		fy = 0.0
@@ -195,7 +208,6 @@ class Player(EntityBase):
 		keyboard = bge.logic.keyboard
 
 		bge.logic.getCurrentScene().active_camera = self.vehicle['Camera']
-
 
 		# HACK
 		self.camera_on = False # Turn off player camera
@@ -252,7 +264,11 @@ class Player(EntityBase):
 
 		# SHOOT
 		if mouse.events[bge.events.LEFTMOUSE] == 1:
-			self.sounds.play_sound('shoot_temp.ogg')
+			#self.sound.play_sound('shoot_temp.ogg', self)
+			sound = aud.Factory(PATH_SOUNDS+'shoot_temp.ogg')
+			handle = aud.device().play(sound)
+
+
 			if hit != None:
 
 				# Impact Effects
@@ -386,9 +402,7 @@ class Player(EntityBase):
 		self.handle_interactions()
 		self.temp_pos2()
 
-		#self.sounds.play_sound('walk_grass.ogg', wait=True)
-
 		#if self.current_weapon != None:
 		self.handle_weapon()
-		self.sounds.main()
+		#self.sound.main()
 
