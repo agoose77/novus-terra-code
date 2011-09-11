@@ -2,8 +2,6 @@ import pickle
 import os
 import time
 
-import bpy
-
 import tweener
 import terrain
 import cell

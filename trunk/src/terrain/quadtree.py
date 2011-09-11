@@ -1,4 +1,4 @@
-import bpy
+
 from math import floor, sqrt, pow
 from mathutils import Vector
 
