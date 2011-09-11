@@ -153,7 +153,7 @@ class Player(EntityBase):
 
 			if self.walk_temp > 40:
 				print ('TESTETSETEST1233 SOUND')
-				SoundManager.play_sound('walk_grass.ogg')
+				#SoundManager.play_sound('walk_grass.ogg')
 				self.walk_temp = 0
 
 
