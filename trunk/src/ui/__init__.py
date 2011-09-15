@@ -13,3 +13,4 @@ ui.singleton.showInventory()
 from .manager import *
 from .loading import *
 from .start import *
+from .pause import *
