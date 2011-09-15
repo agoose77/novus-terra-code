@@ -276,8 +276,7 @@ class Player(EntityBase):
 				new.position = ray.hitPosition
 				new.alignAxisToVect(ray.hitNormal, 2, 1.0)
 				new.setParent(hit)
-				#print ('HITTED')
-				#print (hit)
+
 				if 'physics' in hit:
 					hit['physics'] = 1
 
@@ -297,7 +296,7 @@ class Player(EntityBase):
 
 		if hit != None:
 			if 'Door' in hit:
-				print (hit['Door'])
+
 				if keyboard.events[bge.events.EKEY] == 1:
 					ui.singleton.show_loading('./data/cells/'+ hit['Door'] +'.cell')
 					self.position = bge.logic.getCurrentScene.objects[hit['Start Object']].position
@@ -312,8 +311,6 @@ class Player(EntityBase):
 
 			# Items
 			if 'Item' in hit:
-				print ('Tiem')
-				print (hit['Item'].name)
 
 				if keyboard.events[bge.events.EKEY] == 1:
 				  self.inventory.add_item(hit['Item'].id)

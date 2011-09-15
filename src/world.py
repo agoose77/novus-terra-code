@@ -83,7 +83,6 @@ class World:
 
         ### HACK - set the Time prop for all the lighting effects
 		if cell.singleton.terrain != False:
-			print ('Exterior')
 			try:
 				atmos = bge.logic.getSceneList()[0].objects[self.atmosphere_ctrl]
 				lighting = bge.logic.getCurrentScene().objects[self.outside_lighting_ctrl]
@@ -93,14 +92,13 @@ class World:
 				sun['Time'] = self.world_time
 
 			except:
-				print ('Problem in world.py')
+				pass
 
 
 	def main(self):
 
 		#JPLUR ENTITY HACKS
 		if game.init_game == 1:
-			print ('INIT Game')
 			self.player.main()
         #	self.filters()
 
