@@ -4,10 +4,6 @@ import xml.etree.ElementTree as etree
 import bge
 import blf
 
-import sys
-# So we can find the bgui module
-sys.path.append('./src/bgui/')
-
 import bgui
 
 CONTENT_BOX_PADDING = 5 # in px
@@ -15,15 +11,18 @@ NAME_BOX_PADDING = 5 # in px
 MORE_BUTTON_PADDING = 8 # in px
 SCROLL_BAR_WIDTH = 12 # in px
 
+
+'''
 def init(cont=None):
     if isinstance(cont, bge.types.SCA_PythonController):
         theme = cont.owner.get('ds_theme', None)
         if theme is not None:
             theme = bge.logic.expandPath(theme)
-        bge.logic.globalDict['dialogue_system'] = DialogueSystem([cont.owner.get('ds_width', bge.render.getWindowWidth()-100),
-            cont.owner.get('ds_height', 250)], theme)
+        bge.logic.globalDict['dialogue_system'] = DialogueSystem([cont.owner.get('ds_width', bge.render.getWindowWidth()-100),cont.owner.get('ds_height', 250)], theme)
+        print ('BGE INITERESE1233333')
     else:
         bge.logic.globalDict['dialogue_system'] = DialogueSystem()
+        print ("YERSYSET")
 
 def main(cont=None):
     if 'dialogue_system' not in bge.logic.globalDict:
@@ -47,7 +46,9 @@ def end_dialogue(other):
 
     bge.logic.globalDict['dialogue_system'].end_dialogue()
 
+'''
 
+##################################
 class DialogueSystem(bgui.System):
     def __init__(self, content_box_size=[bge.render.getWindowWidth()-100, 250], theme=None):
         self.current_tree = None
@@ -60,8 +61,6 @@ class DialogueSystem(bgui.System):
         self.option_init = {}
         self.current_selection = None
         self.current_option_container = []
-
-        self.on_end = None
 
         self.init_gui(content_box_size, theme)
 
@@ -141,10 +140,6 @@ class DialogueSystem(bgui.System):
         self.gui_name_text.text = ''
         self.gui_name_text.visible = False
         self.gui_more_button.visible = False
-
-        if self.on_end is not None:
-            self.on_end()
-        self.on_end = None
 
     def handle_conversation(self):
         self.next_node()

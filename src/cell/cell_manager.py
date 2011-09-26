@@ -74,6 +74,7 @@ class Cell:
 		self.blends = [] #list of string filenames that should be loaded before building cell
 		self.models = [] #list of string object names that are used in this cell
 		self.terrain = None
+		self.navmesh = None #navmesh or obstical avoidance
 	def save(self, filename): #this is for level creation and shouldn't be used at runtime
 		for thing in self.props:
 			for entry in thing:
@@ -383,9 +384,9 @@ class CellManager:
 				if entry not in found_lamps:
 					if entry.game_object:
 						tweener.singleton.add(entry.game_object, "color", "[0,0,0.0]", 2.0, callback=entry.kill)
+
 			for entry in found_lamps:
 				if entry not in self.lamps_in_game:
-
 					if ( entry.type == "POINT" and len(self.points) > 0 ) or ( entry.type == "SPOT" and len(self.spots) > 0 ):
 						self.lamps_in_game.append(entry)
 						entry.game_object = self.spawn_lamp(entry)
