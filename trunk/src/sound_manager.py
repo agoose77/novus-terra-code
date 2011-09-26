@@ -1,4 +1,5 @@
 import os
+import random
 
 import aud
 import bge
@@ -12,6 +13,17 @@ class SoundManager:
 		self.handles = []
 
 	def play_sound(self, sound_name, object, type='play', multi=False):
+		info = {'Name':sound_name, 'Own':object, 'Type':type, 'Multi':multi}
+
+		if not info in self.sounds:
+			self.sounds.append(info)
+		else:
+			print ('TESTHIFINF')
+
+	def play_random_sound(self, sounds, object, type='play', multi=False):
+		random_n = random(0, len(sounds))
+
+		sound_name = sounds[random_n]
 		info = {'Name':sound_name, 'Own':object, 'Type':type, 'Multi':multi}
 
 		if not info in self.sounds:

@@ -19,6 +19,7 @@ from behavior_tree import BehaviorTree
 from item import Item
 from sound_manager import SoundManager
 from Inventory import Inventory
+from dialogue_system import DialogueSystem
 
 import ui
 
@@ -77,7 +78,14 @@ class Player(EntityBase):
 
 		# Inventory
 		self.inventory = Inventory()
-		self.sound= SoundManager()
+
+		# Sound manager?
+		#self.sound= SoundManager()
+
+		# Dialogue
+		#self.dialogue = DialogueSystem([cont.owner.get('ds_width', bge.render.getWindowWidth()-100),cont.owner.get('ds_height', 250)], theme)
+
+		#self.dialogue = DialogueSystem(	[bge.render.getWindowWidth(), 250], theme='Frame')
 
 		# HACKS
 		self.temp_pos = 1
@@ -331,7 +339,7 @@ class Player(EntityBase):
 						self.lev= hit
 
 
-			# Small peice of code that can add a bunch of easy features
+			# toggle
 			elif 'Toggle' in hit:
 				keyboard = bge.logic.keyboard
 
@@ -402,4 +410,7 @@ class Player(EntityBase):
 		#if self.current_weapon != None:
 		self.handle_weapon()
 		#self.sound.main()
+
+		# handle dialogue
+		#self.dialogue.main()
 
