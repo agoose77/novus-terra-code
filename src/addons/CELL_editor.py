@@ -69,20 +69,30 @@ def index_blends(dir, output):
 		fo.close()
 		return file_dict
 
+def read_model_dict():
+	fo = open("./data/model_dict.data", 'rb')
+	file_dict = pickle.load(fo)
+	fo.close()
+	return file_dict
+
+def update_model_dict():
+	index_blends("./data/models/", "./data/model_dict.data")
+
 def bake_cell():
 	print("## Indexing ./data/models")
-	blends = index_blends("./data/models/", "./data/model_dict.data")
+	blends = read_model_dict()
 	known_objects = []
 	for blend in blends:
 		for entry in blends[blend]:
 			if entry not in known_objects:
 				known_objects.append(entry)
+
+	# sort props for 15 kd-trees for different scales
 	props = []
 	for i in range(15):
 		props.append([])
 	lamps = []
-	print(bpy.data.objects)
-	print(bpy.context.scene.objects)
+
 	for object in bpy.data.objects:
 		split_name = object.name.split(".")[0]
 		if object.type in ["MESH", "EMPTY", "ARMATURE"] and not object.parent:
@@ -100,6 +110,7 @@ def bake_cell():
 				if pow(2, i) > best:
 					print("best:",pow(2,i))
 					properties = []
+					print(object.game.physics_type)
 					for p in object.game.properties:
 						#properties.append({p.name:p.value})
 						properties.append([p.name, p.value])
@@ -126,7 +137,7 @@ def bake_cell():
 	for entry in props:
 				print (len(entry))
 
-    ### Cell FX Settings
+	### Cell FX Settings
 	FX = {}
 
 	FX['Bloom'] = bpy.context.scene.cell_props['Bloom'].float
@@ -163,12 +174,12 @@ args = {
 fx_args = {
 
 		'HDR':False,
-        'Bloom': True,
+		'Bloom': True,
 
-        'Color Tint':True,
+		'Color Tint':True,
 		'Color R': 1.0,
-        'Color B': 1.0,
-        'Color G': 1.0,
+		'Color B': 1.0,
+		'Color G': 1.0,
 	}
 
 
@@ -182,6 +193,25 @@ class te_3(bpy.types.Operator):
 
 	def execute(self, context):
 		bake_cell()
+		return {'FINISHED'}
+
+def register():
+	bpy.utils.register_class(te_3)
+
+def unregister():
+	bpy.utils.unregister_class(te_3)
+
+register()
+
+class te_3(bpy.types.Operator):
+
+	'''Recreate model_dict.data (Use after you've made changes to .data/models/) *! takes a long time !*'''
+
+	bl_idname = "scene.modeldict"
+	bl_label = "Update model_dict"
+
+	def execute(self, context):
+		update_model_dict()
 		return {'FINISHED'}
 
 def register():
@@ -213,6 +243,7 @@ class OBJECT_PT_cell_editor(bpy.types.Panel):
 		colR = split.column()
 
 		box.operator("scene.bakecell")
+		box.operator("scene.modeldict")
 
 		for arg in args:
 			prop = bpy.context.scene.cell_props[arg]
@@ -233,7 +264,7 @@ class OBJECT_PT_cell_editor(bpy.types.Panel):
 				colR.prop(prop, "string", text='')
 
 
-        ###
+		###
 		box = layout.box()
 		row = box.row()
 		split = row.split(percentage=0.4)
