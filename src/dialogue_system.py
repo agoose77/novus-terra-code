@@ -12,7 +12,7 @@ MORE_BUTTON_PADDING = 8 # in px
 SCROLL_BAR_WIDTH = 12 # in px
 
 
-'''
+
 def init(cont=None):
     if isinstance(cont, bge.types.SCA_PythonController):
         theme = cont.owner.get('ds_theme', None)
@@ -46,7 +46,7 @@ def end_dialogue(other):
 
     bge.logic.globalDict['dialogue_system'].end_dialogue()
 
-'''
+
 
 ##################################
 class DialogueSystem(bgui.System):

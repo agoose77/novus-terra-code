@@ -5,7 +5,7 @@ import bge
 import aud
 import random
 from mathutils import Vector
-
+from ai_manager import AI_Manager
 from dialogue_system import DialogueSystem
 from player import Player
 import game
@@ -28,6 +28,7 @@ class World:
 		self.entity_loading_queue = None
 
 		self.player = Player()
+		self.ai_manager = AI_Manager()
 
 		self.world_time = 0.0
 		self.world_time_scale = 0.05
@@ -75,8 +76,6 @@ class World:
 
 		# Add timescale to current time
 		if self.world_time < 240:
-			#import Rasterizer
-			#Rasterizer.setMistColor([0.1,0.9,0.1])
 			self.world_time += self.world_time_scale
 		else:
 			self.world_time = 1.0
@@ -100,6 +99,7 @@ class World:
 		#JPLUR ENTITY HACKS
 		if game.init_game == 1:
 			self.player.main()
+			self.ai_manager.main()
         #	self.filters()
 
 			# MUSIC
