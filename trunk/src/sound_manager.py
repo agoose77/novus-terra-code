@@ -38,6 +38,7 @@ class SoundManager:
 
 	def main(self):
 		device = aud.device()
+		print(len)
 
 		for sound in self.sounds:
 			if sound['Multi'] == False:

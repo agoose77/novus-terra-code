@@ -9,7 +9,7 @@ from entity_base import EntityBase
 from player import Player
 from item import Item
 #from savefile import Savefile
-#from sound_manager import SoundManager
+from sound_manager import SoundManager
 from world import World
 
 class Game:
@@ -75,6 +75,7 @@ class Game:
 		#self.current_savefile = self.get_last_played_savefile()
 		#self.sound_manager = SoundManager()
 		self.world = None
+		self.sound_manager = SoundManager()
 
 		#bge.logic.getCurrentScene().replace('world')
 

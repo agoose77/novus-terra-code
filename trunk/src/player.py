@@ -14,7 +14,11 @@ from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
 from behavior_tree import BehaviorTree
 
-#from game import Game
+try:
+    from game import Game
+except:
+	print('problem importing Game')
+
 #from game import *
 from item import Item
 from sound_manager import SoundManager
@@ -273,8 +277,9 @@ class Player(EntityBase):
 		# SHOOT
 		if mouse.events[bge.events.LEFTMOUSE] == 1:
 			#self.sound.play_sound('shoot_temp.ogg', self)
-			sound = aud.Factory(PATH_SOUNDS+'shoot_temp.ogg')
-			handle = aud.device().play(sound)
+			#sound = aud.Factory(PATH_SOUNDS+'shoot_temp.ogg')
+			#handle = aud.device().play(sound)
+			Game.sound_manager.play_sound('shoot_temp.ogg', self)
 
 
 			if hit != None:
