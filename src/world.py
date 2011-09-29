@@ -101,7 +101,7 @@ class World:
 		#JPLUR ENTITY HACKS
 		if game.init_game == 1:
 			self.player.main()
-			#self.ai_manager.main()
+			self.ai_manager.main()
         #	self.filters()
 
 			# MUSIC

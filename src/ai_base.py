@@ -51,6 +51,7 @@ class AIBase(EntityBase):
 		# Hacks...
 		self.ai_state_machine.current_state = 'idle'
 
+
 	def handle_engage(self, FSM):
 		self.handle_movement()
 
@@ -115,13 +116,14 @@ class AIBase(EntityBase):
 
 	###
 	def main(self):
-		EntityBase.main(self)
-		self.ai_state_machine.main()
+		pass
+		#EntityBase.main(self)
+		#self.ai_state_machine.main()
 		#print (self.armature.isPlayingAction())
 
 		# Run away
-		if self.is_scared == True:
-			self.ai_state_machine.current_state = 'flee'
+		#if self.is_scared == True:
+		#	self.ai_state_machine.current_state = 'flee'
 
 
 
