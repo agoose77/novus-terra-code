@@ -22,6 +22,7 @@ class AI_Manager():
 			if 'spawn_point' in obj.name:
 				temp = AIBase()
 				temp.position= obj.position
+				#game.world.entity_list.append(temp)
 				self.nodes.put(temp)
 
 
@@ -30,8 +31,6 @@ class AI_Manager():
 		object = self.nodes.get()
 		AIBase.main(object)
 		self.nodes.put(object)
-
-
 
 
 

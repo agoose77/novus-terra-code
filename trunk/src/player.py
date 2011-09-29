@@ -24,7 +24,7 @@ from item import Item
 from sound_manager import SoundManager
 from Inventory import Inventory
 from dialogue_system import DialogueSystem
-
+#from world import World
 import ui
 
 ###
@@ -95,6 +95,8 @@ class Player(EntityBase):
 		self.temp_pos = 1
 		self.set_loc = [child for child in self.childrenRecursive if 'set_loc' in child][0]
 		self.lev = None
+
+		#world.entity_list.append(self)
 
 	# Animations
 	def handle_animations(self):
