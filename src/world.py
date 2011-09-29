@@ -26,6 +26,7 @@ class World:
 		self.loaded_kdtrees = None
 		self.loaded_entities = None
 		self.entity_loading_queue = None
+		self.entity_list = []
 
 		self.player = Player()
 		self.ai_manager = AI_Manager()
@@ -55,6 +56,7 @@ class World:
             'Motion Blur':True,
 			'Color settings':[1.0, 1.0, 1.0],
 		}
+
 
 	# Hackity hack :P
 	def filters(self):

@@ -55,7 +55,9 @@ class AIBase(EntityBase):
 		self.handle_movement()
 
 	def handle_idle(self, FSM):
-		self.detect_enemies()
+		#enemies = self.detect_enemies()
+		#closest = enemies[0]
+		pass
 
 	def handle_talk(self, FSM):
 		pass
@@ -64,7 +66,17 @@ class AIBase(EntityBase):
 		self.handle_movement(behavior=1)
 
 	def detect_enemies(self):
-		pass
+		temp = []
+
+		for obj in [self]:
+			dist = self.getDistanceTo(obj)
+			ray = self.rayCast(obj.position, self.position, 0, '', 0, 0, 0)
+
+			if ray[0] != obj:
+				temp.append([dist, obj])
+
+		temp.sort()
+		return temp
 
 	def handle_movement(self, behavior=3):
 		#if cell.singleton.navmesh != False:
@@ -110,3 +122,6 @@ class AIBase(EntityBase):
 		# Run away
 		if self.is_scared == True:
 			self.ai_state_machine.current_state = 'flee'
+
+
+
