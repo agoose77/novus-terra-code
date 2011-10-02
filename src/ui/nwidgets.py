@@ -19,11 +19,11 @@ class Nbox(bgui.Widget):
 		
 		print( "NBOX: width = ", self.size)
 		self.part = bgui.Image(self, 'part', './data/textures/ui/ui_middle.png', pos=[32, 0], size=[self.size[0]-32, self.size[1]],
-			options = bgui.BGUI_CACHE )
+			options = bgui.BGUI_CACHE, interpolate='NEAREST' )
 		self.left = bgui.Image(self, 'left', './data/textures/ui/ui_left.png', pos=[0, 0], size=[32, self.size[1]],
-			options = bgui.BGUI_CACHE )
+			options = bgui.BGUI_CACHE, interpolate='NEAREST' )
 		self.right = bgui.Image(self, 'right', './data/textures/ui/ui_right.png', pos=[size[0], 0],size=[32, self.size[1]],
-			options = bgui.BGUI_CACHE )
+			options = bgui.BGUI_CACHE, interpolate='NEAREST' )
 		image_size = self.part.image_size
 		ratio = [ self.size[0] / image_size[0], self.size[1] / image_size[1] ]
 		self.part.color, self.left.color, self.right.color = [1,1,1,.4], [1,1,1,.4], [1,1,1,.4]
@@ -48,19 +48,19 @@ class Nbutton(bgui.Widget):
 		self.image.visible = 0
 		
 		self.corner1 = bgui.Image(self, 'corner1', './data/textures/ui/nbutton_corner.png', pos=[0, 0], size=[csize,csize],
-			options = bgui.BGUI_CACHE )
+			options = bgui.BGUI_CACHE, interpolate='NEAREST' )
 		self.corner1.visible = 0
 		
 		self.corner2 = bgui.Image(self, 'corner2', './data/textures/ui/nbutton_corner.png', pos=[self.size[0]-csize, 0], size=[csize,csize],
-			options = bgui.BGUI_CACHE )
+			options = bgui.BGUI_CACHE, interpolate='NEAREST' )
 		self.corner2.visible = 0
 		
 		self.corner3 = bgui.Image(self, 'corner3', './data/textures/ui/nbutton_corner.png', pos=[0, self.size[1]-csize], size=[csize,csize],
-			options = bgui.BGUI_CACHE )
+			options = bgui.BGUI_CACHE, interpolate='NEAREST' )
 		self.corner3.visible = 0
 		
 		self.corner4 = bgui.Image(self, 'corner4', './data/textures/ui/nbutton_corner.png', pos=[self.size[0]-csize, self.size[1]-csize], size=[csize,csize],
-			options = bgui.BGUI_CACHE )
+			options = bgui.BGUI_CACHE, interpolate='NEAREST' )
 		self.corner4.visible = 0
 		
 		self.corner1.texco=[ (0,1), (0,0), (1,0), (1,1)]
@@ -105,18 +105,18 @@ class Ninv_icon( Nbutton ):
 		self._remove_widget(self.text1)
 		self._remove_widget(self.text2)
 		self.text1 = bgui.Label(self, 'text1', text=text, pt_size=14, color=[1,1,1,1], font='./data/fonts/akzidenze.ttf', options=bgui.BGUI_CENTERX)
-		self.text1.position = [0,2]
+		self.text1.position = [0,6]
 		
 		self.amount = bgui.Label(self, 'amount', text="", pt_size=32, color=[1,.9,0,1], 
-				pos = [self.size[0]*.7, self.size[0]*.8 ], font='./data/fonts/FFF_Tusj.ttf', options=bgui.BGUI_NONE)
+				pos = [self.size[0]*.5, self.size[0]*.75 ], font='./data/fonts/FFF_Tusj.ttf', options=bgui.BGUI_NONE)
 
 	def button_logic(self, button):
-		self.active = 1
+		self.parent.parent.button_logic(button)
 		
 	def _draw(self):
 		if self._hover == False:
 			for entry in self.corners:
-				entry.visible = 1
+				entry.visible = 0
 		if self.active == 1:
 			for entry in self.corners:
 				entry.visible = 1

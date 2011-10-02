@@ -1,4 +1,5 @@
 import bge
+from bgl import *
 import sys
 
 import tweener
@@ -34,12 +35,21 @@ class InvScreen(bgui.Widget):
 		self.black_frame.colors = [ [.3,.3,.3,.8]]*4
 		self.black_frame.border_color = [.5,.5,.5,.5]
 		
+		self.items = []
+		
+		
+		
+		
+	def reconstruct_inv(self):
+		for entry in self.items:
+			self.frame._remove_widget(entry)
+		self.items = []
+		
 		temp_items = []
 		for entry in session.game.player.inventory.items:
 			print(entry)
 			temp_items.append(entry)
 		
-		self.items = []
 		size = 110
 		counter = 0
 		print (temp_items)
@@ -55,6 +65,11 @@ class InvScreen(bgui.Widget):
 					if session.game.player.inventory.items[item] > 1:
 						new_item_widget.amount.text = 'x'+str( session.game.player.inventory.items[item] )
 				counter += 1
+	def button_logic(self, button):			
+		if button in self.items:
+			for entry in self.items:
+				entry.active = 0
+			button.active = 1
 
 		
 class Pause(bgui.Widget):
@@ -107,7 +122,9 @@ class Pause(bgui.Widget):
 			
 			if button.name == 'inventory':
 				self.current = self.screens['invscreen']
+				self.current.reconstruct_inv()
 				self.current.visible = 1
 			if button.name == 'game':
 				self.current = self.screens['gamescreen']
 				self.current.visible = 1
+		

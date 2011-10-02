@@ -4,7 +4,6 @@ import tweener
 import cell
 
 try:
-	import bge
 	import bgui
 except:
 	print("import bge failed, normal if you are running an addon")
