@@ -32,10 +32,16 @@ class Prop:
 		self.game_object = False
 
 class Entity:
+	""" This is an entity as far as what needs to be known from a cell file.  """
 	def __init__(self):
 		self.id = 0
-		self.name = "Monkey"
-		self.co = [0.0,0.0,0.0]
+		self.name = name
+		self.co = co
+		self.scale = scale
+		self.dimensions = dimensions
+		self.rotation = rotation
+		self.game_object = 0 #the BGE object pointer
+		self.properties = properties1
 
 class Lamp:
 	def __init__(self, name="None", co=[0.0,0.0,0.0], rotation=[1.0,0.0,0.0], type="POINT", color=[0.0,0.0,0.0], distance=0.5, energy=50, spot_size=100, spot_blend=0.25, spot_bias=2.0):
@@ -68,13 +74,14 @@ class Cell:
 		self.id = 0
 		self.name = ""
 		self.props = []
-		self.entities = [] #this needs consideration for save game state, probably just grab this from savefile unless it doesn't exist
+		self.entities = [] 
 		self.lamps = []
 		self.terrain = 0 #string of terrain file to load if needed
 		self.blends = [] #list of string filenames that should be loaded before building cell
 		self.models = [] #list of string object names that are used in this cell
 		self.terrain = None
 		self.navmesh = None #navmesh or obstical avoidance
+		
 	def save(self, filename): #this is for level creation and shouldn't be used at runtime
 		for thing in self.props:
 			for entry in thing:

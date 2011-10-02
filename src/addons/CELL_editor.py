@@ -92,6 +92,7 @@ def bake_cell():
 	for i in range(15):
 		props.append([])
 	lamps = []
+	entities = []
 
 	for object in bpy.data.objects:
 		split_name = object.name.split(".")[0]
@@ -103,24 +104,30 @@ def bake_cell():
 			for entry in dimensions:
 				if entry > best:
 					best = entry
-			if object.type in ["EMPTY","ARMATURE"]:
+			if object.type in ["EMPTY","ARMATURE"]: #give these zero size things a dimension
 				best = 10
 
-			for i in range( len(props) ):
-				if pow(2, i) > best:
-					print("best:",pow(2,i))
-					properties = []
-					print(object.game.physics_type)
-					for p in object.game.properties:
-						#properties.append({p.name:p.value})
-						properties.append([p.name, p.value])
-
-					if split_name not in known_objects:
-						split_name = "WTF" #yes this is actually important
-					print(split_name)
-					props[i].append( Prop( split_name, list(object.location), list(object.scale),
+			#sort entities
+			if object.game.physics_type in ['RIGID_BODY', 'DYNAMIC']:
+				entities.append( Entity( split_name, list(object.location), list(object.scale),
 											list(object.dimensions), list(object.rotation_euler), properties) )
-					break
+			else: #add to props
+				for i in range( len(props) ):
+					if pow(2, i) > best:
+						print("best:",pow(2,i))
+						properties = []
+						print(object.game.physics_type)
+						
+						for p in object.game.properties:
+							#properties.append({p.name:p.value})
+							properties.append([p.name, p.value])
+	
+						if split_name not in known_objects:
+							split_name = "WTF" #yes this is actually important
+						print(split_name)
+						props[i].append( Prop( split_name, list(object.location), list(object.scale),
+												list(object.dimensions), list(object.rotation_euler), properties) )
+						break
 
 
 		elif object.type in ["LAMP"]:
@@ -152,6 +159,7 @@ def bake_cell():
 	newcell.props = props
 	newcell.lamps = lamps
 	newcell.fx = FX
+	newcell.entities = entities
 
 	if bpy.context.scene.cell_props['terrain'].bool:
 		newcell.terrain = bpy.context.scene.cell_props['terrain file path'].string

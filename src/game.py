@@ -8,7 +8,6 @@ import bge
 from entity_base import EntityBase
 from player import Player
 from item import Item
-#from savefile import Savefile
 from sound_manager import SoundManager
 from world import World
 
@@ -24,12 +23,6 @@ class Game:
 	AIM_WEAPON_KEY = 8
 	SHOOT_WEAPON_KEY = 9
 	MOUSE_SENSITIVITY = 6
-
-	entity = {\
-		'EntityBase': EntityBase,
-		'Player': Player,
-		'Item': Item,
-		}
 
 	def __init__(self):
 		print("game.__init__()")
@@ -72,23 +65,26 @@ class Game:
 			Game.MOUSE_SENSITIVITY: 5.0,
 			}
 
-		#self.current_savefile = self.get_last_played_savefile()
-		#self.sound_manager = SoundManager()
 		self.world = None
+		self.player = None
 		self.sound_manager = SoundManager()
 
-		#bge.logic.getCurrentScene().replace('world')
-
-	def main(self):
-
+	def update(self):
 		self.delta_time = (time.time()-self.game_started) - self.game_time
 		self.game_time += self.delta_time
 
 		if self.world == None:
 			self.world = World()
-		#    self.world.create('novus_terra.world')
-
 		self.world.main()
+		if self.player == None:
+			self.player = Player()
 
-	def get_last_played_savefile(self):
-		return Savefile('/saves/blah')
+		
+		if 'player' in bge.logic.getCurrentScene().objects:
+			if self.player._data == bge.logic.getCurrentScene().objects['player']:
+				self.player.main()
+			else:
+				self.player._wrap(bge.logic.getCurrentScene().objects['player'])
+		else:	
+			self.player._unwrap()
+

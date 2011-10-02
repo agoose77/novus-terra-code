@@ -32,7 +32,7 @@ class Player(EntityBase):
 
 	def __init__(self):
 		print("player.__init__()")
-		EntityBase.__init__(self, 'player')
+
 
 		# Player Stats
 		self.health = 100
@@ -60,7 +60,20 @@ class Player(EntityBase):
 		self.is_in_combat = False
 		self.stored_state = None
 		self.camera_on = True
+		
+		# Inventory
+		self.inventory = Inventory()
+		
+		#adding some items for testing:
+		self.inventory.add_item( Item( 0, 2, 'SMG machine gun', description='This is a gun you use to shoot things./nJust point and shoot', size=1, cost=0, effects={}), amount=1 )
+		self.inventory.add_item( Item( 0, 0, '22 mm ammo', description='ammo that goes in the gun', size=1, cost=0, effects={}), amount=56 )
+		self.inventory.add_item( Item( 0, 0, 'wrench', description='a wrench', size=1, cost=0, effects={}, icon='wrench.png'), amount=1 )
+		print (self.inventory.items)
 
+		
+	def _wrap(self, object):
+		EntityBase._wrap(self, object)
+		#JP - stuff i think might involve a specific wrapped object, was moved here from __init__
 		# Vehicle
 		self.current_vehicle = None
 		self.vehicle= None
@@ -80,8 +93,7 @@ class Player(EntityBase):
 		self.movement_state_machine.add_transition('walk', 'vehicle', self.has_entered_vehicle)
 		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
 
-		# Inventory
-		self.inventory = Inventory()
+		
 
 		# Sound manager?
 		#self.sound= SoundManager()
@@ -95,9 +107,10 @@ class Player(EntityBase):
 		self.temp_pos = 1
 		self.set_loc = [child for child in self.childrenRecursive if 'set_loc' in child][0]
 		self.lev = None
-
-		#world.entity_list.append(self)
-
+		
+	def _unwrap(self):
+		EntityBase._unwrap(self)
+		
 	# Animations
 	def handle_animations(self):
 		pass
@@ -404,20 +417,22 @@ class Player(EntityBase):
 
 	###
 	def main(self):
-		EntityBase.main(self)
-		self.movement_state_machine.main()
-		#self.b_tree.main()
+	
+		if bge.logic.globalDict['pause'] == 0 and self._data:
+			EntityBase.main(self)
+			self.movement_state_machine.main()
+			#self.b_tree.main()
 
-		if self.camera_on == True:
-			self.handle_camera()
+			if self.camera_on == True:
+				self.handle_camera()
 
-		self.handle_interactions()
-		self.temp_pos2()
+			self.handle_interactions()
+			self.temp_pos2()
 
-		#if self.current_weapon != None:
-		self.handle_weapon()
-		#self.sound.main()
+			#if self.current_weapon != None:
+			self.handle_weapon()
+			#self.sound.main()
 
-		# handle dialogue
-		#self.dialogue.main()
+			# handle dialogue
+			#self.dialogue.main()
 
