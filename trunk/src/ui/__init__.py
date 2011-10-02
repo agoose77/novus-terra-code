@@ -14,3 +14,4 @@ from .manager import *
 from .loading import *
 from .start import *
 from .pause import *
+from .nwidgets import *

@@ -4,7 +4,7 @@ class Inventory:
     def __init__(self):
         self.items = {}
         self.current_items_count = 0
-        self.max_items = 10#-1
+        self.max_items = 100#-1
 
     def has_item(self, item_id, amount=1):
         if item_id in self.items.keys():

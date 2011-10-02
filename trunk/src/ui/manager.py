@@ -27,36 +27,46 @@ class System(bgui.System):
 		# Create a keymap for keyboard input
 		self.keymap = {getattr(bge.events, val): getattr(bgui, val) for val in dir(bge.events) if val.endswith('KEY') or val.startswith('PAD')}
 
+		self.screens = { 'pause': Pause(self, 'pause', size=self.size),
+						 'start': Start(self, 'start'),
+						 'loading': Loading(self, 'loading') }
+		for entry in self.screens:
+			self.screens[entry].visible = 0
+		
+		
 	def clear(self):
-		if self.current.name in self.children:
-			self._remove_widget(self.current)
+		if self.current:
+			if self.current.name in self.children:
+				self.current.visible = 0
 			
 	def show_loading(self, filename):
-
-		if self.current.name in self.children:
-			self._remove_widget(self.current)
-		self.current = Loading(self, 'loading')
+		if self.current:
+			if self.current.name in self.children:
+				self.current.visible = 0
+		self.current = self.screens['loading']
+		self.current.visible = 1
 		self.current.load(filename)
 		
 	def show_start(self):
 		if self.current:
 			if self.current.name in self.children:
-				self._remove_widget(self.current)
-		self.current = Start(self, 'start')
-
+				self.current.visible = 0
+		self.current = self.screens['start']
+		self.current.visible = 1
+		
 	def pause(self):
-		if self.paused == 0:
-			self.paused = 1
+		if bge.logic.globalDict['pause'] == 0:
+			bge.logic.globalDict['pause'] = 1
 			if self.current:
 				if self.current.name in self.children:
-					self._remove_widget(self.current)
-			print( "SYSTEM SIZE:", self.size)
-			self.current = Pause(self, 'pause', size=self.size)
+					self.current.visible = 0
+			self.current = self.screens['pause']
+			self.current.visible = 1
 		else:
-			self.paused = 0
+			bge.logic.globalDict['pause'] = 0
 			#get rid of the pause menu
 			if self.current:
-				self._remove_widget(self.current)
+				self.current.visible = 0
 				self.current = 0
 					
 	def update(self):
