@@ -28,7 +28,7 @@ class World:
 		self.entity_loading_queue = None
 		self.entity_list = []
 
-		self.player = Player()
+		self.player = None
 		self.ai_manager = AI_Manager()
 
 		self.world_time = 0.0
@@ -97,16 +97,5 @@ class World:
 
 
 	def main(self):
-
-		#JPLUR ENTITY HACKS
-		if game.init_game == 1:
-			self.player.main()
-			self.ai_manager.main()
-        #	self.filters()
-
-			# MUSIC
-			#sound = aud.Factory(PATH_SOUNDS+'music_1.ogg')
-			#handle = aud.device().play(sound)
-
 		self.handle_time()
 
