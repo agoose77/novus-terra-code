@@ -164,8 +164,6 @@ class Player(EntityBase):
 		vel = self.getLinearVelocity()
 		move = [0,0,0]
 
-		self.armature['animation'] = 1
-
 		### Keys
 		if keyboard[bge.events.LEFTSHIFTKEY]:
 			speed = self.run_speed
@@ -193,66 +191,17 @@ class Player(EntityBase):
 		com = vel[2]+move[2]
 		self.localLinearVelocity = [move[1],move[0], com]
 
-
 		###
-		if move[0] + move[1] == 0:
+		if move[0] + move[1] != 0:
 			print("Walking")
-
-			self.armature.controllers[0].actuators['Action'].action = 'P90_run'
-			self.armature.controllers[0].actuators['Action'].frameStart = 1
-			self.armature.controllers[0].actuators['Action'].frameEnd = 32
+			self.armature.playAction("P90_walk", 1, 32, layer=5, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(4)
 
 		else:
 			print("IDLE")
+			self.armature.playAction("P90_idle", 1, 64, layer=4, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(5)
 
-			self.armature.controllers[0].actuators['Action'].action = 'P90_idle'
-			self.armature.controllers[0].actuators['Action'].frameStart = 1
-			self.armature.controllers[0].actuators['Action'].frameEnd = 64
-
-
-		''' - a101 movement code - get errors
-		fx = 0.0
-		fy = 0.0
-
-		if keyboard.events[bge.events.WKEY] == bge.logic.KX_INPUT_ACTIVE:
-			fy += 1.0
-		if keyboard.events[bge.events.SKEY] == bge.logic.KX_INPUT_ACTIVE:
-			fy -= 1.0
-		if keyboard.events[bge.events.AKEY] == bge.logic.KX_INPUT_ACTIVE:
-			fx -= 1.0
-		if keyboard.events[bge.events.DKEY] == bge.logic.KX_INPUT_ACTIVE:
-			fx += 1.0
-
-		if keyboard.events[bge.events.TKEY] == 1:
-			self.equip_weapon(8)
-
-		if fx or fy:
-			ray_end = self.worldPosition.copy()
-			ray_end.z -= 2.0
-			hit_obj, hit_pos, hit_normal = self.rayCast(ray_end, self._data)		### TEMP - needs fixing (self._data)
-
-			# Direction along the xy plane to apply the force  (rotated 90 degrees, for when cross product is taken)
-			force_xy = Vector([fx, fy, 0]) * Matrix.Rotation(-math.pi/2, 3, [0, 0, 1])
-
-			# Direction to apply force, taking into account slope of ground plane
-			force_xyz = 100 * hit_normal.cross(force_xy).normalized()
-
-			self.applyForce(force_xyz, True)
-
-			# limit velocity
-			if keyboard.events[bge.events.LEFTSHIFTKEY] == bge.logic.KX_INPUT_ACTIVE:
-				vel_limit = self.run_speed
-			else:
-				vel_limit = self.walk_speed
-
-			vel = self.worldLinearVelocity
-			if vel.magnitude > vel_limit:
-				vel.magnitude = vel_limit
-				self.worldLinearVelocity = vel
-
-			# Animations
-			self.handle_animations()
-			'''
 
 	def handle_fall_state(self, FSM):
 		pass
