@@ -21,11 +21,13 @@ except:
 
 #from game import *
 from item import Item
+from weapon import Weapon
 from sound_manager import SoundManager
 from Inventory import Inventory
 from dialogue_system import DialogueSystem
 #from world import World
 import ui
+import session
 
 ###
 class Player(EntityBase):
@@ -42,7 +44,10 @@ class Player(EntityBase):
 		self.walk_speed = 8.0
 		self.run_speed = 15.0
 		self.walk_temp = 0.0
+		self.init_1 = False
+		self.animations= []
 
+		#
 		self.impants = []
 		self.stats = {'temp':'temp'}
 
@@ -60,17 +65,17 @@ class Player(EntityBase):
 		self.is_in_combat = False
 		self.stored_state = None
 		self.camera_on = True
-		
+
 		# Inventory
 		self.inventory = Inventory()
-		
+
 		#adding some items for testing:
 		self.inventory.add_item( Item( 0, 2, 'SMG machine gun', description='This is a gun you use to shoot things./nJust point and shoot', size=1, cost=0, effects={}), amount=1 )
 		self.inventory.add_item( Item( 0, 0, '22 mm ammo', description='ammo that goes in the gun', size=1, cost=0, effects={}), amount=56 )
 		self.inventory.add_item( Item( 0, 0, 'wrench', description='a wrench', size=1, cost=0, effects={}, icon='wrench.png'), amount=1 )
 		print (self.inventory.items)
 
-		
+
 	def _wrap(self, object):
 		EntityBase._wrap(self, object)
 		#JP - stuff i think might involve a specific wrapped object, was moved here from __init__
@@ -93,7 +98,7 @@ class Player(EntityBase):
 		self.movement_state_machine.add_transition('walk', 'vehicle', self.has_entered_vehicle)
 		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
 
-		
+
 
 		# Sound manager?
 		#self.sound= SoundManager()
@@ -107,37 +112,48 @@ class Player(EntityBase):
 		self.temp_pos = 1
 		self.set_loc = [child for child in self.childrenRecursive if 'set_loc' in child][0]
 		self.lev = None
-		
+
 	def _unwrap(self):
 		EntityBase._unwrap(self)
-		
+
 	# Animations
 	def handle_animations(self):
 		pass
 
 	# Update Animations when current weapon changes
-	def update_animations(self):
-		self.current_animations['idle'] = self.current_weapon['name']+' idle'
-		self.current_animations['walk'] = self.current_weapon['name']+' walk'
-		self.current_animations['run'] = self.current_weapon['name']+' run'
-		self.current_animations['reload'] = self.current_weapon['name']+' reload'
-		self.current_animations['attack'] = self.current_weapon['name']+' attack'
-		self.current_animations['switch'] = self.current_weapon['name']+' switch'
-		self.current_animations['aim'] = self.current_weapon['name']+' aim'
+	def update_animations(self, name, do):
+		#self.current_weapon.animations['idle'] = self.current_weapon['name']+' idle'
+		#self.current_weapon.animations['walk'] = self.current_weapon['name']+' walk'
+		#self.current_weapon.animations['run'] = self.inventory.current_weapon.name['name']+' run'
+		#self.current_weapon.animations['reload'] = self.inventory.current_weapon['name']+' reload'
+		#self.current_weapon.animations['attack'] = self.inventory.current_weapon['name']+' attack'
+		#self.current_weapon.animations['switch'] = self.inventory.current_weapon['name']+' switch'
+		#self.current_weapon.animations['aim'] = self.inventory.current_weapon['name']+' aim'
 		#self.current_animations[''] = self.current_weapon['name']+' '
 
+		if do == 'check':
+			if name in self.animations:
+				return True
+			else:
+				self.animations.append(name)
+				return False
+		elif do == 'remove':
+			try:
+				self.animations.remove(name)
+			except:
+				pass
 
-	def equip_weapon(self,id):
-		print (self.inventory.items)
-		self.current_weapon = Item.items[id]
-		name = self.current_weapon.name
+	def equip_weapon(self):
+		weapon = self.inventory.current_weapon#self.current_weapon.name
+		name = weapon.name
 
-		new = bge.logic.getCurrentScene().addObject(name,'weapon_location')
-		new.position = bge.logic.getCurrentScene().objects['weapon_location'].position
-		new.orientation =bge.logic.getCurrentScene().objects['weapon_location'].orientation
-		new.setParent(bge.logic.getCurrentScene().objects['weapon_location'])
+		new = bge.logic.getCurrentScene().addObject(name,'weapon_position')
+		new.position = bge.logic.getCurrentScene().objects['weapon_position'].position
+		new.orientation =bge.logic.getCurrentScene().objects['weapon_position'].orientation
+		new.setParent(bge.logic.getCurrentScene().objects['weapon_position'])
 
 		# Update Animations
+		#self.update_animations()
 
 		# Finished
 		print ('Equiped')
@@ -147,6 +163,8 @@ class Player(EntityBase):
 		keyboard = bge.logic.keyboard.events
 		vel = self.getLinearVelocity()
 		move = [0,0,0]
+
+		self.armature['animation'] = 1
 
 		### Keys
 		if keyboard[bge.events.LEFTSHIFTKEY]:
@@ -169,19 +187,27 @@ class Player(EntityBase):
 
 		if ray[0] != None:
 			if keyboard[bge.events.SPACEKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
-				move[2] = 10
+				move[2] = 5
 
 		###
 		com = vel[2]+move[2]
 		self.localLinearVelocity = [move[1],move[0], com]
 
-		if move[0] != 0 or move[1] != 0:
-			self.walk_temp += 1
 
-			if self.walk_temp > 40:
-				print ('TESTETSETEST1233 SOUND')
-				#SoundManager.play_sound('walk_grass.ogg')
-				self.walk_temp = 0
+		###
+		if move[0] + move[1] == 0:
+			print("Walking")
+
+			self.armature.controllers[0].actuators['Action'].action = 'P90_run'
+			self.armature.controllers[0].actuators['Action'].frameStart = 1
+			self.armature.controllers[0].actuators['Action'].frameEnd = 32
+
+		else:
+			print("IDLE")
+
+			self.armature.controllers[0].actuators['Action'].action = 'P90_idle'
+			self.armature.controllers[0].actuators['Action'].frameStart = 1
+			self.armature.controllers[0].actuators['Action'].frameEnd = 64
 
 
 		''' - a101 movement code - get errors
@@ -294,7 +320,8 @@ class Player(EntityBase):
 			#self.sound.play_sound('shoot_temp.ogg', self)
 			#sound = aud.Factory(PATH_SOUNDS+'shoot_temp.ogg')
 			#handle = aud.device().play(sound)
-			Game.sound_manager.play_sound('shoot_temp.ogg', self)
+			#Game.sound_manager.play_sound('shoot_temp.ogg', self)
+			bge.logic.globalDict['game'].sound_manager.play_sound('shoot_temp.ogg', self)
 
 
 			if hit != None:
@@ -341,10 +368,21 @@ class Player(EntityBase):
 			if 'Item' in hit:
 
 				if keyboard.events[bge.events.EKEY] == 1:
-				  self.inventory.add_item(hit['Item'].id)
+				  self.inventory.add_item(hit['Item'])
+                  #self.inventory.add_item( Item( 0, 0, '22 mm ammo', description='ammo that goes in the gun', size=1, cost=0, effects={}), amount=56 )
 				  print ('added to inventory')
 				  print (self.inventory.items)
 				  hit.endObject()
+
+			# Weapons
+			if 'WeaponC' in hit:
+				if keyboard.events[bge.events.EKEY] == 1:
+				  self.inventory.replace_weapon(hit.parent['Weapon'])
+				  self.equip_weapon()
+                  #self.inventory.add_item( Item( 0, 0, '22 mm ammo', description='ammo that goes in the gun', size=1, cost=0, effects={}), amount=56 )
+				  #print ('added to inventory')
+				  #print (self.inventory.items)
+				  hit.parent.endObject()
 
 			# pickup
 			if 'pick' in hit:
@@ -382,11 +420,12 @@ class Player(EntityBase):
 		w = bge.render.getWindowWidth()
 		h = bge.render.getWindowHeight()
 
-		w,h = int(w), int(h)
-		w = (w - w%2)/2
-		h = (h - h%2)/2
+		w,h = w, h
+		w = (w - int(w)%2)/2
+		h = (h - int(h)%2)/2
 
 		bge.render.setMousePosition(int(w), int(h))
+		#bge.render.setMousePosition(int(w/2), int(h/2))
 
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))
@@ -403,6 +442,7 @@ class Player(EntityBase):
 					self.camera.applyRotation([-mouse_my, 0, 0], 1) # Y
 					self.camera['ml_rotx'] += mouse_my
 
+
 	def remove_controls(self):
 		self.stored_state = self.movement_state_machine.current_state
 
@@ -411,20 +451,28 @@ class Player(EntityBase):
 
 	def temp_pos2(self):
 		if self.temp_pos == 1:
-			self.position = bge.logic.getCurrentScene().objects['player_location'].position
+			#self.position = bge.logic.getCurrentScene().objects['player_location'].position
 			self.temp_pos = 2
 			#self.handle_lights()
 
 	###
 	def main(self):
-	
+
 		if bge.logic.globalDict['pause'] == 0 and self._data:
 			EntityBase.main(self)
 			self.movement_state_machine.main()
 			#self.b_tree.main()
 
-			if self.camera_on == True:
-				self.handle_camera()
+		#if self.init_1 == 0:
+			#bge.logic.globalDict['game'].world.entity_list.append(self)
+		#	session.game.world.entity_list.append(self)
+		#	self.init_1 = 1
+
+		#if self.camera_on == True:
+			self.handle_camera()
+
+			#if self.camera_on == True:
+			#	self.handle_camera()
 
 			self.handle_interactions()
 			self.temp_pos2()

@@ -10,6 +10,9 @@ from mathutils import Vector, Matrix
 from ai_base import AIBase
 import ui
 
+#import game
+#from game import Game
+
 ###
 class AI_Manager:
 
@@ -18,17 +21,28 @@ class AI_Manager:
 		self.index = 0
 		self.debug = False
 
+		# Hack
 		for obj in bge.logic.getCurrentScene().objects:
 			if 'spawn_point' in obj.name:
-				temp = AIBase()
-				temp.position= obj.position
-				#game.world.entity_list.append(temp)
-				self.nodes.put(temp)
+				obj['spawned'] = 0
 
 
 	###
 	def main(self):
-		print("YP")
+
+		# Spawn Points
+		for obj in bge.logic.getCurrentScene().objects:
+			if 'spawn_point' in obj.name:
+				if obj['spawned'] == 0:
+					temp = AIBase()
+					temp.position = obj.position
+
+					bge.logic.globalDict['game'].world.entity_list.append(temp)
+					self.nodes.put(temp)
+
+					obj['spawned'] = 1
+
+		# Cycle
 		if self.nodes.empty() == False:
 
 			object1 = self.nodes.get()

@@ -3,7 +3,6 @@ class Item:
 	CONSUMABLE_ITEM = 1
 	QUEST_ITEM = 2
 	CLOTHING_ITEM = 4
-	WEAPON_ITEM = 8
 
 	items = {}
 

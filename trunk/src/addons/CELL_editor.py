@@ -111,17 +111,18 @@ def bake_cell():
 			if object.game.physics_type in ['RIGID_BODY', 'DYNAMIC']:
 				entities.append( Entity( split_name, list(object.location), list(object.scale),
 											list(object.dimensions), list(object.rotation_euler), properties) )
+
 			else: #add to props
 				for i in range( len(props) ):
 					if pow(2, i) > best:
 						print("best:",pow(2,i))
 						properties = []
 						print(object.game.physics_type)
-						
+
 						for p in object.game.properties:
 							#properties.append({p.name:p.value})
 							properties.append([p.name, p.value])
-	
+
 						if split_name not in known_objects:
 							split_name = "WTF" #yes this is actually important
 						print(split_name)
