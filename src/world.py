@@ -30,6 +30,7 @@ class World:
 
 		self.player = None
 		self.ai_manager = AI_Manager()
+		#self.entity_list.append(self.player)
 
 		self.world_time = 0.0
 		self.world_time_scale = 0.05

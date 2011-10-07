@@ -38,7 +38,6 @@ class SoundManager:
 
 	def main(self):
 		device = aud.device()
-		print(len)
 
 		for sound in self.sounds:
 			if sound['Multi'] == False:
@@ -47,12 +46,11 @@ class SoundManager:
 						handle = aud.Factory(PATH_SOUNDS+sound['Name'])
 						h = device.play(handle)
 						self.handles.append([h, sound])
+						self.sounds.remove(sound)
 
 		for handle in self.handles:
 			status = handle[0].status
-			print (status)
 
-			if status == False:
+			#if status == False:
 				#self.sounds.remove(handle[1])
 				#self.handles.remove(handle)
-				print ('DO')

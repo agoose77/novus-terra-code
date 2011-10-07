@@ -5,6 +5,8 @@ import time
 import tweener
 import terrain
 import cell
+from item import Item
+from weapon import Weapon
 
 
 try:
@@ -74,14 +76,14 @@ class Cell:
 		self.id = 0
 		self.name = ""
 		self.props = []
-		self.entities = [] 
+		self.entities = []
 		self.lamps = []
 		self.terrain = 0 #string of terrain file to load if needed
 		self.blends = [] #list of string filenames that should be loaded before building cell
 		self.models = [] #list of string object names that are used in this cell
 		self.terrain = None
 		self.navmesh = None #navmesh or obstical avoidance
-		
+
 	def save(self, filename): #this is for level creation and shouldn't be used at runtime
 		for thing in self.props:
 			for entry in thing:
@@ -197,9 +199,6 @@ class CellManager:
 
 
 
-
-
-
 		print( "()()(): ", size, depth, terrain.tr_singleton.map.scale )
 		terrain.qt_singleton = terrain.Quadtree(int(size/2), [0,0], 1, max_depth=depth, scale = terrain.tr_singleton.map.scale)
 		self.terrain = 1
@@ -295,11 +294,35 @@ class CellManager:
 		new.color = [1.0,1.0,1.0,0.0]
 		new.localScale = thing.scale
 		new.localOrientation = thing.rotation
+
 		if 'properties' in thing.__dict__:
 			for p in thing.properties:
-				new[p[0]] = p[1]
-				if p == 'ITEM':
-					print ('ITEM')
+
+				if p[0] == 'Item':
+					for ob in Item.items:
+						if Item.items[ob].name == p[1]:
+							print("9999999999999999999999999999999999999999999999999999999999999999999999999999999")
+							p[1] = Item( 0, 0, 'wrench', description='a wrench', size=1, cost=0, effects={}, icon='wrench.png')
+					new[p[0]] = p[1]
+
+				elif p[0] == 'Weapon':
+					print("Weapon!!!")
+					found = []
+					for ob in Weapon.weapons:
+						if Weapon.weapons[ob].name == p[1]:
+							found.append(ob)
+
+					if len(found) == 0:
+						p[1] = Weapon(0, 'P90', description='', size=1, cost=0, effects={}, icon='cube.png', clip_size = 30, ammo_type = 1, weapon_type = 'Pistol')
+					else:
+						p[1] = found[0]
+
+					new[p[0]] = p[1]
+
+
+				# Other
+				else:
+					new[p[0]] = p[1]
 
 		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 2.0)
 		return new
