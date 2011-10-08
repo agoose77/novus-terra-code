@@ -97,6 +97,7 @@ class Player(EntityBase):
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
 		self.movement_state_machine.add_transition('walk', 'vehicle', self.has_entered_vehicle)
 		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
+		session.game.world.entity_list.append(self)
 
 
 

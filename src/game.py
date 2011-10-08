@@ -10,6 +10,7 @@ from player import Player
 from item import Item
 from sound_manager import SoundManager
 from world import World
+from ai_manager import AI_Manager
 
 class Game:
 	FORWARD_KEY = 0
@@ -79,12 +80,12 @@ class Game:
 		if self.player == None:
 			self.player = Player()
 
-		
+
 		if 'player' in bge.logic.getCurrentScene().objects:
 			if self.player._data == bge.logic.getCurrentScene().objects['player']:
 				self.player.main()
 			else:
 				self.player._wrap(bge.logic.getCurrentScene().objects['player'])
-		else:	
+		else:
 			self.player._unwrap()
 
