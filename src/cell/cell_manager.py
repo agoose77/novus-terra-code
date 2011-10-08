@@ -313,7 +313,7 @@ class CellManager:
 							found.append(ob)
 
 					if len(found) == 0:
-						p[1] = Weapon(0, 'P90', description='', size=1, cost=0, effects={}, icon='cube.png', clip_size = 30, ammo_type = 1, weapon_type = 'Pistol')
+						p[1] = Weapon(1, 'P90', description='', size=1, cost=0, effects={}, icon='cube.png', clip_size = 30, ammo_type = 1, weapon_type = 'Pistol')
 					else:
 						p[1] = found[0]
 
