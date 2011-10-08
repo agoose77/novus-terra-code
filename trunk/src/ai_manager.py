@@ -12,6 +12,7 @@ import ui
 
 #import game
 #from game import Game
+import session
 
 ###
 class AI_Manager:
@@ -35,9 +36,10 @@ class AI_Manager:
 			if 'spawn_point' in obj.name:
 				if obj['spawned'] == 0:
 					temp = AIBase()
+					temp._wrap(bge.logic.getCurrentScene().objects['ai_base'])
 					temp.position = obj.position
 
-					bge.logic.globalDict['game'].world.entity_list.append(temp)
+					session.game.world.entity_list.append(temp)
 					self.nodes.put(temp)
 
 					obj['spawned'] = 1

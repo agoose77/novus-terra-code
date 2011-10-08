@@ -99,4 +99,6 @@ class World:
 
 	def main(self):
 		self.handle_time()
+		if len(self.entity_list) != 0:
+			self.ai_manager.main()
 

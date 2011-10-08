@@ -16,13 +16,17 @@ from sound_manager import SoundManager
 from Inventory import Inventory
 
 import ui
+import session
 
 ###
 class AIBase(EntityBase):
 
 	def __init__(self):
 		print("AIBase.__init__()")
-		EntityBase.__init__(self, 'ai_base')
+		#EntityBase.__init__(self, 'ai_base')
+
+	def _wrap(self, object):
+		EntityBase._wrap(self, object)
 		#bge.logic.globalDict['game'].world.entity_list.append(self)
 
 		#
@@ -68,7 +72,7 @@ class AIBase(EntityBase):
 		self.ai_state_machine.add_transition('engage', 'flee', self.is_fleeing)
 
 		# Hacks...
-		self.ai_state_machine.current_state = 'idle'
+		self.ai_state_machine.current_state = 'engage'
 
 		#
 	#	self.inventory.add_item()
@@ -77,6 +81,7 @@ class AIBase(EntityBase):
 
 	###
 	def handle_engage(self, FSM):
+		#print("Engage")
 		enemies = self.detect_enemies()
 		closest = enemies[0]
 		self.target = closest[1]
@@ -95,11 +100,11 @@ class AIBase(EntityBase):
 
 	def handle_idle(self, FSM):
 		self['Steer'] = 0
-		self.armature.playAction("pistol_idle", 1, 61, layer=0, priority=0, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+		#self.armature.playAction("walk", 1, 32, layer=5, priority=0, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 	def handle_talk(self, FSM):
 		self['Steer'] = 0
-		self.armature.playAction("pistol_idle", 1, 61, layer=0, priority=0, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+		#self.armature.playAction("walk", 1, 32, layer=5, priority=0, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 	def handle_flee(self, FSM):
 		self.handle_movement(behavior=1)
@@ -111,7 +116,7 @@ class AIBase(EntityBase):
 		self.allies = []
 		self.enemies = []
 
-		for obj in bge.logic.globalDict['game'].world.entity_list:
+		for obj in session.game.world.entity_list:
 			if obj.name != self.name:
 				if obj.faction != self.faction:
 
@@ -151,9 +156,9 @@ class AIBase(EntityBase):
 		self['Steer'] = 1
 
 		# Animations
-		if self.do_animation('pistol_walk', 'check') == False:
-			self.do_animation('pistol_idle', 'remove')
-			self.armature.playAction("pistol_walk", 1, 33, layer=0, priority=0, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+		#if self.do_animation('pistol_walk', 'check') == False:
+			#self.do_animation('pistol_idle', 'remove')
+		self.armature.playAction("walk", 1, 33, layer=5, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 	def handle_attack(self):
 		#print("Attacking")
@@ -177,10 +182,10 @@ class AIBase(EntityBase):
 			bge.logic.globalDict['game'].sound_manager.play_sound('shoot_temp.ogg', self)
 
 
-		if self.do_animation('pistol_shoot', 'check') == False:
-			self.do_animation('pistol_walk', 'remove')
-			self.do_animation('pistol_idle', 'remove')
-			self.armature.playAction("pistol_shoot", 1, 16, layer=0, priority=0, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+		#if self.do_animation('pistol_shoot', 'check') == False:
+			#self.do_animation('pistol_walk', 'remove')
+			#self.do_animation('pistol_idle', 'remove')
+		self.armature.playAction("walk", 1, 33, layer=5, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 	def is_scared():
 		return False
@@ -196,19 +201,43 @@ class AIBase(EntityBase):
 		moral += -(self.health - 100)*0.25
 		return False
 
-	def do_animation(self, name, do):
-		if do == 'check':
-			if name in self.animations:
-				return True
-			else:
-				self.animations.append(name)
-				return False
+	def play_animation(self,name):
 
-		elif do == 'remove':
-			try:
-				self.animations.remove(name)
-			except:
-				pass
+		"""
+		1 = shoot
+		2 = reload
+		3 =
+		4 = idle
+		5 = walk
+		6 = run
+		"""
+
+		if name == 'idle':
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_idle", 1, 64, layer=4, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(5)
+			self.armature.stopAction(6)
+
+		if name == 'shoot':
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_shoot", 1, 5, layer=1, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(4)
+			self.armature.stopAction(5)
+			self.armature.stopAction(6)
+
+		if name == 'reload':
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_reload", 1, 24, layer=2, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(5)
+
+		if name == 'walk':
+			self.armature.playAction("walk", 1, 32, layer=5, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(4)
+			self.armature.stopAction(6)
+
+		if name == 'run':
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_run", 1, 64, layer=6, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(4)
+			self.armature.stopAction(5)
+
+
 	def track(self):
 		vec = self.getVectTo(self.target.position)
 		self.alignAxisToVect(-vec[1], 1, 0.5)
