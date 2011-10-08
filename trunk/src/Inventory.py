@@ -1,4 +1,5 @@
 from item import Item
+from weapon import Weapon
 
 class Inventory:
 	def __init__(self):
@@ -6,7 +7,7 @@ class Inventory:
 		self.weapons = {}
 
         # Weapons
-		self.weapon_slot_1 = None
+		self.weapon_slot_1 = Weapon(0, "Hands", description='No Weapon', size=1, cost=0, effects={}, icon='cube.png', clip_size = -1, ammo_type = 0, weapon_type = 'Melee')
 		self.weapon_slot_2 = None
 		self.current_weapon = self.weapon_slot_1
 
@@ -74,21 +75,22 @@ class Inventory:
 		print('--------------')
 
 		if self.current_weapon == self.weapon_slot_1:
-			if self.weapon_slot_1 == None:
-				if self.weapon_slot_2 == None:
-					self.weapon_slot_2 = self.weapon_slot_1
+			#if self.weapon_slot_1 != None:
+			#	if self.weapon_slot_2 == None:
+			#		self.weapon_slot_2 = self.weapon_slot_1
 
-				self.weapon_slot_1 = weapon
-				self.current_weapon = self.weapon_slot_1
+			self.weapon_slot_1 = weapon
+			self.current_weapon = self.weapon_slot_1
 
 
-		elif self.current_weapon == self.weapon_slot_2:
+		'''elif self.current_weapon == self.weapon_slot_2:
 			if self.weapon_slot_2 == None:
 				if self.weapon_slot_1 == None:
 					self.weapon_slot_1 = self.weapon_slot_2
 
 				self.weapon_slot_2 = weapon
 				self.current_weapon = self.weapon_slot_2
+				'''
 
 
 

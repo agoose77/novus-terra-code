@@ -194,12 +194,51 @@ class Player(EntityBase):
 		###
 		if move[0] + move[1] != 0:
 			print("Walking")
-			self.armature.playAction("P90_walk", 1, 32, layer=5, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
-			self.armature.stopAction(4)
+			if speed == self.walk_speed:
+				self.play_animation('walk')
+
+			elif speed == self.run_speed:
+				self.play_animation('run')
 
 		else:
 			print("IDLE")
-			self.armature.playAction("P90_idle", 1, 64, layer=4, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.play_animation('idle')
+
+
+	def play_animation(self,name):
+
+		"""
+		1 = shoot
+		2 = reload
+		3 =
+		4 = idle
+		5 = walk
+		6 = run
+		"""
+
+		if name == 'idle':
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_idle", 1, 64, layer=4, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(5)
+			self.armature.stopAction(6)
+
+		if name == 'shoot':
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_shoot", 1, 5, layer=1, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(4)
+			self.armature.stopAction(5)
+			self.armature.stopAction(6)
+
+		if name == 'reload':
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_reload", 1, 24, layer=2, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(5)
+
+		if name == 'walk':
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_walk", 1, 32, layer=5, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(4)
+			self.armature.stopAction(6)
+
+		if name == 'run':
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_run", 1, 64, layer=6, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.stopAction(4)
 			self.armature.stopAction(5)
 
 
@@ -266,16 +305,11 @@ class Player(EntityBase):
 
 		# SHOOT
 		if mouse.events[bge.events.LEFTMOUSE] == 1:
-			#self.sound.play_sound('shoot_temp.ogg', self)
-			#sound = aud.Factory(PATH_SOUNDS+'shoot_temp.ogg')
-			#handle = aud.device().play(sound)
-			#Game.sound_manager.play_sound('shoot_temp.ogg', self)
-			bge.logic.globalDict['game'].sound_manager.play_sound('shoot_temp.ogg', self)
-
+			session.game.sound_manager.play_sound('shoot_temp.ogg', self)
+			self.play_animation('shoot')
+			print("BOOM!!!")
 
 			if hit != None:
-
-				# Impact Effects
 				new = bge.logic.getCurrentScene().addObject('B_Hole', bge.logic.getCurrentController().owner, 100)
 				new.position = ray.hitPosition
 				new.alignAxisToVect(ray.hitNormal, 2, 1.0)
