@@ -16,7 +16,7 @@ sys.path.append('./src/')
 
 import bpy
 import cell
-from cell.cell_manager import Prop, Lamp, Cell
+from cell.cell_manager import Prop, Lamp, Cell, Entity
 
 def index_blends(dir, output):
 		file_dict = {}
@@ -109,6 +109,9 @@ def bake_cell():
 
 			#sort entities
 			if object.game.physics_type in ['RIGID_BODY', 'DYNAMIC']:
+				properties = []
+				for p in object.game.properties:
+					properties.append([p.name, p.value])
 				entities.append( Entity( split_name, list(object.location), list(object.scale),
 											list(object.dimensions), list(object.rotation_euler), properties) )
 
@@ -142,8 +145,6 @@ def bake_cell():
 				lamps.append( Lamp(split_name, list(object.location), list(object.rotation_euler),
 									lamp.type, list(lamp.color), lamp.distance, lamp.energy) )
 
-	for entry in props:
-				print (len(entry))
 
 	### Cell FX Settings
 	FX = {}
@@ -161,7 +162,7 @@ def bake_cell():
 	newcell.lamps = lamps
 	newcell.fx = FX
 	newcell.entities = entities
-
+	print( entities )
 	if bpy.context.scene.cell_props['terrain'].bool:
 		newcell.terrain = bpy.context.scene.cell_props['terrain file path'].string
 	filename=bpy.context.scene.cell_props['cell_filename'].string

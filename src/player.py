@@ -194,7 +194,6 @@ class Player(EntityBase):
 
 		###
 		if move[0] + move[1] != 0:
-			print("Walking")
 			if speed == self.walk_speed:
 				self.play_animation('walk')
 
@@ -202,7 +201,6 @@ class Player(EntityBase):
 				self.play_animation('run')
 
 		else:
-			print("IDLE")
 			self.play_animation('idle')
 
 

@@ -7,6 +7,8 @@ import terrain
 import cell
 from item import Item
 from weapon import Weapon
+import session
+from entity_base import EntityBase
 
 
 try:
@@ -35,7 +37,7 @@ class Prop:
 
 class Entity:
 	""" This is an entity as far as what needs to be known from a cell file.  """
-	def __init__(self):
+	def __init__(self, name="None", co=[0.0,0.0,0.0], scale=[1.0,1.0,1.0], dimensions=[1.0,1.0,1.0], rotation=[1.0,0.0,0.0], properties=[]):
 		self.id = 0
 		self.name = name
 		self.co = co
@@ -43,7 +45,7 @@ class Entity:
 		self.dimensions = dimensions
 		self.rotation = rotation
 		self.game_object = 0 #the BGE object pointer
-		self.properties = properties1
+		self.properties = properties
 
 class Lamp:
 	def __init__(self, name="None", co=[0.0,0.0,0.0], rotation=[1.0,0.0,0.0], type="POINT", color=[0.0,0.0,0.0], distance=0.5, energy=50, spot_size=100, spot_blend=0.25, spot_bias=2.0):
@@ -83,24 +85,31 @@ class Cell:
 		self.models = [] #list of string object names that are used in this cell
 		self.terrain = None
 		self.navmesh = None #navmesh or obstical avoidance
+		
 
 	def save(self, filename): #this is for level creation and shouldn't be used at runtime
 		for thing in self.props:
 			for entry in thing:
 				if entry.name not in self.models:
 					self.models.append( entry.name )
-		print(self.models)
+		for thing in self.entities:
+			if thing.name not in self.models:
+				self.models.append( thing.name )
+		print( self.models)
 		fo = open(filename, 'wb')
 		pickle.dump(self,fo)
 
 class CellManager:
 	def __init__(self):
+		self.cell = 0
+	
 		self.props_in_game = []
 		self.lamps_in_game = []
 		self.entities_in_game = []
 
 		self.ready_to_load = 0
-
+		self.hook = 0 #used for a tweener callback 
+		
 		self.terrain = False
 
 		# this will map out what objects are in what blends
@@ -125,6 +134,7 @@ class CellManager:
 		try:
 			fo = open(filepath, 'rb')
 			self.cell = pickle.load(fo)
+			self.cell.name = filepath
 			fo.close
 		except:
 			return("Failure to load "+filepath)
@@ -151,6 +161,8 @@ class CellManager:
 			else:
 				self.terrain = False
 
+		
+		tweener.singleton.add(self, "hook", 3, length=.5, callback=self.load_entities)		
 		tweener.singleton.add(ui.singleton.current, "color", "[*,*,*,0.0]", length=5.0, callback=ui.singleton.clear)
 
 	def load_terrain(self, filename):
@@ -199,7 +211,6 @@ class CellManager:
 
 
 
-		print( "()()(): ", size, depth, terrain.tr_singleton.map.scale )
 		terrain.qt_singleton = terrain.Quadtree(int(size/2), [0,0], 1, max_depth=depth, scale = terrain.tr_singleton.map.scale)
 		self.terrain = 1
 
@@ -208,12 +219,11 @@ class CellManager:
 
 	def load_libs(self):
 		scene = bge.logic.getCurrentScene()
-		print(scene.objects)
+
 		print("cell_manager.load_libs()")
 		liblist = bge.logic.LibList()
 		libs = []
 		accum = []
-		print(self.blend_dict)
 		for entry in self.cell.models:
 			for key in self.blend_dict:
 				if entry in self.blend_dict[key]:
@@ -221,11 +231,10 @@ class CellManager:
 						accum.append(key)
 					if key not in libs and str(self.convert_lib_name(key)) not in liblist: #this is the list of libraries to load
 						libs.append(key)
-		print(libs)
+
 		fred = []
 		for key in liblist:
 			if self.convert_back(key) not in accum:
-				#print ("*", self.convert_back(key) )
 				bge.logic.LibFree(key)
 		scene = bge.logic.getCurrentScene()
 
@@ -238,29 +247,54 @@ class CellManager:
 
 		print(scene.objectsInactive)
 		print(bge.logic.LibList())
+		
+	def load_entities(self):
+		if self.cell.name in session.savefile.entities: #we've visited this cell
+			print( "!revisiting!: ", self.cell.name)
+			self.cell.entities = session.savefile.entities[ self.cell.name ]
+			for thing in self.cell.entities:
+				if thing.packet:
+					ob = self.spawn_prop( thing.packet )
+					thing._wrap( ob )
+			print( self.cell.entities )
+			print(self.cell.entities[0]._data)
+		else: #getting the list from a unvisited cell
+			for thing in self.cell.entities:
+				new_entity = EntityBase(thing)
+				new_entity._wrap( self.spawn_prop(thing) )
+				self.entities_in_game.append( new_entity )
+			session.savefile.entities[ self.cell.name ] = self.entities_in_game
+			print( self.entities_in_game )
 
 
 	def convert_lib_name(self, given):
 		given = given.replace("/","\\")
 		given = given.replace(".\\", "./")
 		return given
+		
 	def convert_back(self, given):
 		given = given.replace("\\","/")
 		return given
+		
 	def cleanup(self):
 		print("cell_manager.cleanup()")
-		if 'entity_hack' in self.__dict__:
+		if 'entity_hack' in self.__dict__: #JP forget what this is for
 			self.__dict__.pop('entity_hack')
 		self.props_in_game, self.lamps_in_game, self.entities_in_game = [], [], []
 		self.kdtrees = []
 		self.lamp_kdtree = None
 
-		#ENTITY HACKS
-		import game, bge
-
-		if 'game' in bge.logic.globalDict:
-			bge.logic.globalDict.pop('game')
-			#bge.logic.globalDict['game'].world.player = None
+		
+		#Update the entities setup packet, and unwrap from their objects
+		if self.cell and self.cell.name in session.savefile.entities:
+			for entry in session.savefile.entities[ self.cell.name ]:
+				if entry._data:
+					entry.packet.co = list( entry._data.position )
+					#print(dir(entry._data.orientation))
+					entry.packet.rotation = list(entry._data.orientation.to_euler())
+					entry._unwrap()
+				
+				
 
 		tweener.singleton.nuke() #probably paranoia
 
@@ -269,8 +303,6 @@ class CellManager:
 			if entry not in self.clean_object_list:
 				#print("DIRTY:", entry)
 				entry.endObject()
-
-		game.init_game = 0
 
 		#set up light que (in lieu of cucumber branch)
 		self.spots = []
@@ -294,7 +326,6 @@ class CellManager:
 		new.color = [1.0,1.0,1.0,0.0]
 		new.localScale = thing.scale
 		new.localOrientation = thing.rotation
-
 		if 'properties' in thing.__dict__:
 			for p in thing.properties:
 
@@ -323,7 +354,7 @@ class CellManager:
 				# Other
 				else:
 					new[p[0]] = p[1]
-
+		print( "***", new )
 		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 2.0)
 		return new
 

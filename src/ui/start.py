@@ -38,7 +38,7 @@ class Start(bgui.Widget):
 		self.lbl = bgui.Label(self.win, 'label',text=blurb, pos=[100, 180], options = bgui.BGUI_THEMED )
 		#tweener.singleton.add(self, 'color', '[*,*,*,1]', length=2.0)
 		
-		self.input = bgui.TextInput(self.win, 'input', "entrance.cell", size=[160, 30], pos=[220, 120], pt_size=32,
+		self.input = bgui.TextInput(self.win, 'input', "dynamic.cell", size=[160, 30], pos=[220, 120], pt_size=32,
 			input_options = bgui.BGUI_INPUT_SELECT_ALL, options = bgui.BGUI_THEMED)
 		#self.input.activate()
 		self.input.on_enter_key = self.on_input_enter

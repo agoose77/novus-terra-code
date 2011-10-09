@@ -24,8 +24,9 @@ class EntityBase:
 
 	entities = {}
 
-	def __init__(self, object_name):
-		pass
+	def __init__(self, packet=0):
+		#packet is the Entity instance from the cell
+			self.packet = packet
 
 	def main(self):
 		pass
@@ -58,10 +59,12 @@ class EntityBase:
 		self._data = None
 
 	def destroy(self):
+		#JP - currently not in use
 		EntityBase.entities.pop(self.id)
 		self.endObject()
 
 	def freeze(self):
+		#JP - currently not in use
 		self.stored_linear_velocity = self.worldLinearVelocity
 		self.store_angular_velocity = self.worldAngularVelocity
 		self.worldLinearVelocity = [0.00001]*3
@@ -69,12 +72,14 @@ class EntityBase:
 		self.frozen = True
 
 	def unfreeze(self):
+		#JP - currently not in use
 		self.worldLinearVelocity = self.stored_linear_velocity
 		self.worldAngularVelocity = self.stored_angular_velocity
 		self.frozen = False
 
 	@classmethod
 	def from_pickled_entity(cls, pickled_entity):
+		#JP - currently not in use
 		if pickled_entity.id not in cls.entities.keys():
 			entity = EntityBase(pickled_entity.object_name, pickled_entity.position,
 				pickled_entity.orientation, pickled_entity.id, pickled_entity.type)
@@ -93,8 +98,6 @@ class EntityBase:
 	def __delitem__(self, item):
 		self._data.__delitem__(item)
 
-	def __repr__(self):
-		return self._data.__repr__
 
 	def __contains__(self, item):
 		return item in self._data
