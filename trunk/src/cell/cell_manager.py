@@ -162,7 +162,7 @@ class CellManager:
 				self.terrain = False
 
 		
-		tweener.singleton.add(self, "hook", 3, length=.5, callback=self.load_entities)		
+		tweener.singleton.add(self, "hook", 3, length=.5, callback=self.load_entities)	#using a callback so the entities are put into a built level
 		tweener.singleton.add(ui.singleton.current, "color", "[*,*,*,0.0]", length=5.0, callback=ui.singleton.clear)
 
 	def load_terrain(self, filename):

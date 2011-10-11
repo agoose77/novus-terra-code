@@ -15,25 +15,53 @@ class GameScreen(bgui.Widget):
 	def __init__(self, parent, name, aspect=None, size=[1, 1], pos=[0, 0],
 				sub_theme='', options=bgui.BGUI_DEFAULT):
 		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
-		self.test = Nbox(self, 'test', pos=[20,self.size[1]*.75-550], size = [800, 500], options=bgui.BGUI_CENTERX)
+		area = self.parent.image_back
+		self.frame = bgui.Frame(self, 'frame', pos=area.position, size = area.size, options=bgui.BGUI_CENTERX)
+		self.frame.colors = [ [0,0,0,0]]*4
+
+
+
+		self.back1 = Fut_Box(self.frame, 'back1', pos=[250,0], size = [500, 450], options=bgui.BGUI_NONE)
+		
+		self.button = bgui.FrameButton(self.back1, 'button', text='ENTER GAME', size=[110, 30], pos=[100, 120],
+			options = bgui.BGUI_THEMED)
+		# Setup an on_click callback for the image
+		self.button.on_click = self.start_game
+		
+	
+		
+		
+		blurb = "NOVUS TERRA : Alpha v0.2 : Thanks for waiting!"
+		self.lbl = bgui.Label(self.back1, 'label',text=blurb, pos=[100, 180], options = bgui.BGUI_THEMED )
+		#tweener.singleton.add(self, 'color', '[*,*,*,1]', length=2.0)
+		
+		self.input = bgui.TextInput(self.back1, 'input', "dynamic.cell", size=[160, 30], pos=[220, 120], pt_size=32,
+			input_options = bgui.BGUI_INPUT_SELECT_ALL, options = bgui.BGUI_THEMED)
+		#self.input.activate()
+		self.input.on_enter_key = self.on_input_enter
+	
+	def start_game(self, data):
+		try:
+			fo = safeopen('./data/cells/'+self.input.text, 'rb')
+			fo.close()
+			self.parent.show_loading('./data/cells/'+self.input.text)
+		except:
+			self.lbl.color = [1.0,0,0,1]
+			self.lbl.text = "ERROR: cell "+self.input.text+" not found."
 
 class InvScreen(bgui.Widget):
 	"""Frame for storing other widgets"""
 	def __init__(self, parent, name, aspect=None, size=[1, 1], pos=[0, 0],
 				sub_theme='', options=bgui.BGUI_DEFAULT):
 		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
+		area = self.parent.image_back
+		self.frame = bgui.Frame(self, 'frame', pos=area.position, size = area.size, options=bgui.BGUI_CENTERX)
+		self.frame.colors = [ [0,0,0,0]]*4
 
-		self.frame = bgui.Frame(self, 'frame', pos=[20,self.size[1]*.75-550], size = [800, 500], options=bgui.BGUI_CENTERX)
-		self.frame.colors = [ [0,0,0,.4]]*4
 
 
+		self.back1 = Fut_Box(self.frame, 'back1', pos=[250,0], size = [450, 450], options=bgui.BGUI_NONE)
 
-		self.back1 = Nbox(self.frame, 'back1', pos=[300,0], size = [500, 500], options=bgui.BGUI_NONE)
-		self.back2 = Nbox(self.frame, 'back2', pos=[0,0], size = [230, 500], options=bgui.BGUI_NONE)
-
-		self.black_frame = bgui.Frame(self.frame, 'black_frame', pos=[325, 20], border=2, size = [480, 460], options=bgui.BGUI_NONE)
-		self.black_frame.colors = [ [.3,.3,.3,.8]]*4
-		self.black_frame.border_color = [.5,.5,.5,.5]
 
 		self.items = []
 
@@ -84,16 +112,17 @@ class Pause(bgui.Widget):
 		self.current = None #this is where the widget for the individual screens will go
 
 		self.frame = bgui.Frame(self, 'frame', size=[1,1], options=bgui.BGUI_CENTERED|bgui.BGUI_DEFAULT)
-		self.frame.colors = [ [0,0,0,.4]]*4
-
+		self.frame.colors = [ [0,0,0,1]]*4
+		self.image_back = bgui.Image(self.frame, 'image_back', './data/textures/ui/show.png' , pos=[0, 0], size=[900,600], color=[.4,.7,.9,.4],
+			options = bgui.BGUI_CACHE | bgui.BGUI_NONE | bgui.BGUI_CENTERED, interpolate="NEAREST" )
 		self.menudown = Nbox(self.frame, 'nbox3', pos=[20,-500], size = [32, 50])
-		self.frame.menu_back = Nbox(self, 'menu_back', pos=[20,self.frame.size[1]*.75], size = [800, 65], options=bgui.BGUI_CENTERX)
+		self.frame.menu_back = Fut_Box(self, 'menu_back', pos=self.image_back.position, size = [190, 450], options=bgui.BGUI_NONE)
 
 
-		self.button1 = Nbutton(self.frame.menu_back, 'game', pos=[20, 10], size=[130,50], text="GAME", options=bgui.BGUI_NONE)
-		self.button2 = Nbutton(self.frame.menu_back, 'button2', pos=[170, 10], size=[190,50], text="OPTIONS", options=bgui.BGUI_NONE)
-		self.button3 = Nbutton(self.frame.menu_back, 'inventory', pos=[380, 10], size=[250,50], text="INVENTORY", options=bgui.BGUI_NONE)
-		self.button4 = Nbutton(self.frame.menu_back, 'button4', pos=[655, 10], size=[170,50], text="PLAYER", options=bgui.BGUI_NONE)
+		self.button1 = Fut_Button(self.image_back, 'game', pos=[5, 400], size=[182, 45], text="GAME", options=bgui.BGUI_NONE)
+		self.button2 = Fut_Button(self.image_back, 'button2', pos=[5, 350], size=[182, 45], text="OPTIONS", options=bgui.BGUI_NONE)
+		self.button3 = Fut_Button(self.image_back, 'inventory', pos=[5, 300], size=[182, 45], text="INVENTORY", options=bgui.BGUI_NONE)
+		self.button4 = Fut_Button(self.image_back, 'button4', pos=[5, 250], size=[182, 45], text="PLAYER", options=bgui.BGUI_NONE)
 		# Create the button
 
 		self.main_menu = [self.button1, self.button2, self.button3, self.button4]
