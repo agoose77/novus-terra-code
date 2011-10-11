@@ -136,3 +136,58 @@ class Ninfo(bgui.Widget):
 		self.frame = bgui.Frame(self, 'frame', size=size, pos=pos, options=options)
 		self.text = bgui.TextBlock(self, 'text', text="hello world/nline2", font='./data/fonts/FFF_Tusj.ttf', pt_size=12, color=None, aspect=None,
 					size=[1, 1], pos=[0, 0], sub_theme='', overflow=bgui.BGUI_OVERFLOW_HIDDEN, options=bgui.BGUI_NONE)
+					
+					
+class Fut_Box(bgui.Frame):
+	def __init__(self, parent, name, aspect=None, size=[1, 1], pos=[0, 0],
+				sub_theme='', options=bgui.BGUI_NONE):
+		bgui.Frame.__init__(self, parent, name, border=1, aspect=aspect, size=size, pos=pos,
+				sub_theme=sub_theme, options=options)
+		self.colors = [ [0,0,0,0]]*4
+		self.border = 2
+		self.border_color = [.4,.7,.9,.3]
+					
+class Fut_Button(bgui.Widget):
+	"""Novus UI button"""
+
+	
+	def __init__(self, parent, name, aspect=None, text='Click me', shadow=[-2,2], size=[1, 1], pos=[0, 0],
+				sub_theme='', image='./data/textures/ui/fut_menu_active.png', options=bgui.BGUI_THEMED):	
+		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
+		
+		csize = self.size[1]*.3
+		self.image_back = bgui.Image(self, 'image_back', './data/textures/ui/fut_menu.png' , pos=[0, 0], size=[1,1],
+			options = bgui.BGUI_CACHE | bgui.BGUI_DEFAULT | bgui.BGUI_CENTERED, interpolate="NEAREST" )
+		self.image = bgui.Image(self, 'back', image, pos=[0, 0], size=[1,1],
+			options = bgui.BGUI_CACHE | bgui.BGUI_DEFAULT | bgui.BGUI_CENTERED , interpolate="NEAREST")
+		self.image.visible = 0
+		self.image_back.color = [.4,.7,.9,.5]
+		self.image.color = [.4,.7,.9,.5]
+		
+		
+		self.text1 = bgui.Label(self, 'text1', text=text, pt_size=18, color=[0,0,0,1], font='./data/fonts/Greyscale_Basic_Bold.ttf', options=bgui.BGUI_CENTERED)
+		print( self.text1.position)
+		off = [ self.text1.position[0]+shadow[0]-self.position[0], self.text1.position[1]+shadow[1] -self.position[1] ]
+		self.text2 = bgui.Label(self, 'text2', text=text, pos=off , 
+											pt_size=18, color=[1,1,1,1], font='./data/fonts/Greyscale_Basic_Bold.ttf', options=bgui.BGUI_NONE)
+											
+		self.active = 0									
+
+	def _handle_mouse(self, pos, event):
+		if event == bgui.BGUI_MOUSE_NONE:
+			self.image.visible = 1
+		elif event == bgui.BGUI_MOUSE_CLICK:
+			self.button_logic(self)
+		bgui.Widget._handle_mouse(self, pos, event)
+		
+	def _draw(self):
+		if self._hover == False:
+			self.image.visible = 0
+		if self.active == 1:
+			self.image.visible = 1
+		else:
+			pass
+		bgui.Widget._draw(self)
+		
+	def button_logic(self, button):
+		pass
