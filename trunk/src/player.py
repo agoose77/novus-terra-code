@@ -14,6 +14,8 @@ from entity_base import EntityBase
 from finite_state_machine import FiniteStateMachine
 from behavior_tree import BehaviorTree
 
+import random
+
 try:
     from game import Game
 except:
@@ -85,6 +87,7 @@ class Player(EntityBase):
 
 		self.camera = [child for child in self.children if isinstance(child, bge.types.KX_Camera)][0]
 		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
+		self.bullet_spread = [child for child in self.childrenRecursive if 'spread' in child][0]
 
 		# FSM States
 		self.movement_state_machine = FiniteStateMachine(self)
@@ -152,6 +155,8 @@ class Player(EntityBase):
 		new.position = bge.logic.getCurrentScene().objects['weapon_position'].position
 		new.orientation =bge.logic.getCurrentScene().objects['weapon_position'].orientation
 		new.setParent(bge.logic.getCurrentScene().objects['weapon_position'])
+		self.current_weapon_object = new
+		self.weapon_muzzle = [child for child in self.current_weapon_object.childrenRecursive if 'Muzzle' in child][0]
 
 		# Update Animations
 		#self.update_animations()
@@ -291,7 +296,7 @@ class Player(EntityBase):
 		pass
 
 	def handle_weapon(self):
-		ray = self.camera.controllers[0].sensors['weapon_ray']
+		ray = self.bullet_spread.controllers[0].sensors['weapon_ray']
 		ray.range = 200#self.current_weapon.range
 
 		hit = ray.hitObject
@@ -308,8 +313,18 @@ class Player(EntityBase):
 			self.play_animation('shoot')
 			print("BOOM!!!")
 
+			self.bullet_spread['X'] = random.randrange(-20,20)
+			self.bullet_spread['Z'] = random.randrange(-20,20)
+
+			line = bge.logic.getCurrentScene().addObject('bullet_line', self.camera, 100)
+			line.position = self.weapon_muzzle.position
+			line.orientation = self.bullet_spread.orientation
+
+			flash = bge.logic.getCurrentScene().addObject('muzzle_flash', self.camera, 100)
+			flash.position = self.weapon_muzzle.position
+
 			if hit != None:
-				new = bge.logic.getCurrentScene().addObject('B_Hole', bge.logic.getCurrentController().owner, 100)
+				new = bge.logic.getCurrentScene().addObject('B_Hole', self.camera, 100)
 				new.position = ray.hitPosition
 				new.alignAxisToVect(ray.hitNormal, 2, 1.0)
 				new.setParent(hit)
@@ -336,8 +351,10 @@ class Player(EntityBase):
 
 				if keyboard.events[bge.events.EKEY] == 1:
 					ui.singleton.show_loading('./data/cells/'+ hit['Door'] +'.cell')
-					self.position = bge.logic.getCurrentScene.objects[hit['Start Object']].position
-					self.orientation = bge.logic.getCurrentScene.objects[hit['Start Object']].orientation
+					try:
+						self.position = bge.logic.getCurrentScene.objects[hit['Start Object']].position
+						self.orientation = bge.logic.getCurrentScene.objects[hit['Start Object']].orientation
+					except: pass
 
 			if 'Vehicle' in hit:
 				if keyboard.events[bge.events.EKEY] == 1:
