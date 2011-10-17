@@ -53,7 +53,7 @@ class System(bgui.System):
 		if self.current:
 			if self.current.name in self.children:
 				self.current.visible = 0
-		self.current = self.screens['start']
+		self.current = self.screens['pause']
 		self.current.visible = 1
 		
 	def pause(self):

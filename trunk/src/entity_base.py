@@ -1,4 +1,7 @@
-import bge
+try:
+	import bge
+except:
+	print('bge import failed, normal if you are running an editor')
 
 class return_entity_base:
 	def __init__(self, f):
