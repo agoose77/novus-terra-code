@@ -76,7 +76,10 @@ class Game:
 
 		if self.world == None:
 			self.world = World()
+
 		self.world.main()
+		self.sound_manager.main()
+
 		if self.player == None:
 			self.player = Player()
 

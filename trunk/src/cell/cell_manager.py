@@ -17,6 +17,7 @@ try:
 	import mathutils
 	from paths import *
 	import session
+	#import session
 except:
 	print("BGE imports failed, normal if you are running the cell editor")
 
@@ -86,7 +87,7 @@ class Cell:
 		self.models = [] #list of string object names that are used in this cell
 		self.terrain = None
 		self.navmesh = None #navmesh or obstical avoidance
-		
+
 
 	def save(self, filename): #this is for level creation and shouldn't be used at runtime
 		for thing in self.props:
@@ -103,14 +104,14 @@ class Cell:
 class CellManager:
 	def __init__(self):
 		self.cell = 0
-	
+
 		self.props_in_game = []
 		self.lamps_in_game = []
 		self.entities_in_game = []
 
 		self.ready_to_load = 0
-		self.hook = 0 #used for a tweener callback 
-		
+		self.hook = 0 #used for a tweener callback
+
 		self.terrain = False
 
 		# this will map out what objects are in what blends
@@ -162,7 +163,7 @@ class CellManager:
 			else:
 				self.terrain = False
 
-		
+
 		tweener.singleton.add(self, "hook", 3, length=.5, callback=self.load_entities)	#using a callback so the entities are put into a built level
 		tweener.singleton.add(ui.singleton.current, "color", "[*,*,*,0.0]", length=5.0, callback=ui.singleton.clear)
 
@@ -248,7 +249,7 @@ class CellManager:
 
 		print(scene.objectsInactive)
 		print(bge.logic.LibList())
-		
+
 	def load_entities(self):
 		if self.cell.name in session.savefile.entities: #we've visited this cell
 			print( "!revisiting!: ", self.cell.name)
@@ -272,11 +273,11 @@ class CellManager:
 		given = given.replace("/","\\")
 		given = given.replace(".\\", "./")
 		return given
-		
+
 	def convert_back(self, given):
 		given = given.replace("\\","/")
 		return given
-		
+
 	def cleanup(self):
 		print("cell_manager.cleanup()")
 		if 'entity_hack' in self.__dict__: #JP forget what this is for
@@ -285,7 +286,7 @@ class CellManager:
 		self.kdtrees = []
 		self.lamp_kdtree = None
 
-		
+
 		#Update the entities setup packet, and unwrap from their objects
 		if self.cell and self.cell.name in session.savefile.entities:
 			for entry in session.savefile.entities[ self.cell.name ]:
@@ -294,8 +295,8 @@ class CellManager:
 					#print(dir(entry._data.orientation))
 					entry.packet.rotation = list(entry._data.orientation.to_euler())
 					entry._unwrap()
-				
-				
+
+
 
 		tweener.singleton.nuke() #probably paranoia
 
@@ -328,33 +329,9 @@ class CellManager:
 		new.localScale = thing.scale
 		new.localOrientation = thing.rotation
 		if 'properties' in thing.__dict__:
-			for p in thing.properties:
+   			for p in thing.properties:
+			   	new[p[0]] = p[1]
 
-				if p[0] == 'Item':
-					for ob in Item.items:
-						if Item.items[ob].name == p[1]:
-							print("9999999999999999999999999999999999999999999999999999999999999999999999999999999")
-							p[1] = Item( 0, 0, 'wrench', description='a wrench', size=1, cost=0, effects={}, icon='wrench.png')
-					new[p[0]] = p[1]
-
-				elif p[0] == 'Weapon':
-					print("Weapon!!!")
-					found = []
-					for ob in Weapon.weapons:
-						if Weapon.weapons[ob].name == p[1]:
-							found.append(ob)
-
-					if len(found) == 0:
-						p[1] = Weapon(1, 'P90', description='', size=1, cost=0, effects={}, icon='cube.png', clip_size = 30, ammo_type = 1, weapon_type = 'Pistol')
-					else:
-						p[1] = found[0]
-
-					new[p[0]] = p[1]
-
-
-				# Other
-				else:
-					new[p[0]] = p[1]
 		print( "***", new )
 		tweener.singleton.add(new, "color", "[*,*,*,1.0]", 2.0)
 		return new

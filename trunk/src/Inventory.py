@@ -5,6 +5,7 @@ class Inventory:
 	def __init__(self):
 		self.items = {}
 		self.weapons = {}
+		self.ammo = {"Pistol":0,"Assault":55,"Shotgun":0}
 
         # Weapons
 		self.weapon_slot_1 = Weapon(0, "Hands", description='No Weapon', size=1, cost=0, effects={}, icon='cube.png', clip_size = -1, ammo_type = 0, weapon_type = 'Melee')
@@ -70,28 +71,10 @@ class Inventory:
 			self.current_weapon = self.weapon_slot_1
 
 	def replace_weapon(self, weapon):
-		print('--------------')
-		print(weapon)
-		print('--------------')
-
 		if self.current_weapon == self.weapon_slot_1:
-			#if self.weapon_slot_1 != None:
-			#	if self.weapon_slot_2 == None:
-			#		self.weapon_slot_2 = self.weapon_slot_1
-
-			self.weapon_slot_1 = weapon
+			temp = __import__(weapon)
+			self.weapon_slot_1 = temp.weapon()
 			self.current_weapon = self.weapon_slot_1
-
-
-		'''elif self.current_weapon == self.weapon_slot_2:
-			if self.weapon_slot_2 == None:
-				if self.weapon_slot_1 == None:
-					self.weapon_slot_1 = self.weapon_slot_2
-
-				self.weapon_slot_2 = weapon
-				self.current_weapon = self.weapon_slot_2
-				'''
-
 
 
 

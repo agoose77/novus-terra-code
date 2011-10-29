@@ -2,6 +2,18 @@ class Weapon:
 
 	weapons = {}
 
+	'''	self.weapon_list = [
+		{
+		'name':'temp_name',
+		'description':'temp',
+		'cost':120,
+		'icon':'cube.png',
+		'clip size':25,
+		'ammo type':2,
+		'weapon type':1,
+		 }
+		]
+	'''
 	def __init__(self, id, name, description='', size=1, cost=0, effects={}, icon='cube.png', clip_size = 30, ammo_type = 1, weapon_type = 'Pistol'):
 		self.id = len(self.weapons)+1
 		self.type = type
@@ -22,3 +34,7 @@ class Weapon:
 
 	def activate_item(self):
 		pass
+
+	def create_weapons(self):
+		for weap in self.weapon_list:
+			self.__init__(self, len(self.weapons)+1, weap['name'], weap['description'], weap['cost'], weap['icon'], weap['clip size'], weap['ammo type'], weap['weapon type'])
