@@ -28,7 +28,7 @@ class GameScreen(bgui.Widget):
 		self.button = Fut_Button(self.back1, 'button', text='NEW GAME', size=[182, 45], pos=[10, 400],
 			options = bgui.BGUI_NONE)
 		self.button.on_click = self.start_game
-		self.input = Fut_Input(self.back1, 'input', text="dynamic.cell", size=[160, 30], pos=[230, 410],
+		self.input = Fut_Input(self.back1, 'input', text="pen2.cell", size=[160, 30], pos=[230, 410],
 			options = bgui.BGUI_NONE)
 
 			

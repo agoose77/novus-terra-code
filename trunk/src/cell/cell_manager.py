@@ -7,7 +7,7 @@ import terrain
 import cell
 from item import Item
 from weapon import Weapon
-import session
+
 from entity_base import EntityBase
 
 
@@ -16,6 +16,7 @@ try:
 	import ui
 	import mathutils
 	from paths import *
+	import session
 except:
 	print("BGE imports failed, normal if you are running the cell editor")
 
