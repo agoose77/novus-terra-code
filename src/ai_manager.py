@@ -35,8 +35,11 @@ class AI_Manager:
 		for obj in bge.logic.getCurrentScene().objects:
 			if 'spawn_point' in obj.name:
 				if obj['spawned'] == 0:
-					temp = AIBase()
-					temp._wrap(bge.logic.getCurrentScene().objects['ai_base'])
+
+					#temp = AIBase()
+					new = bge.logic.getCurrentScene().addObject('ai_base', obj)#.objects['ai_base']
+					temp = AIBase(new)
+					#temp._wrap(new)
 					temp.position = obj.position
 
 					session.game.world.entity_list.append(temp)
