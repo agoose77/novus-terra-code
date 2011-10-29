@@ -47,6 +47,7 @@ class Chunk_Que:
 			return "Chunk.000"
 
 	def update(self):
+		print(len(self.available))
 		while len(self.need_update) > 0:
 			chosen = self.need_update.pop(0)
 			chosen.alter_height()
@@ -188,7 +189,7 @@ class Node(object):
 		d = sqrt(pow(x, 2) + pow(y,2))
 
 
-		if d < self.size*1.8*self.scale:
+		if d < self.size*3*self.scale:
 			return True
 
 	def remove(self, object):

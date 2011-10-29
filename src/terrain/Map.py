@@ -263,13 +263,13 @@ class Map_Manager:
 				if c >= self.map.width*self.map.height:
 					c = 0
 				if i == 0:
-					top_cache.append(self.map.buffer[c]* node.scale*.0085 - (.0002*node.size* node.scale))
+					top_cache.append(self.map.buffer[ c ]* node.scale *.01 - 1*node.scale*node.scale)
 				elif i == 32:
-					bottom_cache.append(self.map.buffer[c]* node.scale*.0085-(.0002*node.size* node.scale))
+					bottom_cache.append(self.map.buffer[ c ]* node.scale *.01 - 1*node.scale*node.scale)
 				if j == 0:
-					left_cache.append(self.map.buffer[c]* node.scale*.0085-(.0002*node.size* node.scale))
+					left_cache.append(self.map.buffer[ c ]* node.scale *.01 - 1*node.scale*node.scale)
 				elif j == 32:
-					right_cache.append(self.map.buffer[c]* node.scale*.0085-(.0002*node.size* node.scale))
+					right_cache.append(self.map.buffer[ c ]* node.scale *.01 - 1*node.scale*node.scale)
 				
 				
 		#Now lets set the skirt
