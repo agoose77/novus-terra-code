@@ -25,14 +25,14 @@ def index_blends(dir, output):
 			if each_tuple[2] != []:
 
 				for filename in each_tuple[2]:
-					if filename[-6:] == '.blend':
+					if filename.endswith('.blend'):
 						if each_tuple[0][-2:] != ".\\":
 							filename = "/"+filename
 						name = each_tuple[0]+filename
 
 						name2 = name.replace("\\", "/")
 						name2 = name2.replace("//", "/") #really no clue how this works anymore, it's also slow as shit
-						file_dict[ name2 ] = []
+						#file_dict[ name2 ] = []
 						fo = open(name2, 'rb')
 						fd = str(fo.read())
 						print("NAME2::",name2)
@@ -59,7 +59,7 @@ def index_blends(dir, output):
 								fd = fd.replace("OB", "$$", 1)
 								if derived != "":
 									print(derived)
-									file_dict[name2].append(derived)
+									file_dict[derived] = name2
 							else:
 								break
 
