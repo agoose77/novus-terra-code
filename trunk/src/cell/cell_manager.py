@@ -8,10 +8,9 @@ import cell
 from item import Item
 from weapon import Weapon
 
-from entity_base import EntityBase
-
 
 try:
+    from entity_base import EntityBase
     import bge
     import ui
     import mathutils
@@ -222,29 +221,29 @@ class CellManager:
     def load_libs(self):
         print("cell_manager.load_libs()")
         print("=========")
-        
+
         scene = bge.logic.getCurrentScene()
         liblist = bge.logic.LibList()
         libs_to_load = []
-        
+
         # Determine which libs to load
         for model in self.cell.models:
             if model in self.blend_dict:
                 blend = self.blend_dict[model]
                 if blend not in libs_to_load:
                     libs_to_load.append(blend)
-            
+
         # Free un used libs
         for lib in liblist:
             if self.convert_back(lib) not in libs_to_load:
                 bge.logic.LibFree(lib)
                 print("[freed]", blend)
         scene = bge.logic.getCurrentScene() # neccessary?
-        
+
         # Load terrain
         if self.cell.terrain:
             libs_to_load.append( './data/models/CHUNKS.blend' )
-        
+
         # Load libs
         for blend in libs_to_load:
             if str(self.convert_lib_name(blend)) not in liblist:
