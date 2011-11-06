@@ -160,7 +160,7 @@ class Map_Manager:
 	def readChunk(self, x,y, depth, node):
 		trans = self.translate_xy_terrain([x,y])
 		x,y = trans[0],trans[1] 
-		#chunks will always be 32^2, and are centered on the x,y
+		#chunks will always be 33^2, and are centered on the x,y
 
 		depth = 7-depth #1 most detail, 0 lowest
 		dinc = int(pow(2,depth))
@@ -256,8 +256,9 @@ class Map_Manager:
 					print( ":(  ", t, self.translate_vertex_order(t) )
 				try:
 					v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],self.map.buffer[ c ]* node.scale *.01]) #?
+
 				except:
-					pass
+					v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],-500])
 				
 				t += 1
 				if c >= self.map.width*self.map.height:
