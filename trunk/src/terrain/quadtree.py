@@ -47,7 +47,6 @@ class Chunk_Que:
 			return "Chunk.000"
 
 	def update(self):
-		print(len(self.available))
 		while len(self.need_update) > 0:
 			chosen = self.need_update.pop(0)
 			chosen.alter_height()
@@ -55,7 +54,7 @@ class Chunk_Que:
 
 class Quadtree(object):
 
-	def __init__(self, size=2056, pos=[0,0], debug=1, max_depth=7, scale=1.0):
+	def __init__(self, size=2048, pos=[0,0], debug=1, max_depth=7, scale=1.0):
 		print("MY SCALE: ", scale)
 		self.root = Node(pos, size, debug, max_depth=max_depth, scale=scale)
 
