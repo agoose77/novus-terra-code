@@ -82,10 +82,19 @@ def bake_cell():
 	print("## Indexing ./data/models")
 	blends = read_model_dict()
 	known_objects = []
+
+	###
+	for entry in blends:
+		if entry not in known_objects:
+			known_objects.append(entry)
+
+	"""  OLD -- Model_Dict.data -- Stuff
+
 	for blend in blends:
 		for entry in blends[blend]:
 			if entry not in known_objects:
 				known_objects.append(entry)
+				"""
 
 	# sort props for 15 kd-trees for different scales
 	props = []
@@ -127,7 +136,8 @@ def bake_cell():
 							properties.append([p.name, p.value])
 
 						if split_name not in known_objects:
-							split_name = "WTF" #yes this is actually important
+							split_name = 'WTF!!' + split_name#"WTF" #yes this is actually important
+							print("---------------------" + split_name)
 						print(split_name)
 						props[i].append( Prop( split_name, list(object.location), list(object.scale),
 												list(object.dimensions), list(object.rotation_euler), properties) )

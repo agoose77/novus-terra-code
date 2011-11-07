@@ -71,7 +71,7 @@ class Game:
         self.world = None
         self.player = None
         self.sound_manager = SoundManager()
-        
+
         self.console = Console(safepath('./data/fonts/phaisarn.ttf'), bge.events.ACCENTGRAVEKEY)
 
     def update(self):
@@ -95,6 +95,6 @@ class Game:
                 self.player._wrap(bge.logic.getCurrentScene().objects['player'])
         else:
             self.player._unwrap()
-            
+
         self.console.main()
 
