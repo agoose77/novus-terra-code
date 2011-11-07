@@ -33,7 +33,7 @@ class World:
 		#self.entity_list.append(self.player)
 
 		self.world_time = 0.0
-		self.world_time_scale = 0.05
+		self.world_time_scale = 0.01
 
 		### Light
 		self.light_sources = None
@@ -85,19 +85,22 @@ class World:
 
         ### HACK - set the Time prop for all the lighting effects
 		if cell.singleton.terrain != False:
-			try:
-				atmos = bge.logic.getSceneList()[0].objects[self.atmosphere_ctrl]
-				lighting = bge.logic.getCurrentScene().objects[self.outside_lighting_ctrl]
-				sun = bge.logic.getCurrentScene().objects['Sun_Main']
-				lighting['Time'] = self.world_time
-				atmos['Time'] = self.world_time
-				sun['Time'] = self.world_time
+			#print("Updating Time:", self.world_time)
+			#try:
+			atmos = bge.logic.getSceneList()[0].objects[self.atmosphere_ctrl]
+			lighting = bge.logic.getCurrentScene().objects[self.outside_lighting_ctrl]
+			sun = bge.logic.getCurrentScene().objects['Sun_Main']
+			lighting['Time'] = self.world_time
+			atmos['Time'] = self.world_time
+			sun['Time'] = self.world_time
 
-			except:
-				pass
+			#except:
+			#	pass
 
 
 	def main(self):
+		#pass
+
 		self.handle_time()
 		if len(self.entity_list) != 0:
 			self.ai_manager.main()
