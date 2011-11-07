@@ -35,6 +35,7 @@ MODE_MANAGE = 'manage'
 MODE_HELP = 'help'
 
 blend_dict = {}
+model_dict = {}
 
 def construct_blend_dict(assets):
 	blend_dict = {}
@@ -70,7 +71,7 @@ def walk_dir(path):
 		if os.path.isdir(path + "/" + file):
 			if not file.startswith("."):
 				assets.extend(walk_dir(path + "/" + file))
-		else:
+		elif file.endswith('.blend'):
 			assets.append(path + "/" + file)
 	
 	return assets
@@ -110,6 +111,7 @@ class CE_interior(bpy.types.Operator):
 	def execute(self, context):
 		context.scene.ce_name = 'Untitled Cell'
 		context.scene.ce_type = CELL_INTERIOR
+		bpy.ops.scene.ce_load_model_dict()
 		
 		return {'FINISHED'}
 	
@@ -132,17 +134,91 @@ class CE_new(bpy.types.Operator):
 class CE_load(bpy.types.Operator):
 	bl_idname = "scene.ce_load"
 	bl_label = "Open"
+	bl_description = "Open an existing cell"
+	filepath = bpy.props.StringProperty(subtype='FILENAME')
+	filepath_ext = ".cell"
 	
-	def execute(self, context):
+	@classmethod
+	def poll(cls, context):
+		return True
 		
-		return {'FINISHED'}
-	
-class CE_save(bpy.types.Operator):
-	bl_idname = "scene.ce_save"
-	bl_label = "Save"
+	def invoke(self, context, event):
+		context.window_manager.fileselect_add(self)
+		return {'RUNNING_MODAL'}
 	
 	def execute(self, context):
-
+		global blend_dict, model_dict
+		
+		bpy.ops.scene.ce_load_model_dict()
+		
+		# attempt to open .cell file
+		try:
+			file = open(self.filepath, 'rb')
+			cell = pickle.load(file)
+			file.close()
+		except IOError:
+			self.report({'ERROR'}, 'Unable to open file')
+			return {'CANCELLED'}
+		except (pickle.UnpicklingError, EOFError):
+			self.report({'ERROR'}, 'Unable to unpickle .cell file')
+			return {'CANCELLED'}
+			
+		# load props
+		for entry in cell.props: # props are stored in a 2D array
+			for prop in entry:
+				blend = model_dict[prop.name]
+				directory = blend + "/Object/"
+				bpy.ops.wm.link_append(directory=directory, filename=prop.name, link=False, instance_groups=False, autoselect=True)
+				bpy.ops.object.make_local()
+				
+				obj = bpy.context.selected_objects[0]
+				obj.location = prop.co
+				obj.rotation_euler = prop.rotation
+				obj.scale = prop.scale
+				
+				for name, value in prop.properties:
+					if name in obj.game.properties: # TODO - try and add properties
+						obj.game.properties[name].value = value
+						
+		# load entities
+		for entity in cell.entities:
+			blend = model_dict[entity.name]
+			directory = blend + "/Object/"
+			bpy.ops.wm.link_append(directory=directory, filename=entity.name, link=False, instance_groups=False, autoselect=True)
+			bpy.ops.object.make_local()
+			
+			obj = bpy.context.selected_objects[0]
+			obj.location = entity.co
+			obj.rotation_euler = entity.rotation
+			obj.scale = entity.scale
+			
+			for name, value in entity.properties:
+				obj.game.properties[name].value = value
+				
+		# load destinations
+		if hasattr(cell, 'destinations'):
+			for destination in cell.destinations.values():
+				blend = model_dict['destination']
+				directory = blend + "/Object/"
+				bpy.ops.wm.link_append(directory=directory, filename='destination', link=False, instance_groups=False, autoselect=True)
+				bpy.ops.object.make_local()
+				
+				obj = bpy.context.selected_objects[0]
+				obj.location = destination.co
+				obj.rotation_mode = 'QUATERNION'
+				obj.rotation_quaternion = destination.rotation
+				obj.game.properties['id'].value = destination.id
+		
+		# TODO - load lightsaax
+		
+		context.scene.ce_name = cell.name
+		context.scene.ce_type = CELL_INTERIOR
+		context.scene.ce_terrain = cell.terrain is not None
+		if context.scene.ce_terrain:
+			context.scene.ce_terrain_file = cell.terrain
+		
+		#context.scene.ce
+		
 		return {'FINISHED'}
 	
 class CE_close(bpy.types.Operator):
@@ -150,7 +226,13 @@ class CE_close(bpy.types.Operator):
 	bl_label = "Close"
 	
 	def execute(self, context):
-		
+		context.scene.ce_type = CELL_NONE
+		context.scene.ce_name = 'Untitled Cell'
+		context.scene.ce_terrain = False
+		context.scene.ce_hdr = False
+		context.scene.ce_bloom = False
+		context.scene.ce_tint = False
+		context.scene.ce_terrain_file = ''
 		return {'FINISHED'}
 	
 class CE_bake(bpy.types.Operator):
@@ -176,7 +258,7 @@ class CE_bake(bpy.types.Operator):
 		
 		lamps = []
 		entities = []
-		props = [[]] * 15
+		props = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 		destinations = {}
 		
 		for obj in bpy.data.objects:
@@ -253,15 +335,14 @@ class CE_bake(bpy.types.Operator):
 		
 		return {'FINISHED'}
 
-class CE_refresh_assets(bpy.types.Operator):
-	bl_idname = "scene.ce_refresh_assets"
-	bl_label = "Refresh Assets"
-	bl_description = "Refresh the asset list based on the asset directory"
+class CE_index_blends(bpy.types.Operator):
+	bl_idname = "scene.ce_index_blends"
+	bl_label = "Index .blends"
+	bl_description = "Crawl the model directory and index the .blends"
 	
 	def execute(self, context):
-		global blend_dict
+		global blend_dict, model_dict
 		assets = walk_dir(context.scene.ce_asset_dir)
-		assets = sorted(assets, key = lambda s: s[s.rindex('/')+1:].lower())
 		
 		for asset in assets:
 			asset = asset.replace("//", "/")
@@ -277,11 +358,32 @@ class CE_refresh_assets(bpy.types.Operator):
 		pickle.dump(model_dict, file)
 		file.close()
 		
+		return {'FINISHED'}
+		
+class CE_load_model_dict(bpy.types.Operator):
+	bl_idname = "scene.ce_load_model_dict"
+	bl_label = "Load Model Dict"
+	bl_description = "Refresh the asset list based on the model dict"
+	
+	def execute(self, context):
+		global blend_dict, model_dict
+		
+		file = open('./data/model_dict.data', 'rb')
+		model_dict = pickle.load(file)
+		file.close()
+		
+		blend_dict = {}
+		for model, blend in model_dict.items():
+			if blend not in blend_dict:
+				blend_dict[blend] = []
+				
+			blend_dict[blend].append(model)
+		
 		ce_assets = context.scene.ce_assets
 		for i in range(len(ce_assets)):
 			ce_assets.remove(0)
 			
-		for file in assets:
+		for file in sorted(blend_dict.keys(), key = lambda s: s[s.rindex('/'):].lower()):
 			if file.endswith('.blend'):
 				ce_assets.add()
 				ce_assets[-1].label = file[file.rindex('/')+1:]
@@ -301,10 +403,10 @@ class CE_load_lib(bpy.types.Operator):
 		filepath = context.scene.ce_assets[self.asset].filepath
 		directory = context.scene.ce_assets[self.asset].filepath + "/Object/"
 		
-		
 		for asset in blend_dict[filepath]:
 			bpy.ops.wm.link_append(directory=directory, filename=asset, link=False, instance_groups=False, autoselect=True)
 			bpy.ops.object.make_local()
+			
 		context.scene.ce_assets[self.asset].loaded = True
 		return {'FINISHED'}
 
@@ -398,7 +500,7 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 					box = layout.box()
 					row = box.row(align=True)
 					row.prop(context.scene, 'ce_asset_dir')
-					row.operator("scene.ce_refresh_assets", text='', icon='FILE_REFRESH')
+					row.operator("scene.ce_index_blends", text='', icon='FILE_REFRESH')
 					
 					row = box.row()
 					split = row.split(percentage=0.5)
