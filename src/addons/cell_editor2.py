@@ -1,0 +1,435 @@
+"""
+Novus Terra - Cell Editor
+
+This addon is for use with populating areas for the Novus Terra game.
+"""
+
+bl_info = {
+	"name": "Novus Terra - Cell Editor",
+	"author": "joe@designisgood.com, andrew-101",
+	"version": (1,1,0),
+	"blender" : (2,6,0.1),
+	"api": 41226,
+	"location": "Scene Panel",
+	"description": "Edit interior and exterior cells",
+	"catergory": "Game Engine"}
+
+import math
+import os
+import pickle
+import re
+import sys
+
+import bpy
+from bpy_extras.io_utils import ImportHelper, ExportHelper
+
+sys.path.append('./src/')
+import cell
+from cell.cell_manager import Prop, Lamp, Cell, Entity, Destination
+
+CELL_NONE = ""
+CELL_INTERIOR = 'Interior'
+CELL_EXTERIOR = 'Exterior'
+MODE_EDIT = 'edit'
+MODE_MANAGE = 'manage'
+MODE_HELP = 'help'
+
+blend_dict = {}
+
+def construct_blend_dict(assets):
+	blend_dict = {}
+	for blend in assets:
+		blend_dict[blend] = []
+		
+		file = open(blend, 'rb')
+		data = str(file.read())
+		file.close()
+		
+		parts = data.split("OB")
+		for n in range(len(parts)):
+			obj_name = ""
+			t = 0
+			
+			if n != 0 and parts[n-1][-2:] == "00":
+				if parts[n][:4] != "JECT":
+					if parts[n][t] not in ["\\", " ","?",".",")","("]:
+						while (parts[n][t] not in ["\\", " "]):
+							obj_name += parts[n][t]
+							t += 1
+							
+			if obj_name:
+				#blend_dict[obj_name] = blend
+				blend_dict[blend].append(obj_name)
+				
+	return blend_dict
+				
+def walk_dir(path):
+	assets = []
+			
+	for file in os.listdir(path):
+		if os.path.isdir(path + "/" + file):
+			if not file.startswith("."):
+				assets.extend(walk_dir(path + "/" + file))
+		else:
+			assets.append(path + "/" + file)
+	
+	return assets
+	
+	
+
+def init():
+	bpy.types.Scene.ce_asset_dir = bpy.props.StringProperty(name='Asset Directory', default='./data/models', description='Filepath to asset folder')
+	bpy.types.Scene.ce_assets = bpy.props.CollectionProperty(type=CE_asset_properties)
+	bpy.types.Scene.ce_name = bpy.props.StringProperty(name='Cell Name', default='')
+	bpy.types.Scene.ce_type = bpy.props.StringProperty(default=CELL_NONE)
+	bpy.types.Scene.ce_mode = bpy.props.EnumProperty(
+		name = "ce_mode",
+		items = (
+			(MODE_EDIT, ' Edit Cell', ''),
+			(MODE_MANAGE, 'Manage Assets', ''),
+			(MODE_HELP, 'Help', '')
+		),
+		default = 'edit')
+	
+	bpy.types.Scene.ce_terrain = bpy.props.BoolProperty(name='Terrain', default=False, description='Attach a terrain file to this cell')
+	bpy.types.Scene.ce_terrain_file = bpy.props.StringProperty(name='Terrain File', default='', description='Path to terrain file')
+	bpy.types.Scene.ce_hdr = bpy.props.BoolProperty(name='HDR', default=False, description='Enable HDR in this cell')
+	bpy.types.Scene.ce_bloom = bpy.props.BoolProperty(name='Bloom', default=False, description='Enable bloom in this cell')
+	bpy.types.Scene.ce_tint = bpy.props.BoolProperty(name='Tint', default=False, description='Enable color tinting in this cell')
+	bpy.types.Scene.ce_tint_color = bpy.props.FloatVectorProperty(name='Tint Color', default=[0.0, 0.0, 0.0], max=1.0, min=0.0, subtype='COLOR', description='Select color tint')
+		
+class CE_asset_properties(bpy.types.PropertyGroup):
+	label = bpy.props.StringProperty(default='')
+	filepath = bpy.props.StringProperty(default='')
+	loaded = bpy.props.BoolProperty(default=False)
+	
+class CE_interior(bpy.types.Operator):
+	bl_idname = "scene.ce_interior"
+	bl_label = "Interior"
+	
+	def execute(self, context):
+		context.scene.ce_name = 'Untitled Cell'
+		context.scene.ce_type = CELL_INTERIOR
+		
+		return {'FINISHED'}
+	
+class CE_exterior(bpy.types.Operator):
+	bl_idname = "scene.ce_exterior"
+	bl_label = "Exterior"
+	
+	def execute(self, context):
+		
+		return {'FINISHED'}
+	
+class CE_new(bpy.types.Operator):
+	bl_idname = "scene.ce_new"
+	bl_label = "New"
+	
+	def execute(self, context):
+		
+		return {'FINISHED'}
+	
+class CE_load(bpy.types.Operator):
+	bl_idname = "scene.ce_load"
+	bl_label = "Open"
+	
+	def execute(self, context):
+		
+		return {'FINISHED'}
+	
+class CE_save(bpy.types.Operator):
+	bl_idname = "scene.ce_save"
+	bl_label = "Save"
+	
+	def execute(self, context):
+
+		return {'FINISHED'}
+	
+class CE_close(bpy.types.Operator):
+	bl_idname = "scene.ce_close"
+	bl_label = "Close"
+	
+	def execute(self, context):
+		
+		return {'FINISHED'}
+	
+class CE_bake(bpy.types.Operator):
+	bl_idname = "scene.ce_bake"
+	bl_label = "Bake"
+	bl_description = "Bake the selected objects to the cell"
+	filepath = bpy.props.StringProperty(subtype='FILENAME')
+	filepath_ext = ".cell"
+	
+	@classmethod
+	def poll(cls, context):
+		return True
+	
+	def invoke(self, context, event):
+		context.window_manager.fileselect_add(self)
+		return {'RUNNING_MODAL'}
+	
+	def execute(self, context):
+		global blend_dict
+		known_models = []
+		for assets in blend_dict.values():
+			known_models.extend(assets)
+		
+		lamps = []
+		entities = []
+		props = [[]] * 15
+		destinations = {}
+		
+		for obj in bpy.data.objects:
+			if obj.type in ['MESH', 'EMPTY', 'ARMATURE'] and not obj.parent:
+				name = re.sub("(\\.)(\\d){3}($)", "", obj.name) # remove .001 from name
+				
+				size = sorted(obj.dimensions[:])[2] # equivilant to max(width, length, height)
+				if size == 0:
+					size = 10
+					
+				properties = {}
+				for property in obj.game.properties:
+					properties[property.name] = property.value
+				
+				if name == 'destination':
+					print('[destination]', name)
+					# object is a destination
+					old_rot = obj.rotation_mode
+					obj.rotation_mode = 'QUATERNION'
+					destinations[properties['id']] = Destination(properties['id'], obj.location[:], obj.rotation_quaternion[:])
+					obj.rotation_mode = old_rot
+					
+				elif obj.game.physics_type in ['RIGID_BODY', 'DYNAMIC'] or 'entity' in properties:
+					# object is an entity
+					print('[entity]', name)
+					class_ = 'EntityBase'
+					if 'entity' in properties:
+						class_ = properties['entity']
+					entities.append(Entity(name, obj.location[:], obj.scale[:], obj.dimensions[:], obj.rotation_euler[:], list(properties.items()), class_))
+					
+				else:
+					# object is a prop
+					print('[prop]', name)
+					i = math.floor(math.log(size, 2))
+					
+					if name not in known_models:
+						print(['wtf'], name)
+						name = "WTF" # yes this is actually important
+					
+					props[i].append(Prop(name, obj.location[:], obj.scale[:], obj.dimensions[:], obj.rotation_euler[:], list(properties.items())))
+				
+			elif obj.type == 'LAMP':
+				# object is a light
+				print('[lamp]', name)
+				lamp = bpy.data.lamps[obj.name]
+				if lamp.type == 'SPOT':
+					lamps.append(Lamp(name, obj.location[:], obj.rotation_euler[:], lamp.type, lamp.color[:], lamp.distance, \
+						lamp.energy, spot_size=lamp.spot_size, spot_blend=lamp.spot_blend, spot_bias=lamp.shadow_buffer_bias) )
+					
+				elif lamp.type == 'POINT':
+					lamps.append(Lamp(name, obj.location[:], obj.rotation_euler[:], lamp.type, lamp.color[:], lamp.distance, lamp.energy))
+					
+		# FX settings
+		FX = {}
+		FX['Bloom'] = bpy.context.scene.ce_bloom
+		FX['HDR'] = bpy.context.scene.ce_hdr
+		FX['CC'] = bpy.context.scene.ce_tint
+
+		FX['Color R'] = bpy.context.scene.ce_tint_color[0]
+		FX['Color B'] = bpy.context.scene.ce_tint_color[1]
+		FX['Color G'] = bpy.context.scene.ce_tint_color[2]
+		
+		newcell = Cell()
+		newcell.name = bpy.context.scene.ce_name
+		newcell.props = props
+		newcell.lamps = lamps
+		newcell.destinations = destinations
+		newcell.fx = FX
+		newcell.entities = entities
+		if bpy.context.scene.ce_terrain:
+			newcell.terrain = bpy.context.scene.ce_terrain_file
+
+		newcell.save(self.filepath)
+		
+		return {'FINISHED'}
+
+class CE_refresh_assets(bpy.types.Operator):
+	bl_idname = "scene.ce_refresh_assets"
+	bl_label = "Refresh Assets"
+	bl_description = "Refresh the asset list based on the asset directory"
+	
+	def execute(self, context):
+		global blend_dict
+		assets = walk_dir(context.scene.ce_asset_dir)
+		assets = sorted(assets, key = lambda s: s[s.rindex('/')+1:].lower())
+		
+		for asset in assets:
+			asset = asset.replace("//", "/")
+			
+		
+		# bake a model dict
+		blend_dict = construct_blend_dict(assets)
+		model_dict = {}
+		for blend, models in blend_dict.items():
+			for model in models:
+				model_dict[model] = blend
+		file = open('./data/model_dict.data', 'wb')
+		pickle.dump(model_dict, file)
+		file.close()
+		
+		ce_assets = context.scene.ce_assets
+		for i in range(len(ce_assets)):
+			ce_assets.remove(0)
+			
+		for file in assets:
+			if file.endswith('.blend'):
+				ce_assets.add()
+				ce_assets[-1].label = file[file.rindex('/')+1:]
+				ce_assets[-1].filepath = file
+				ce_assets[-1].loaded = False
+		
+		return {'FINISHED'}
+	
+class CE_load_lib(bpy.types.Operator):
+	bl_idname = "scene.ce_load_lib"
+	bl_label = "Load Library"
+	bl_description = "Load the current libraries contents"
+	
+	asset = bpy.props.IntProperty()
+	
+	def invoke(self, context, event):
+		filepath = context.scene.ce_assets[self.asset].filepath
+		directory = context.scene.ce_assets[self.asset].filepath + "/Object/"
+		
+		
+		for asset in blend_dict[filepath]:
+			bpy.ops.wm.link_append(directory=directory, filename=asset, link=False, instance_groups=False, autoselect=True)
+			bpy.ops.object.make_local()
+		context.scene.ce_assets[self.asset].loaded = True
+		return {'FINISHED'}
+
+class CE_free_lib(bpy.types.Operator):
+	bl_idname = "scene.ce_free_lib"
+	bl_label = "Load Library"
+	bl_description = "Load the current libraries contents"
+	
+	asset = bpy.props.IntProperty()
+	
+	def invoke(self, context, event):
+		context.scene.ce_assets[self.asset].loaded = False
+		return {'FINISHED'}   
+	
+class CE_terrain_select(bpy.types.Operator):
+	bl_idname = "scene.ce_root_select"
+	bl_label = "Select Terrain"
+	bl_description = "Select terrain file"
+	filepath = bpy.props.StringProperty(subtype='FILENAME')
+	filepath_ext = ".terrain"
+	
+	@classmethod
+	def poll(cls, context):
+		return True
+	
+	def execute(self, context):
+		context.scene.ce_terrain_file = self.filepath
+		return {'FINISHED'}
+	
+	def invoke(self, context, event):
+		context.window_manager.fileselect_add(self)
+		return {'RUNNING_MODAL'}
+	
+	
+
+class CE_type_menu(bpy.types.Menu):
+	bl_label = "Cell Type"
+	
+	def draw(self, context):
+		layout = self.layout
+		
+		layout.operator("scene.ce_interior")
+		layout.operator("scene.ce_exterior")
+	
+	
+
+class SCENE_PT_cell_editor(bpy.types.Panel):
+	bl_label = "Cell Editor"
+	bl_space_type = "PROPERTIES"
+	bl_region_type = "WINDOW"
+	bl_context = "scene"
+	
+	def draw(self, context):
+		layout = self.layout
+		#row = layout.row(align=True)
+		#row.prop(context.scene, "ce_nt_root")
+		#row.operator('scene.ce_root_select', icon='FILESEL')
+		
+		if context.scene.ce_type == CELL_NONE:
+			row = layout.row()
+			
+			row.menu("CE_type_menu", text="New Cell")
+			row.operator("scene.ce_load", icon="FILESEL")
+		else:
+			layout.row(align=True).prop(context.scene, "ce_mode", expand=True)
+			if context.scene.ce_type == CELL_INTERIOR:
+				if context.scene.ce_mode == MODE_EDIT:
+					box = layout.box()
+					
+					box.row().prop(context.scene, "ce_name")
+					
+					row = box.row()
+					row.prop(context.scene, 'ce_terrain')
+					row.prop(context.scene, 'ce_hdr')
+					row.prop(context.scene, 'ce_bloom')
+					row.prop(context.scene, 'ce_tint')
+					if bpy.context.scene.ce_terrain:
+						row = box.row(align=True)
+						row.prop(context.scene, 'ce_terrain_file')
+						row.operator('scene.ce_root_select', icon='FILESEL', text="")
+					if bpy.context.scene.ce_tint:
+						box.row().prop(context.scene, 'ce_tint_color')
+					
+					row = box.row()
+					row.operator("scene.ce_bake", icon="DISK_DRIVE")
+					row.operator("scene.ce_close", icon="PANEL_CLOSE")
+					
+					
+					
+				elif context.scene.ce_mode == MODE_MANAGE:
+					box = layout.box()
+					row = box.row(align=True)
+					row.prop(context.scene, 'ce_asset_dir')
+					row.operator("scene.ce_refresh_assets", text='', icon='FILE_REFRESH')
+					
+					row = box.row()
+					split = row.split(percentage=0.5)
+					colA = split.column()
+					colB = split.column()
+					for id, asset in enumerate(context.scene.ce_assets):
+						
+						if asset.loaded:
+							row = colB.row()
+							row.operator("scene.ce_free_lib", text='', icon='LINKED').asset = id
+							row.label(asset.label)
+						else:
+							row = colA.row()
+							row.label(asset.label)
+							row.operator("scene.ce_load_lib", text='', icon='UNLINKED').asset = id
+				
+				elif context.scene.ce_mode == MODE_HELP:
+					box = layout.box()
+					
+					box.row().label("Refresh assets on opening of cell editor")
+				
+			elif cell_type == CELL_EXTERIOR:
+				layout.label("TODO")
+		
+def register():
+	bpy.utils.register_module(__name__)
+	init()
+	
+	
+def unregister():
+	bpy.utils.unregister_module(__name__)
+	
+if __name__ == "__main__":
+	register()
