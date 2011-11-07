@@ -49,12 +49,12 @@ class World:
 
 		self.fx = {
 			'HDR':True,
-            'Bloom':True,
-            'DOF':False,
-            'SSAO':False,
-            'SSAA':False,
-            'Color':True,
-            'Motion Blur':True,
+			'Bloom':True,
+			'DOF':False,
+			'SSAO':False,
+			'SSAA':False,
+			'Color':True,
+			'Motion Blur':True,
 			'Color settings':[1.0, 1.0, 1.0],
 		}
 
@@ -83,7 +83,7 @@ class World:
 		else:
 			self.world_time = 1.0
 
-        ### HACK - set the Time prop for all the lighting effects
+		### HACK - set the Time prop for all the lighting effects
 		if cell.singleton.terrain != False:
 			#print("Updating Time:", self.world_time)
 			#try:

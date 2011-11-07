@@ -61,9 +61,9 @@ class Player(EntityBase):
 			'walk':0,
 			'run':0,
 			'shoot':0,
-            'reload':0,
-            'idle':1,
-            'cround':0
+			'reload':0,
+			'idle':1,
+			'cround':0
 			}
 
 		self.bullets_auto = 10
@@ -387,7 +387,10 @@ class Player(EntityBase):
 			self.armature.stopAction(5)
 
 
-		if hit != None:
+		if hit != None and 'entity_base' in hit:
+			if keyboard.events[bge.events.EKEY] == 1:
+				hit['entity_base'].on_interact()
+		"""
 			if 'Door' in hit:
 
 				if keyboard.events[bge.events.EKEY] == 1:
@@ -443,6 +446,7 @@ class Player(EntityBase):
 						hit['Toogle'] = 0
 					elif hit['Toogle'] == 0:
 						hit['Toogle'] = 1
+		"""
 
 
 	def fast_travel(self, location):
