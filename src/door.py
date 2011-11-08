@@ -11,16 +11,16 @@ properties: (set on the KX_GameObject):
 """
 class Door(EntityBase):
 	"""
-	
+
 	"""
 	def __init__(self, packet=None):
 		EntityBase.__init__(self, packet)
-		
+
 		self.iteract_label = 'Enter'
-		
-	def on_interact(self):
+
+	def on_interact(self, player):
 		# TODO play sound - door open
-		
+
 		ui.singleton.show_loading('./data/cells/'+ self['cell'] +'.cell')
 		print(self['destination'])
 		cell.singleton.next_destination = self['destination']

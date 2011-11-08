@@ -386,10 +386,9 @@ class Player(EntityBase):
 		else:
 			self.armature.stopAction(5)
 
-
 		if hit != None and 'entity_base' in hit:
 			if keyboard.events[bge.events.EKEY] == 1:
-				hit['entity_base'].on_interact()
+				hit['entity_base'].on_interact(self)
 		"""
 			if 'Door' in hit:
 
