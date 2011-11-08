@@ -17,6 +17,12 @@ from door import Door
 from entity_base import EntityBase
 from weapon_pickup import WeaponPickup
 
+def main():
+	if Game.singleton is None:
+		Game()
+		
+	Game.singleton.update()
+
 class Game:
 	FORWARD_KEY = 0
 	BACKWARD_KEY = 1
@@ -35,9 +41,12 @@ class Game:
 		'EntityBase' : EntityBase,
 		'WeaponPickup' : WeaponPickup,
 	}
+	
+	singleton = None
 
 	def __init__(self):
 		print("game.__init__()")
+		Game.singleton = self
 		self.game_started = time.time()
 		self.game_time = 0.0
 		self.delta_time = 0.0001
@@ -78,7 +87,6 @@ class Game:
 		}
 
 		self.world = None
-		self.player = None
 		self.sound_manager = SoundManager()
 
 		self.console = Console(safepath('./data/fonts/phaisarn.ttf'), bge.events.ACCENTGRAVEKEY)
@@ -86,23 +94,11 @@ class Game:
 	def update(self):
 		self.delta_time = (time.time()-self.game_started) - self.game_time
 		self.game_time += self.delta_time
-
+		
 		if self.world == None:
 			self.world = World()
-
+		
 		self.world.main()
 		self.sound_manager.main()
-
-		if self.player == None:
-			self.player = Player()
-
-		if 'player' in bge.logic.getCurrentScene().objects:
-			if self.player._data == bge.logic.getCurrentScene().objects['player']:
-				self.player.main()
-			else:
-				self.player._wrap(bge.logic.getCurrentScene().objects['player'])
-		else:
-			self.player._unwrap()
-
 		self.console.main()
 

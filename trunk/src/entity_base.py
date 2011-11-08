@@ -4,7 +4,8 @@ entity_map = {}
 
 try:
 	import bge
-
+	import cell
+	import session
 except:
 	print('bge import failed, normal if you are running an editor')
 
@@ -36,6 +37,7 @@ class method_wrapper:
 		return to_entity_base(self.f(*args, **kwargs))
 
 class Container:
+	""" Hack for storing variables on EntityBase since __getattr__ and __setattr__ are overridden """
 	pass
 
 class EntityBase:
@@ -71,6 +73,16 @@ class EntityBase:
 
 	def on_interact(self, instance):
 		pass
+		
+	def remove(self):
+		""" Removes any references of the entity in the cell and removes the object """
+		
+		cell.CellManager.singleton.entities_in_game.remove(self)
+		cell.CellManager.singleton.cell.entities.remove(self.packet)
+		cell.CellManager.singleton.cell.modified = True
+		
+		self.packet.game_object = None
+		self.endObject()
 
 	def _wrap(self, obj):
 		self._data = obj

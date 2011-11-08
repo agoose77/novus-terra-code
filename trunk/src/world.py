@@ -15,21 +15,19 @@ class World:
 
 	INTERIOR_WORLD = 0
 	EXTERIOR_WORLD = 1
-
+	
+	singleton = None
+	
 	def __init__(self):
 		print("world.__init__()")
-
-		# Needed?
-		self.current_world_file = None
-		self.current_cell = None
-		self.loaded_libs = None
-		self.loaded_kdtrees = None
-		self.loaded_entities = None
-		self.entity_loading_queue = None
+		
+		World.singleton = self
+		
 		self.entity_list = []
-
-		self.player = None
+		
+		self.player = Player()
 		self.ai_manager = AI_Manager()
+		self.cell_manager = cell.CellManager()
 		#self.entity_list.append(self.player)
 
 		self.world_time = 0.0
@@ -84,7 +82,7 @@ class World:
 			self.world_time = 1.0
 
 		### HACK - set the Time prop for all the lighting effects
-		if cell.singleton.terrain != False:
+		if cell.CellManager.singleton.terrain != False:
 			#print("Updating Time:", self.world_time)
 			#try:
 			atmos = bge.logic.getSceneList()[0].objects[self.atmosphere_ctrl]
@@ -98,10 +96,18 @@ class World:
 			#	pass
 
 
-	def main(self):
-		#pass
-
+	def main(self):	
 		self.handle_time()
+		
+		
+		if 'player' in bge.logic.getCurrentScene().objects:
+			if self.player._data == bge.logic.getCurrentScene().objects['player']:
+				self.player.main()
+			else:
+				self.player._wrap(bge.logic.getCurrentScene().objects['player'])
+		else:
+			self.player._unwrap()
+		self.cell_manager.update()
 		if len(self.entity_list) != 0:
 			self.ai_manager.main()
 

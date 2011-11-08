@@ -22,4 +22,4 @@ class WeaponPickup(EntityBase):
 	def on_interact(self, player):
 		player.inventory.replace_weapon(self.weapon_name)
 		player.inventory.weapon_slot_1.equip()
-		self.endObject()
+		self.remove()

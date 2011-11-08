@@ -20,7 +20,7 @@ class Door(EntityBase):
 
 	def on_interact(self, player):
 		# TODO play sound - door open
-
-		ui.singleton.show_loading('./data/cells/'+ self['cell'] +'.cell')
-		print(self['destination'])
-		cell.singleton.next_destination = self['destination']
+		
+		cell.CellManager.singleton.next_destination = self['destination']
+		cell.CellManager.singleton.load('./data/cells/'+ self['cell'] +'.cell')
+		

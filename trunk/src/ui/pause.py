@@ -51,7 +51,7 @@ class GameScreen(bgui.Widget):
 		try:
 			fo = safeopen('./data/cells/'+self.input.text, 'rb')
 			fo.close()
-			self.parent.parent.show_loading('./data/cells/'+self.input.text)
+			cell.CellManager.singleton.load('./data/cells/'+self.input.text)
 		except:
 			self.lbl.color = [1.0,0,0,1]
 			self.lbl.text = "ERROR: cell "+self.input.text+" not found."
@@ -89,7 +89,7 @@ class InvScreen(bgui.Widget):
 		self.items = []
 
 		temp_items = []
-		for entry in session.game.player.inventory.items:
+		for entry in session.game.world.player.inventory.items:
 			print(entry)
 			temp_items.append(entry)
 
@@ -105,8 +105,8 @@ class InvScreen(bgui.Widget):
 					new_item_widget = Ninv_icon(self.frame, str(i)+str(j), image=imageicon,text=imagename, pos = [((size+10)*i+335),
 												( 370 - (size+10)*j)], size = [size, size], options=bgui.BGUI_NONE)
 					self.items.append( new_item_widget )
-					if session.game.player.inventory.items[item] > 1:
-						new_item_widget.amount.text = 'x'+str( session.game.player.inventory.items[item] )
+					if session.game.world.player.inventory.items[item] > 1:
+						new_item_widget.amount.text = 'x'+str( session.game.world.player.inventory.items[item] )
 				counter += 1
 	def button_logic(self, button):
 		if button in self.items:
@@ -172,7 +172,7 @@ class Pause(bgui.Widget):
 
 			if button.name == 'inventory':
 				self.current = self.screens['invscreen']
-				print( session.game.player.inventory.items)
+				print( session.game.world.player.inventory.items)
 				self.current.reconstruct_inv()
 				self.current.visible = 1
 			if button.name == 'game':
