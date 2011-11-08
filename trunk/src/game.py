@@ -34,6 +34,7 @@ class Game:
 		'Door': Door,
 		'EntityBase' : EntityBase,
 		'WeaponPickup' : WeaponPickup,
+		'ItemPickup': ItemPickup
 	}
 
 	def __init__(self):
