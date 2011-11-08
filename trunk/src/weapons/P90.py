@@ -60,7 +60,7 @@ class weapon:
 		new.setParent(bge.logic.getCurrentScene().objects['weapon_position'])
 
 		# Set Objects
-		self.object = obj
+		self.object = new
 		self.armature = [child for child in self.object.childrenRecursive if 'Armature' in child][0]
 		self.muzzle = [child for child in self.object.childrenRecursive if 'Muzzle' in child][0]
 
