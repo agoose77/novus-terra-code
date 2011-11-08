@@ -14,7 +14,7 @@ class weapon:
 
 	def __init__(self):
 		self.name = "P90"
-		self.description = 'Bla Bla'
+		self.description = 'A Cool Looking Weapon'
 
 		self.icon = 'cube.png'
 		self.weapon_type = 'Pistol'
@@ -29,7 +29,7 @@ class weapon:
 		self.reload_time = 1.0
 
 		# Effects
-		self.flash = ['muzzle_flash','muzzle_flash.001','muzzle_flash.002','muzzle_flash.003']
+		self.flash = ['muzzle_flash','muzzle_flash.001','muzzle_flash.002','muzzle_flash.003'] # Different flash effects to cycle
 		self.bullet_line = 'bullet_line'
 		self.smoke = 'smoke'
 
@@ -39,10 +39,11 @@ class weapon:
 		self.reload_sound = ''
 		self.equip_sound = ''
 
-	def finish(self, obj):
-		self.object = obj
-		self.armature = [child for child in self.object.childrenRecursive if 'Armature' in child][0]
-		self.muzzle = [child for child in self.object.childrenRecursive if 'Muzzle' in child][0]
+		# Objects
+		self.object = None
+		self.armature = None
+		self.muzzle = None
+
 
 	def on_interact(self, player):
 		player.inventory.replace_weapon(hit.parent['Weapon'])
@@ -58,12 +59,10 @@ class weapon:
 		new.orientation = bge.logic.getCurrentScene().objects['weapon_position'].orientation
 		new.setParent(bge.logic.getCurrentScene().objects['weapon_position'])
 
-		#
-		self.finish(new)
-
-		# Finished
-		print ('Equiped')
-		return new
+		# Set Objects
+		self.object = obj
+		self.armature = [child for child in self.object.childrenRecursive if 'Armature' in child][0]
+		self.muzzle = [child for child in self.object.childrenRecursive if 'Muzzle' in child][0]
 
     ###
 	def reload(self):
