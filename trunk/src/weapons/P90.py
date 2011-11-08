@@ -44,6 +44,12 @@ class weapon:
 		self.armature = [child for child in self.object.childrenRecursive if 'Armature' in child][0]
 		self.muzzle = [child for child in self.object.childrenRecursive if 'Muzzle' in child][0]
 
+	def on_interact(self, player):
+		player.inventory.replace_weapon(hit.parent['Weapon'])
+		new = player.inventory.weapon_slot_1.equip()
+		hit.parent.endObject()
+
+
 	def equip(self):
 		name = self.name
 

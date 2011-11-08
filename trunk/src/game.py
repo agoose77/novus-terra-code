@@ -15,6 +15,7 @@ from ai_manager import AI_Manager
 from console_ import Console
 from door import Door
 from entity_base import EntityBase
+from weapon_pickup import WeaponPickup
 
 class Game:
 	FORWARD_KEY = 0
@@ -28,10 +29,11 @@ class Game:
 	AIM_WEAPON_KEY = 8
 	SHOOT_WEAPON_KEY = 9
 	MOUSE_SENSITIVITY = 6
-	
+
 	entity_map = { # Maps class names to class definitions
 		'Door': Door,
 		'EntityBase' : EntityBase,
+		'WeaponPickup' : WeaponPickup,
 	}
 
 	def __init__(self):
@@ -78,7 +80,7 @@ class Game:
 		self.world = None
 		self.player = None
 		self.sound_manager = SoundManager()
-		
+
 		self.console = Console(safepath('./data/fonts/phaisarn.ttf'), bge.events.ACCENTGRAVEKEY)
 
 	def update(self):
@@ -93,7 +95,7 @@ class Game:
 
 		if self.player == None:
 			self.player = Player()
-		
+
 		if 'player' in bge.logic.getCurrentScene().objects:
 			if self.player._data == bge.logic.getCurrentScene().objects['player']:
 				self.player.main()
@@ -101,6 +103,6 @@ class Game:
 				self.player._wrap(bge.logic.getCurrentScene().objects['player'])
 		else:
 			self.player._unwrap()
-			
+
 		self.console.main()
 

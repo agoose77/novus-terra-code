@@ -71,10 +71,10 @@ class Inventory:
 			self.current_weapon = self.weapon_slot_1
 
 	def replace_weapon(self, weapon):
-		if self.current_weapon == self.weapon_slot_1:
-			temp = __import__(weapon)
-			self.weapon_slot_1 = temp.weapon()
-			self.current_weapon = self.weapon_slot_1
+		#if self.current_weapon == self.weapon_slot_1:
+		temp = __import__(weapon)
+		self.weapon_slot_1 = temp.weapon()
+		self.current_weapon = self.weapon_slot_1
 
 
 
