@@ -41,13 +41,13 @@ class System(bgui.System):
 			if self.current.name in self.children:
 				self.current.visible = 0
 			
-	def show_loading(self, filename):
+	def show_loading(self):
 		if self.current:
 			if self.current.name in self.children:
 				self.current.visible = 0
 		self.current = self.screens['loading']
 		self.current.visible = 1
-		self.current.load(filename)
+		tweener.singleton.add(self.current, 'color', '[*,*,*,1]', length=0.1)
 		
 	def show_start(self):
 		if self.current:

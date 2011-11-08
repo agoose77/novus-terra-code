@@ -1,7 +1,7 @@
 import sys
 
-import tweener
 import cell
+import tweener
 
 try:
 	import bge
@@ -35,10 +35,10 @@ class Loading(bgui.Widget):
 	def load(self, filename): #here we're completely hijacking the cell.singleton.load command to wrap it with fades
 		self.loadfile = filename
 		tweener.singleton.add(self, 'color', '[*,*,*,1]', length=0.1, callback = self.load_internal)
+		
 	def load_internal(self):
-		cell.singleton.load(self.loadfile)
-		cell.singleton.load_state = 1
-		tweener.singleton.add(self, 'color', '[*,*,*,0]', length=3.0, callback = self.parent.clear)
+		cell.CellManager.singleton.load(self.loadfile)
+		cell.CellManager.singleton.load_state = 1
 
 	@property
 	def color(self):
