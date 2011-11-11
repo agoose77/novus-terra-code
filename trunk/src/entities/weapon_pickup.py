@@ -1,19 +1,20 @@
 ### Weapon Pickup
 import sys
+import random
 sys.path.append('./src/')
 
 import bge
 from mathutils import Vector, Matrix
-import random
+
+import entities
 import session
-from entity_base import EntityBase
 
 ###
-class WeaponPickup(EntityBase):
+class WeaponPickup(entities.EntityBase):
 
 	def __init__(self, packet=None):
 		print ("WeaponPickup.__init__()")
-		EntityBase.__init__(self, packet)
+		entities.EntityBase.__init__(self, packet)
 
 		self.iteract_label = 'pickup'
 		self.interact_info = "P90 - Weapon"

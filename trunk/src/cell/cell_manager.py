@@ -13,7 +13,6 @@ try:
 	import mathutils
 	import session
 	import ui
-	from entity_base import EntityBase
 	from game import Game
 	from paths import *
 except:
@@ -81,8 +80,10 @@ class CellManager:
 			self.cell.name = filepath
 			fo.close
 		except IOError:
+			print("Unable to open "+filepath)
 			return("Unable to open "+filepath)
-		except pickle.UnpicklingError:
+		except (pickle.UnpicklingError, AttributeError, ImportError, EOFError):
+			print("Unable to build cell, the cell might be outdated\nTry baking with the latest cell editor")
 			return("Unable to build cell, the cell might be outdated")
 		
 		# Setup prop kdtrees
@@ -146,13 +147,6 @@ class CellManager:
 				self.spots.append(entry)
 			if "POINT" in entry.name:
 				self.points.append(entry)
-		print(self.spots)
-		print(self.points)
-		
-		
-
-		#scene.restart()
-		print("$$$$$$ CLEANED UP $$$$$")
 	
 	def load_terrain(self, filename):
 		""" Load a terrain file """
@@ -194,7 +188,6 @@ class CellManager:
 		libs_to_load = []
 		
 		# Determine which libs to load
-		print(self.cell.models)
 		for model in self.cell.models:
 			if model in self.blend_dict:
 				blend = self.blend_dict[model]

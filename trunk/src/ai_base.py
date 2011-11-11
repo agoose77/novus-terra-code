@@ -9,11 +9,11 @@ from paths import PATH_SOUNDS, PATH_MUSIC
 import bge
 from mathutils import Vector, Matrix
 
-from entity_base import EntityBase
+from entities import EntityBase
 from finite_state_machine import FiniteStateMachine
 
 from sound_manager import SoundManager
-from Inventory import Inventory
+from inventory import Inventory
 
 import ui
 import session

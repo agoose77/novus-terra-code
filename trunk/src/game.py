@@ -5,17 +5,13 @@ import time
 
 import bge
 
-from entity_base import EntityBase
-from player import Player
+import entities
 from paths import safepath
 from item import Item
 from sound_manager import SoundManager
 from world import World
 from ai_manager import AI_Manager
 from console_ import Console
-from door import Door
-from entity_base import EntityBase
-from weapon_pickup import WeaponPickup
 
 def main():
 	if Game.singleton is None:
@@ -37,9 +33,9 @@ class Game:
 	MOUSE_SENSITIVITY = 6
 
 	entity_map = { # Maps class names to class definitions
-		'Door': Door,
-		'EntityBase' : EntityBase,
-		'WeaponPickup' : WeaponPickup,
+		'Door': entities.Door,
+		'EntityBase' : entities.EntityBase,
+		'WeaponPickup' : entities.WeaponPickup,
 	}
 	
 	singleton = None
