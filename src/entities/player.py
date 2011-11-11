@@ -3,18 +3,16 @@ sys.path.append('./src/')
 sys.path.append('./src/weapons/')
 #import pyglet
 import math
+import random
 
 import aud
-from paths import PATH_SOUNDS, PATH_MUSIC
-
 import bge
 from mathutils import Vector, Matrix
 
-from entity_base import EntityBase
-from finite_state_machine import FiniteStateMachine
+import entities
 from behavior_tree import BehaviorTree
-
-import random
+from finite_state_machine import FiniteStateMachine
+from paths import PATH_SOUNDS, PATH_MUSIC
 
 try:
 	from game import Game
@@ -25,7 +23,7 @@ except:
 from item import Item
 from weapon import Weapon
 from sound_manager import SoundManager
-from Inventory import Inventory
+from inventory import Inventory
 from dialogue_system import DialogueSystem
 #from world import World
 import ui
@@ -33,12 +31,12 @@ import session
 
 
 ###
-class Player(EntityBase):
+class Player(entities.EntityBase):
 
 	def __init__(self):
 		print("player.__init__()")
 
-		EntityBase.__init__(self)
+		entities.EntityBase.__init__(self)
 
 		# Player Stats
 		self.health = 100
@@ -100,7 +98,7 @@ class Player(EntityBase):
 		print (self.inventory.items)
 
 	def _wrap(self, object):
-		EntityBase._wrap(self, object)
+		entities.EntityBase._wrap(self, object)
 		#JP - stuff i think might involve a specific wrapped object, was moved here from __init__
 		# Vehicle
 		self.current_vehicle = None
@@ -139,7 +137,7 @@ class Player(EntityBase):
 		self.lev = None
 
 	def _unwrap(self):
-		EntityBase._unwrap(self)
+		entities.EntityBase._unwrap(self)
 
 	def handle_walk_state(self, FSM):
 		keyboard = bge.logic.keyboard.events
@@ -499,7 +497,7 @@ class Player(EntityBase):
 	def main(self):
 
 		if bge.logic.globalDict['pause'] == 0 and self._data:
-			EntityBase.main(self)
+			entities.EntityBase.main(self)
 
 			self.movement_state_machine.main()
 			self.handle_camera()

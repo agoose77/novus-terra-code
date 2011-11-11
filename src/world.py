@@ -1,15 +1,16 @@
-
 import pickle
-from paths import PATH_SOUNDS, PATH_MUSIC
-import bge
-import aud
 import random
+
+import aud
+import bge
 from mathutils import Vector
+
+import cell
+import game
+import entities
 from ai_manager import AI_Manager
 from dialogue_system import DialogueSystem
-from player import Player
-import game
-import cell
+from paths import PATH_SOUNDS, PATH_MUSIC
 
 class World:
 
@@ -25,7 +26,7 @@ class World:
 		
 		self.entity_list = []
 		
-		self.player = Player()
+		self.player = entities.Player()
 		self.ai_manager = AI_Manager()
 		self.cell_manager = cell.CellManager()
 		#self.entity_list.append(self.player)
