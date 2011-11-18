@@ -178,9 +178,10 @@ def CreateMeshUsingMatrix(VertIndices, Verts):
 			ms = terrain.tr_singleton.map.scale
 			# apply the location of the vertex as a UV
 			sc = 1/float(w*ms)
+			sc2 = 1/float(w)
 
-			x = terrain.true_focus[0]*sc + .5/ms
-			y = terrain.true_focus[1]*sc + .5/ms
+			x = terrain.true_focus[0]*sc2 + .5
+			y = terrain.true_focus[1]*sc2 + .5
 
 			v = mesh.vertices[v_idx].co.xy
 			v = v * sc
