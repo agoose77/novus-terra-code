@@ -11,6 +11,7 @@ from .loading import *
 from .start import *
 from .pause import *
 from paths import *
+import ui
 
 FONTPATH = './data/fonts/'
 
@@ -31,7 +32,8 @@ class System(bgui.System):
 
 		self.screens = { 'pause': Pause(self, 'pause', size=self.size),
 						 'start': Start(self, 'start'),
-						 'loading': Loading(self, 'loading') }
+						 'loading': Loading(self, 'loading'),
+						 'item_swap': ui.ItemSwap(self, 'item_swap')}
 		for entry in self.screens:
 			self.screens[entry].visible = 0
 		
@@ -48,6 +50,22 @@ class System(bgui.System):
 		self.current = self.screens['loading']
 		self.current.visible = 1
 		tweener.singleton.add(self.current, 'color', '[*,*,*,1]', length=0.1)
+		
+	def show_item_swap(self, inventory):
+		[scene for scene in bge.logic.getSceneList() if scene.name == 'Construct'][0].suspend()
+		if self.current:
+			if self.current.name in self.children:
+				self.current.visible = 0
+		self.current = self.screens['item_swap']
+		self.current.visible = 1
+		self.current.set_inventory(inventory)
+		
+	def hide_item_swap(self, widget):
+		[scene for scene in bge.logic.getSceneList() if scene.name == 'Construct'][0].resume()
+		self.current.visible = 0
+		self.current = 0
+		
+		bge.render.setMousePosition(bge.render.getWindowWidth()//2, bge.render.getWindowHeight()//2)
 		
 	def show_start(self):
 		if self.current:
@@ -70,13 +88,8 @@ class System(bgui.System):
 			if self.current:
 				self.current.visible = 0
 				self.current = 0
-					
-	def update(self):
-		bge.render.showMouse(1)
-		"""A high-level method to be run every frame"""
-		
-		
-		# Handle the mouse
+	
+	def handle_mouse(self):
 		mouse = bge.logic.mouse
 		
 		pos = list(mouse.position)
@@ -93,9 +106,10 @@ class System(bgui.System):
 		elif mouse_events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_ACTIVE:
 			mouse_state = bgui.BGUI_MOUSE_ACTIVE
 		
+		self.click_state = mouse_state
 		self.update_mouse(pos, mouse_state)
 		
-		# Handle the keyboard
+	def handle_keyboard(self):
 		keyboard = bge.logic.keyboard
 		
 		key_events = keyboard.events
@@ -105,6 +119,13 @@ class System(bgui.System):
 		for key, state in keyboard.events.items():
 			if state == bge.logic.KX_INPUT_JUST_ACTIVATED:
 				self.update_keyboard(self.keymap[key], is_shifted)
+		
+	def update(self):
+		bge.render.showMouse(1)
+		"""A high-level method to be run every frame"""
+		
+		self.handle_mouse()
+		self.handle_keyboard()
 		
 		# Now setup the scene callback so we can draw
 		bge.logic.getCurrentScene().post_draw = [self.render]

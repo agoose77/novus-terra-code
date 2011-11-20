@@ -25,6 +25,7 @@ from bpy_extras.io_utils import ImportHelper, ExportHelper
 
 sys.path.append('./src/')
 from cell import Prop, Lamp, Cell, Entity, Destination
+from inventory import Inventory
 
 CELL_NONE = ""
 CELL_INTERIOR = 'Interior'
@@ -32,6 +33,7 @@ CELL_EXTERIOR = 'Exterior'
 MODE_EDIT = 'edit'
 MODE_MANAGE = 'manage'
 MODE_HELP = 'help'
+MODE_IE = 'inv_edit'
 
 blend_dict = {}
 model_dict = {}
@@ -78,15 +80,17 @@ def walk_dir(path):
 	
 
 def init():
+	# Cell editor props
 	bpy.types.Scene.ce_asset_dir = bpy.props.StringProperty(name='Asset Directory', default='./data/models', description='Filepath to asset folder')
 	bpy.types.Scene.ce_assets = bpy.props.CollectionProperty(type=CE_asset_properties)
 	bpy.types.Scene.ce_name = bpy.props.StringProperty(name='Cell Name', default='')
 	bpy.types.Scene.ce_type = bpy.props.StringProperty(default=CELL_NONE)
 	bpy.types.Scene.ce_mode = bpy.props.EnumProperty(
-		name = "ce_mode",
+		name = "Mode",
 		items = (
 			(MODE_EDIT, ' Edit Cell', ''),
 			(MODE_MANAGE, 'Manage Assets', ''),
+			(MODE_IE, 'Edit Inventories', ''),
 			(MODE_HELP, 'Help', '')
 		),
 		default = 'edit')
@@ -97,6 +101,18 @@ def init():
 	bpy.types.Scene.ce_bloom = bpy.props.BoolProperty(name='Bloom', default=False, description='Enable bloom in this cell')
 	bpy.types.Scene.ce_tint = bpy.props.BoolProperty(name='Tint', default=False, description='Enable color tinting in this cell')
 	bpy.types.Scene.ce_tint_color = bpy.props.FloatVectorProperty(name='Tint Color', default=[1.0, 1.0, 1.0], max=1.0, min=0.0, subtype='COLOR', description='Select color tint')
+	
+	# Inventory editor props
+	bpy.types.Scene.ie_inventories = bpy.props.CollectionProperty(type=IE_Inventory, name='Inventories')
+	bpy.types.Scene.ie_inventory_index = bpy.props.IntProperty()
+
+class IE_Item(bpy.types.PropertyGroup):
+	name = bpy.props.StringProperty(name='Item ID')
+	amount = bpy.props.IntProperty(name='Amount', default=1)
+
+class IE_Inventory(bpy.types.PropertyGroup):
+	name = bpy.props.StringProperty(name='Inv ID')
+	items = bpy.props.CollectionProperty(type=IE_Item, name='Items')
 		
 class CE_asset_properties(bpy.types.PropertyGroup):
 	label = bpy.props.StringProperty(default='')
@@ -208,18 +224,40 @@ class CE_load(bpy.types.Operator):
 			for name, value in entity.properties:
 				if name in obj.game.properties:
 					# Property exists on object - edit it
-					obj.game.properties[name].value = value
+					if name == 'inventory':
+						obj.game.properties[name].value = value.name
+						context.scene.ie_inventories.add()
+						inventory = context.scene.ie_inventories[-1]
+						for id, stacks in value.items:
+							inventory.items.add()
+							inventory.items[-1].name = id
+							inventory.items[-1].count = stack
+					
+					else:
+						obj.game.properties[name].value = value
 				else:
 					# Property doesn't exist on object - add it
 					bpy.ops.object.game_property_new()
 					obj.game.properties[len(obj.game.properties)-1].name = name
-					if isinstance(value, float):
-						obj.game.properties[name].type = 'FLOAT'
-					elif isinstance(value, int):
-						obj.game.properties[name].type = 'INT'
-					elif isinstance(value, str):
+					if name == 'inventory':
 						obj.game.properties[name].type = 'STRING'
-					obj.game.properties[name].value = value
+						obj.game.properties[name].value = value.name
+						context.scene.ie_inventories.add()
+						inventory = context.scene.ie_inventories[-1]
+						inventory.name = value.name
+						for id, stacks in value.items.items():
+							count = sum(stacks)
+							inventory.items.add()
+							inventory.items[-1].name = id
+							inventory.items[-1].amount = count
+					else:
+						if isinstance(value, float):
+							obj.game.properties[name].type = 'FLOAT'
+						elif isinstance(value, int):
+							obj.game.properties[name].type = 'INT'
+						elif isinstance(value, str):
+							obj.game.properties[name].type = 'STRING'
+						obj.game.properties[name].value = value
 				
 		# load destinations
 		if hasattr(cell, 'destinations'):
@@ -277,7 +315,7 @@ class CE_bake(bpy.types.Operator):
 		return {'RUNNING_MODAL'}
 	
 	def execute(self, context):
-		global blend_dict
+		global blend_dict, inventory
 		known_models = []
 		for assets in blend_dict.values():
 			known_models.extend(assets)
@@ -314,6 +352,21 @@ class CE_bake(bpy.types.Operator):
 					class_ = 'EntityBase'
 					if 'entity' in properties:
 						class_ = properties['entity']
+						
+					if 'inventory' in properties:
+						# Switch the iventory id to an inventory object
+						inv = Inventory()
+						inv.name = properties['inventory']
+						id = properties['inventory']
+						
+						for inventory in context.scene.ie_inventories:
+							if inventory.name == id:
+								for item in inventory.items:
+									inv.add_item(item.name, item.amount)
+								break
+						
+						properties['inventory'] = inv
+						
 					entities.append(Entity(name, obj.location[:], obj.scale[:], obj.dimensions[:], obj.rotation_euler[:], list(properties.items()), class_))
 					
 				else:
@@ -477,7 +530,51 @@ class CE_type_menu(bpy.types.Menu):
 		layout.operator("scene.ce_interior")
 		layout.operator("scene.ce_exterior")
 	
+class IE_inv_add(bpy.types.Operator):
+	bl_idname = "scene.ie_inv_add"
+	bl_label = "New"
+	bl_description = "Add a new inventory"
 	
+	def execute(self, context):
+		context.scene.ie_inventories.add()
+		context.scene.ie_inventories[-1].name = 'Inventory'
+		context.scene.ie_inventory_index = len(context.scene.ie_inventories)-2
+		
+		return {'FINISHED'}
+
+class IE_inv_del(bpy.types.Operator):
+	bl_idname = "scene.ie_inv_del"
+	bl_label = "Delete"
+	bl_description = "Delete the selected inventory"
+	
+	def execute(self, context):
+		context.scene.ie_inventories.remove(context.scene.ie_inventory_index)
+		
+		return {'FINISHED'}
+		
+class IE_item_add(bpy.types.Operator):
+	bl_idname = "scene.ie_item_add"
+	bl_label = "Add item"
+	bl_description = "Add a new item"
+	
+	def execute(self, context):
+		inventory = context.scene.ie_inventories[context.scene.ie_inventory_index]
+		inventory.items.add()
+		inventory.items[-1].name = ''
+		
+		return {'FINISHED'}
+
+class IE_item_del(bpy.types.Operator):
+	bl_idname = "scene.ie_item_del"
+	bl_label = "Delete"
+	bl_description = "Delete the selected item"
+	index = bpy.props.IntProperty()
+	
+	def execute(self, context):
+		inventory = context.scene.ie_inventories[context.scene.ie_inventory_index]
+		inventory.items.remove(self.index)
+		
+		return {'FINISHED'}
 
 class SCENE_PT_cell_editor(bpy.types.Panel):
 	bl_label = "Cell Editor"
@@ -542,6 +639,29 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 							row = colA.row()
 							row.label(asset.label)
 							row.operator("scene.ce_load_lib", text='', icon='UNLINKED').asset = id
+				
+				elif context.scene.ce_mode == MODE_IE:
+					box = layout.box()
+					row = box.row()
+					row.template_list(context.scene, 'ie_inventories', context.scene, 'ie_inventory_index', rows=3, maxrows=3)
+					col = row.column(align=True)
+					col.operator('scene.ie_inv_add', icon='ZOOMIN', text='')
+					col.operator('scene.ie_inv_del', icon='ZOOMOUT', text='')
+					
+					if len(context.scene.ie_inventories) != 0:
+						inventory = context.scene.ie_inventories[context.scene.ie_inventory_index]
+						
+						box.row().prop(inventory, 'name', text='')
+						box.row().separator()
+						box.row().operator('scene.ie_item_add', icon='ZOOMIN')
+						for n in range(len(inventory.items)):
+							item = inventory.items[n]
+							box2 = box.box()
+							row = box2.row()
+							row.prop(item, 'name', text='')
+							row.prop(item, 'amount', text='')
+							row.operator('scene.ie_item_del', icon='X', text='', emboss=False).index = n
+						
 				
 				elif context.scene.ce_mode == MODE_HELP:
 					box = layout.box()

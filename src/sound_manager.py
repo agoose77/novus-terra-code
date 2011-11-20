@@ -11,6 +11,12 @@ class SoundManager:
 	def __init__(self):
 		self.sounds = []
 		self.handles = []
+		
+		self.factories = {}
+		
+		for sound in os.listdir(PATH_SOUNDS):
+			if sound.endswith('.wav') or sound.endswith('.ogg'):
+				self.factories[sound] = aud.Factory.file(PATH_SOUNDS+sound).buffer()
 
 	def play_sound(self, sound_name, object, type='play', multi=False):
 		info = {'Name':sound_name, 'Own':object, 'Type':type, 'Multi':multi}
@@ -32,14 +38,13 @@ class SoundManager:
 
 	def main(self):
 		device = aud.device()
-
 		for sound in self.sounds:
 			print(sound)
 			#if sound['Multi'] == False:
 				#if not sound['Name'] in self.handles:
 					#if sound['Type'] == 'play':
-			handle = aud.Factory(PATH_SOUNDS+sound['Name'])
-			h = device.play(handle)
+			#handle = aud.Factory(PATH_SOUNDS+sound['Name'])
+			h = device.play(self.factories[sound['Name']])
 			self.handles.append([h, sound])
 			self.sounds.remove(sound)
 			print("YOYOYOYOYOYYO*999999999999999999")
