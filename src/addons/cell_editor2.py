@@ -327,8 +327,8 @@ class CE_bake(bpy.types.Operator):
 		
 		for obj in bpy.data.objects:
 			if obj.type in ['MESH', 'EMPTY', 'ARMATURE'] and not obj.parent:
-				name = re.sub("(\\.)(\\d){3}($)", "", obj.name) # remove .001 from name
-				
+				name = re.sub("(\\.)(\\d){3,100}($)", "", obj.name) # remove .001 from name
+
 				size = max(*obj.dimensions[:])
 				if size == 0:
 					# Give objects with no size a default value

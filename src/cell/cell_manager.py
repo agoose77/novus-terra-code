@@ -7,6 +7,7 @@ import terrain
 import cell
 from item import Item
 from weapon import Weapon
+import math
 
 try:
 	import bge
