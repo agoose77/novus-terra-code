@@ -92,10 +92,11 @@ class Player(entities.EntityBase):
 		self.inventory = Inventory()
 
 		#adding some items for testing:
-		self.inventory.add_item( Item( 0, 2, 'SMG machine gun', description='This is a gun you use to shoot things./nJust point and shoot', size=1, cost=0, effects={}), amount=1 )
-		self.inventory.add_item( Item( 0, 0, '22 mm ammo', description='ammo that goes in the gun', size=1, cost=0, effects={}), amount=56 )
-		self.inventory.add_item( Item( 0, 0, 'wrench', description='a wrench', size=1, cost=0, effects={}, icon='wrench.png'), amount=1 )
-		print (self.inventory.items)
+		self.inventory.add_item('0', amount=9 )
+		self.inventory.add_item('1', amount=9)
+		#self.inventory.add_item(1, amount=56 )
+		#self.inventory.add_item(2, amount=1 )
+		#self.inventory.add_items({3:1,4:1,5:1,6:1,7:1,8:1,9:1,10:1})
 
 	def _wrap(self, object):
 		entities.EntityBase._wrap(self, object)

@@ -9,6 +9,8 @@ from .nwidgets import *
 import bge
 from paths import *
 import session
+import game
+import ui
 
 class GameScreen(bgui.Widget):
 	"""Frame for storing other widgets"""
@@ -73,7 +75,7 @@ class InvScreen(bgui.Widget):
 		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
 		area = self.parent.image_back
 		self.frame = bgui.Frame(self, 'frame', pos=area.position, size = area.size, options=bgui.BGUI_CENTERX)
-		self.frame.colors = [ [0,0,0,0]]*4
+		self.frame.colors = [ [1,0,0,1]]*4
 
 
 
@@ -90,12 +92,10 @@ class InvScreen(bgui.Widget):
 
 		temp_items = []
 		for entry in session.game.world.player.inventory.items:
-			print(entry)
 			temp_items.append(entry)
 
 		size = 110
 		counter = 0
-		print (temp_items)
 		for j in range(3):
 			for i in range(4):
 				if counter < len(temp_items):
@@ -151,7 +151,7 @@ class Pause(bgui.Widget):
 			entry.button_logic = self.button_logic
 
 		self.screens = { 'gamescreen':GameScreen(self, 'gamescreen'),
-						'invscreen':InvScreen(self, 'invscreen') }
+						'invscreen':ui.InventoryWindow(self, 'invscreen', game.Game.singleton.world.player.inventory, size=[340, 330], pos=[0,50], options=bgui.BGUI_CENTERED) }
 		for entry in self.screens:
 			self.screens[entry].visible = 0
 			
@@ -168,12 +168,11 @@ class Pause(bgui.Widget):
 			if self.current:
 					if self.current.name in self.children:
 						self.current.visible = 0
-						print( '?- ', self.current)
 
 			if button.name == 'inventory':
 				self.current = self.screens['invscreen']
-				print( session.game.world.player.inventory.items)
-				self.current.reconstruct_inv()
+				#self.current.reconstruct_inv()
+				self.current.redraw()
 				self.current.visible = 1
 			if button.name == 'game':
 				self.current = self.screens['gamescreen']

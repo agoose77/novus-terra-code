@@ -15,3 +15,6 @@ from .loading import *
 from .start import *
 from .pause import *
 from .nwidgets import *
+from .inventory_window import *
+from .scrollbar import *
+from .item_swap import *

@@ -36,6 +36,7 @@ class Game:
 		'Door': entities.Door,
 		'EntityBase' : entities.EntityBase,
 		'WeaponPickup' : entities.WeaponPickup,
+		'Container' : entities.Container
 	}
 	
 	singleton = None

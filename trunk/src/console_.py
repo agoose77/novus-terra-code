@@ -530,7 +530,6 @@ class Console:
         if self.toggle_key:
             if bge.logic.keyboard.events[self.toggle_key] == bge.logic.KX_INPUT_JUST_ACTIVATED:
                 self.active = not self.active
-                print(5)
             
         if self.active == True:
             self.handle_input()
