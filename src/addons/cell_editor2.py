@@ -373,7 +373,8 @@ class CE_bake(bpy.types.Operator):
 					# object is a prop
 					print('[prop]', name)
 					i = math.floor(math.log(size, 2))
-					
+					if i < 0: #JP safeguard, small objects were ending up in the [-1] slot
+						i = 0
 					if name not in known_models:
 						print(['wtf'], name)
 						name = "WTF" # yes this is actually important
@@ -390,7 +391,9 @@ class CE_bake(bpy.types.Operator):
 					
 				elif lamp.type == 'POINT':
 					lamps.append(Lamp(name, obj.location[:], obj.rotation_euler[:], lamp.type, lamp.color[:], lamp.distance, lamp.energy))
-					
+		for l in props:
+			print("### "+str(len(l)))
+		
 		# FX settings
 		FX = {}
 		FX['Bloom'] = bpy.context.scene.ce_bloom
