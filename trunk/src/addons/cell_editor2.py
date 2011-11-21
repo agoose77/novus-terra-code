@@ -515,7 +515,7 @@ class CE_terrain_select(bpy.types.Operator):
 		return True
 	
 	def execute(self, context):
-		context.scene.ce_terrain_file = self.filepath
+		context.scene.ce_terrain_file = self.filepath.split('\\')[-1] #JP keeping this just the file name not the local path
 		return {'FINISHED'}
 	
 	def invoke(self, context, event):
