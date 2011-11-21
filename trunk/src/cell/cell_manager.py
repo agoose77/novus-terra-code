@@ -157,6 +157,8 @@ class CellManager:
 		new = scene.addObject('outdoor_sun_shadow', "CELL_MANAGER_HOOK")
 
 		terrain.tr_singleton = terrain.Map_Manager() #should do this in cell manager init
+		if len(filename.split('\\')) > 1:
+			filename = filename.split('\\')[-1]  #redundant, but making sure it's just the filename not the path
 		terrain.tr_singleton.load('./data/terrains/'+filename)
 		terrain.cq_singleton = terrain.Chunk_Que()
 		
