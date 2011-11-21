@@ -52,6 +52,7 @@ class Player(entities.EntityBase):
 		self.walk_speed = 5.0
 		self.run_speed = 9.0
 		self.walk_temp = 0.0
+		self.jump_speed = 10.0
 
 		self.init_1 = False
 		#self.animations= ['walk','run', '']
@@ -97,6 +98,11 @@ class Player(entities.EntityBase):
 		#self.inventory.add_item(1, amount=56 )
 		#self.inventory.add_item(2, amount=1 )
 		#self.inventory.add_items({3:1,4:1,5:1,6:1,7:1,8:1,9:1,10:1})
+		
+		#calculating this once for mouse move
+		w = bge.render.getWindowWidth()
+		h = bge.render.getWindowHeight()
+		self.window_middle = [ int((w - int(w)%2)/2), int((h - int(h)%2)/2) ]
 
 	def _wrap(self, object):
 		entities.EntityBase._wrap(self, object)
@@ -163,12 +169,13 @@ class Player(entities.EntityBase):
 			move[1] += speed
 
 		### Jump
-		pos1 = [self.position[0],self.position[1],self.position[2]-10]
-		ray = self.rayCast(pos1, self.position, 2, '', 0, 0, 0)
+		
+		if keyboard[bge.events.SPACEKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
+			pos1 = [self.position[0],self.position[1],self.position[2]-10]
+			ray = self.rayCast(pos1, self.position, 2, '', 0, 0, 0)
 
-		if ray[0] != None:
-			if keyboard[bge.events.SPACEKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
-				move[2] = 5
+			if ray[0] != None:
+				move[2] = self.jump_speed
 				self.walk_temp = 19
 
 		###
@@ -456,14 +463,11 @@ class Player(entities.EntityBase):
 
 		mpos = bge.logic.mouse.position
 
-		w = bge.render.getWindowWidth()
-		h = bge.render.getWindowHeight()
+		
 
-		w,h = w, h
-		w = (w - int(w)%2)/2
-		h = (h - int(h)%2)/2
+		
 
-		bge.render.setMousePosition(int(w), int(h))
+		bge.render.setMousePosition(self.window_middle[0], self.window_middle[1])
 		#bge.render.setMousePosition(int(w/2), int(h/2))
 
 		if not 'ml_rotx' in self.camera:
@@ -476,7 +480,7 @@ class Player(entities.EntityBase):
 			cap = 1.5
 
 			if -(self.camera['ml_rotx'] + mouse_my) < cap and -(self.camera['ml_rotx'] + mouse_my) > -cap:
-				if abs(mouse_mx) > 0.001 or abs(mouse_my) > 0.001:
+				if abs(mouse_mx) > 0.002 or abs(mouse_my) > 0.002:
 					self.camera.parent.applyRotation([0, 0, -mouse_mx], 0) # X
 					self.camera.applyRotation([-mouse_my, 0, 0], 1) # Y
 					self.camera['ml_rotx'] += mouse_my
