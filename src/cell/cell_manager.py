@@ -157,7 +157,7 @@ class CellManager:
 		new = scene.addObject('outdoor_sun_shadow', "CELL_MANAGER_HOOK")
 
 		terrain.tr_singleton = terrain.Map_Manager() #should do this in cell manager init
-		terrain.tr_singleton.load(filename)
+		terrain.tr_singleton.load('./data/terrains/'+filename)
 		terrain.cq_singleton = terrain.Chunk_Que()
 		
 		width = terrain.tr_singleton.map.width
