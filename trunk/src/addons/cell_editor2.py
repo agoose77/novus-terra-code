@@ -347,6 +347,9 @@ class CE_bake(bpy.types.Operator):
 		destinations = {}
 		
 		for obj in bpy.data.objects:
+			if obj.name = 'CE_terrain':
+				continue
+			
 			if obj.type in ['MESH', 'EMPTY', 'ARMATURE'] and not obj.parent:
 				name = re.sub("(\\.)(\\d){3,100}($)", "", obj.name) # remove .001 from name
 
