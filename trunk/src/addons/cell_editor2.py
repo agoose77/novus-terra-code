@@ -2,6 +2,9 @@
 Novus Terra - Cell Editor
 
 This addon is for use with populating areas for the Novus Terra game.
+
+CE: Cell Editor
+IE: Inventory Editor
 """
 
 bl_info = {
@@ -38,7 +41,13 @@ MODE_IE = 'inv_edit'
 blend_dict = {}
 model_dict = {}
 
+map = None # Terrain file
+
 def construct_blend_dict(assets):
+	""" Open a list of .blends and find out what objects are within it
+
+	assets: a list of blend filepaths
+	"""
 	blend_dict = {}
 	for blend in assets:
 		blend_dict[blend] = []
@@ -66,20 +75,21 @@ def construct_blend_dict(assets):
 	return blend_dict
 				
 def walk_dir(path):
+	""" Recursively walk a directory and find all the .blends within it """
 	assets = []
 			
 	for file in os.listdir(path):
 		if os.path.isdir(path + "/" + file):
 			if not file.startswith("."):
+				# Ignore . dirs (e.g .svn)
 				assets.extend(walk_dir(path + "/" + file))
 		elif file.endswith('.blend'):
 			assets.append(path + "/" + file)
 	
 	return assets
 	
-	
-
 def init():
+	""" Setup all the properties """
 	# Cell editor props
 	bpy.types.Scene.ce_asset_dir = bpy.props.StringProperty(name='Asset Directory', default='./data/models', description='Filepath to asset folder')
 	bpy.types.Scene.ce_assets = bpy.props.CollectionProperty(type=CE_asset_properties)
@@ -95,7 +105,9 @@ def init():
 		),
 		default = 'edit')
 	
+	# cell options
 	bpy.types.Scene.ce_terrain = bpy.props.BoolProperty(name='Terrain', default=False, description='Attach a terrain file to this cell')
+	bpy.types.Scene.ce_terrain_detail = bpy.props.IntProperty(name='Terrain Detail', default=0, description='Detail level of terrain preview')
 	bpy.types.Scene.ce_terrain_file = bpy.props.StringProperty(name='Terrain File', default='', description='Path to terrain file')
 	bpy.types.Scene.ce_hdr = bpy.props.BoolProperty(name='HDR', default=False, description='Enable HDR in this cell')
 	bpy.types.Scene.ce_bloom = bpy.props.BoolProperty(name='Bloom', default=False, description='Enable bloom in this cell')
@@ -107,19 +119,23 @@ def init():
 	bpy.types.Scene.ie_inventory_index = bpy.props.IntProperty()
 
 class IE_Item(bpy.types.PropertyGroup):
-	name = bpy.props.StringProperty(name='Item ID')
+	""" Property group for items """
+	name = bpy.props.StringProperty(name='Item ID') # Item ID
 	amount = bpy.props.IntProperty(name='Amount', default=1)
 
 class IE_Inventory(bpy.types.PropertyGroup):
-	name = bpy.props.StringProperty(name='Inv ID')
+	""" Property group for inventories """
+	name = bpy.props.StringProperty(name='Inv ID') # Inventory ID
 	items = bpy.props.CollectionProperty(type=IE_Item, name='Items')
 		
 class CE_asset_properties(bpy.types.PropertyGroup):
+	""" Properyt group for assets """
 	label = bpy.props.StringProperty(default='')
 	filepath = bpy.props.StringProperty(default='')
 	loaded = bpy.props.BoolProperty(default=False)
 	
 class CE_interior(bpy.types.Operator):
+	""" Creates a new interior cell """
 	bl_idname = "scene.ce_interior"
 	bl_label = "Interior"
 	
@@ -127,10 +143,13 @@ class CE_interior(bpy.types.Operator):
 		context.scene.ce_name = 'Untitled Cell'
 		context.scene.ce_type = CELL_INTERIOR
 		bpy.ops.scene.ce_load_model_dict()
+		context.scene.ce_terrain_detail = 0
 		
 		return {'FINISHED'}
-	
+
+# Not in use
 class CE_exterior(bpy.types.Operator):
+	""" Creates a new exterior cell """
 	bl_idname = "scene.ce_exterior"
 	bl_label = "Exterior"
 	
@@ -138,15 +157,8 @@ class CE_exterior(bpy.types.Operator):
 		
 		return {'FINISHED'}
 	
-class CE_new(bpy.types.Operator):
-	bl_idname = "scene.ce_new"
-	bl_label = "New"
-	
-	def execute(self, context):
-		
-		return {'FINISHED'}
-	
 class CE_load(bpy.types.Operator):
+	""" Load an existing cell """
 	bl_idname = "scene.ce_load"
 	bl_label = "Open"
 	bl_description = "Open an existing cell"
@@ -184,10 +196,10 @@ class CE_load(bpy.types.Operator):
 				blend = model_dict[prop.name]
 				directory = blend + "/Object/"
 				bpy.ops.wm.link_append(directory=directory, filename=prop.name, link=False, instance_groups=False, autoselect=True)
-				bpy.ops.object.make_local()
+				bpy.ops.object.make_local() # Appending doesn't seem to work, this makes linked objects local
 				
 				obj = bpy.context.selected_objects[0]
-				bpy.ops.object.select_name(name=obj.name)
+				bpy.ops.object.select_name(name=obj.name) # Make the selected object the active objected
 				obj.location = prop.co
 				obj.rotation_euler = prop.rotation
 				obj.scale = prop.scale
@@ -213,10 +225,10 @@ class CE_load(bpy.types.Operator):
 			blend = model_dict[entity.name]
 			directory = blend + "/Object/"
 			bpy.ops.wm.link_append(directory=directory, filename=entity.name, link=False, instance_groups=False, autoselect=True)
-			bpy.ops.object.make_local()
+			bpy.ops.object.make_local() # Make object local
 			
 			obj = bpy.context.selected_objects[0]
-			bpy.ops.object.select_name(name=obj.name)
+			bpy.ops.object.select_name(name=obj.name) # Make object active
 			obj.location = entity.co
 			obj.rotation_euler = entity.rotation
 			obj.scale = entity.scale
@@ -225,6 +237,8 @@ class CE_load(bpy.types.Operator):
 				if name in obj.game.properties:
 					# Property exists on object - edit it
 					if name == 'inventory':
+						# property is an inventory - add the inventory
+						# and set the property value to the inventory id
 						obj.game.properties[name].value = value.name
 						context.scene.ie_inventories.add()
 						inventory = context.scene.ie_inventories[-1]
@@ -240,6 +254,7 @@ class CE_load(bpy.types.Operator):
 					bpy.ops.object.game_property_new()
 					obj.game.properties[len(obj.game.properties)-1].name = name
 					if name == 'inventory':
+						# inventories need to be handled seperately
 						obj.game.properties[name].type = 'STRING'
 						obj.game.properties[name].value = value.name
 						context.scene.ie_inventories.add()
@@ -260,28 +275,34 @@ class CE_load(bpy.types.Operator):
 						obj.game.properties[name].value = value
 				
 		# load destinations
-		if hasattr(cell, 'destinations'):
-			for destination in cell.destinations.values():
-				blend = model_dict['destination']
-				directory = blend + "/Object/"
-				bpy.ops.wm.link_append(directory=directory, filename='destination', link=False, instance_groups=False, autoselect=True)
-				bpy.ops.object.make_local()
-				
-				obj = bpy.context.selected_objects[0]
-				obj.location = destination.co
-				obj.rotation_mode = 'QUATERNION'
-				obj.rotation_quaternion = destination.rotation
-				obj.game.properties['id'].value = destination.id
+		for destination in cell.destinations.values():
+			blend = model_dict['destination']
+			directory = blend + "/Object/"
+			bpy.ops.wm.link_append(directory=directory, filename='destination', link=False, instance_groups=False, autoselect=True)
+			bpy.ops.object.make_local()
+			
+			obj = bpy.context.selected_objects[0]
+			obj.location = destination.co
+			obj.rotation_mode = 'QUATERNION'
+			obj.rotation_quaternion = destination.rotation
+			obj.game.properties['id'].value = destination.id
 		
 		# TODO - load lights
 		
+		# load cell properties
 		context.scene.ce_name = cell.name
 		context.scene.ce_type = CELL_INTERIOR
+		context.scene.ce_bloom = cell.fx['Bloom']
+		context.scene.ce_hdr = cell.fx['HDR']
+		context.scene.ce_tint = cell.fx['CC']
+		context.scene.ce_tint_color = [cell.fx['Color R'],
+										cell.fx['Color G'],
+										cell.fx['Color B']]
 		context.scene.ce_terrain = cell.terrain is not None
 		if context.scene.ce_terrain:
 			context.scene.ce_terrain_file = cell.terrain
-		
-		#context.scene.ce
+			
+		context.scene.ce_terrain_detail = 0
 		
 		return {'FINISHED'}
 	
@@ -419,6 +440,7 @@ class CE_bake(bpy.types.Operator):
 		return {'FINISHED'}
 
 class CE_index_blends(bpy.types.Operator):
+	""" Index .blends in the models dict and bake a model_dict.data """
 	bl_idname = "scene.ce_index_blends"
 	bl_label = "Index .blends"
 	bl_description = "Crawl the model directory and index the .blends"
@@ -443,6 +465,7 @@ class CE_index_blends(bpy.types.Operator):
 		return {'FINISHED'}
 		
 class CE_load_model_dict(bpy.types.Operator):
+	""" Load model_dict.data """
 	bl_idname = "scene.ce_load_model_dict"
 	bl_label = "Load Model Dict"
 	bl_description = "Refresh the asset list based on the model dict"
@@ -475,6 +498,7 @@ class CE_load_model_dict(bpy.types.Operator):
 		return {'FINISHED'}
 	
 class CE_load_lib(bpy.types.Operator):
+	""" Link a .blend into the editor """
 	bl_idname = "scene.ce_load_lib"
 	bl_label = "Load Library"
 	bl_description = "Load the current libraries contents"
@@ -492,7 +516,9 @@ class CE_load_lib(bpy.types.Operator):
 		context.scene.ce_assets[self.asset].loaded = True
 		return {'FINISHED'}
 
+# Doesn't really do anything
 class CE_free_lib(bpy.types.Operator):
+	""" Remove a .blend from the editor """
 	bl_idname = "scene.ce_free_lib"
 	bl_label = "Load Library"
 	bl_description = "Load the current libraries contents"
@@ -504,7 +530,8 @@ class CE_free_lib(bpy.types.Operator):
 		return {'FINISHED'}   
 	
 class CE_terrain_select(bpy.types.Operator):
-	bl_idname = "scene.ce_root_select"
+	""" Open a file dialogue and choose a .terrain file """
+	bl_idname = "scene.ce_terrain_select"
 	bl_label = "Select Terrain"
 	bl_description = "Select terrain file"
 	filepath = bpy.props.StringProperty(subtype='FILENAME')
@@ -514,17 +541,71 @@ class CE_terrain_select(bpy.types.Operator):
 	def poll(cls, context):
 		return True
 	
-	def execute(self, context):
-		context.scene.ce_terrain_file = self.filepath.split('\\')[-1] #JP keeping this just the file name not the local path
-		return {'FINISHED'}
-	
 	def invoke(self, context, event):
 		context.window_manager.fileselect_add(self)
 		return {'RUNNING_MODAL'}
 	
+	def execute(self, context):
+		global map
+		context.scene.ce_terrain_file = self.filepath.split('\\')[-1] #JP keeping this just the file name not the local path
+		
+		file = open(self.filepath, 'rb')
+		map = pickle.load(file)
+		file.close()
+		
+		if 'CE_terrain' in context.scene.objects:
+			pass
+		else:
+			mesh = bpy.data.meshes.new('CE_terrain')
+			obj = bpy.data.objects.new('CE_terrain', mesh)
+			
+			verts = []
+			x = 0
+			y = 0
+			while (x < map.width):
+				while (y < map.height):
+					verts.append([x, y, map.buffer[x*map.height + y]])
+					y += 16
+				y = 0
+				x += 16
+				
+			obj.data.from_pydata(verts, [], [])
+			obj.data.update()
+			context.scene.objects.link(obj)
+			
+		print(map.width, map.height, len(map.buffer))
+		return {'FINISHED'}
 	
+class CE_terrain_increase(bpy.types.Operator):
+	""" Increase the level of detail for the terrain perview """
+	bl_idname = 'scene.ce_terrain_increase'
+	bl_label = 'Increase detail'
+	bl_description = 'Increase terrain detail level'
+	
+	@classmethod
+	def poll(cls, context):
+		return context.scene.ce_terrain and context.scene.ce_terrain_detail < 3
+		
+	def execute(self, context):
+		context.scene.ce_terrain_detail += 1
+		return{'FINISHED'}
+		
+class CE_terrain_decrease(bpy.types.Operator):
+	""" Decrease the level of detail for the terrain perview """
+	bl_idname = 'scene.ce_terrain_decrease'
+	bl_label = 'Decrease detail'
+	bl_description = 'Decrease terrain detail level'
+	
+	@classmethod
+	def poll(cls, context):
+		return context.scene.ce_terrain and context.scene.ce_terrain_detail > 0
+		
+	def execute(self, context):
+		context.scene.ce_terrain_detail -= 1
+		return{'FINISHED'}
 
 class CE_type_menu(bpy.types.Menu):
+	""" Menu for selecting whether to create an interior or exterior cell """
 	bl_label = "Cell Type"
 	
 	def draw(self, context):
@@ -534,6 +615,7 @@ class CE_type_menu(bpy.types.Menu):
 		layout.operator("scene.ce_exterior")
 	
 class IE_inv_add(bpy.types.Operator):
+	""" Add a new inventory """
 	bl_idname = "scene.ie_inv_add"
 	bl_label = "New"
 	bl_description = "Add a new inventory"
@@ -546,6 +628,7 @@ class IE_inv_add(bpy.types.Operator):
 		return {'FINISHED'}
 
 class IE_inv_del(bpy.types.Operator):
+	""" Delete the current inventory """
 	bl_idname = "scene.ie_inv_del"
 	bl_label = "Delete"
 	bl_description = "Delete the selected inventory"
@@ -556,6 +639,7 @@ class IE_inv_del(bpy.types.Operator):
 		return {'FINISHED'}
 		
 class IE_item_add(bpy.types.Operator):
+	""" Add a new item to the current inventory """
 	bl_idname = "scene.ie_item_add"
 	bl_label = "Add item"
 	bl_description = "Add a new item"
@@ -568,6 +652,7 @@ class IE_item_add(bpy.types.Operator):
 		return {'FINISHED'}
 
 class IE_item_del(bpy.types.Operator):
+	""" Delete an item """
 	bl_idname = "scene.ie_item_del"
 	bl_label = "Delete"
 	bl_description = "Delete the selected item"
@@ -612,7 +697,9 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 					if bpy.context.scene.ce_terrain:
 						row = box.row(align=True)
 						row.prop(context.scene, 'ce_terrain_file')
-						row.operator('scene.ce_root_select', icon='FILESEL', text="")
+						row.operator('scene.ce_terrain_select', icon='FILESEL', text="")
+						row.operator('scene.ce_terrain_decrease', icon='BACK', text='')
+						row.operator('scene.ce_terrain_increase', icon='FORWARD', text='')
 					if bpy.context.scene.ce_tint:
 						box.row().prop(context.scene, 'ce_tint_color')
 					
