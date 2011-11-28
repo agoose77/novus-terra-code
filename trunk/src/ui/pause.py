@@ -169,8 +169,11 @@ class Pause(bgui.Widget):
 
 		self.frame = bgui.Frame(self, 'frame', size=[1,1], options=bgui.BGUI_CENTERED|bgui.BGUI_DEFAULT)
 		self.frame.colors = [ [0,0,0,1]]*4
-		self.image_back = bgui.Image(self.frame, 'image_back', './data/textures/ui/show.png' , pos=[0, 0], size=[900,600], color=[.4,.7,.9,.4],
-			options = bgui.BGUI_CACHE | bgui.BGUI_NONE | bgui.BGUI_CENTERED, interpolate="NEAREST" )
+		self.image_back = bgui.Image(self.frame, 'image_back', './data/textures/ui/show.png' , pos=[0, 0], size=[900,600],
+			options = bgui.BGUI_CACHE | bgui.BGUI_NONE | bgui.BGUI_CENTERED )
+			
+		self.image_back.color=[.4,.7,.9,.4]
+			
 		self.frame.menu_back = Fut_Box(self, 'menu_back', pos=self.image_back.position, size = [193, 450], options=bgui.BGUI_NONE)
 
 		
