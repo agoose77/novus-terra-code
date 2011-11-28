@@ -12,6 +12,7 @@ from sound_manager import SoundManager
 from world import World
 from ai_manager import AI_Manager
 from console_ import Console
+import session
 
 def main():
 	if Game.singleton is None:
@@ -49,13 +50,14 @@ class Game:
 		self.delta_time = 0.0001
 
 		self.graphics_options = {
-			'HDR':True,
-			'Bloom':True,
+			'Fade in props':True,
+			'HDR':False,
+			'Bloom':False,
 			'DOF':False,
-			'SSAO':False,
+			'SSAO':True,
 			'SSAA':False,
-			'Color':True,
-			'Motion Blur':True,
+			'Color':False,
+			'Motion Blur':False,
 			}
 
 		self.game_options = {
@@ -83,6 +85,8 @@ class Game:
 			Game.MOUSE_SENSITIVITY: 5.0,
 		}
 
+		self.default_cell = 'terrain.cell'
+		
 		self.world = None
 		self.sound_manager = SoundManager()
 

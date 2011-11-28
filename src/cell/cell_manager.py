@@ -9,6 +9,8 @@ from item import Item
 from weapon import Weapon
 import math
 
+
+
 try:
 	import bge
 	import mathutils
@@ -263,8 +265,11 @@ class CellManager:
 			prop.worldOrientation = mathutils.Quaternion(self.cell.destinations[self.next_destination].rotation).to_matrix()
 			self.next_destination = None
 			
-		tweener.singleton.add(prop, "color", "[*,*,*,1.0]", 2.0)
-		print("[spawned]", prop)
+		if session.game.graphics_options['Fade in props']:
+			tweener.singleton.add(prop, "color", "[*,*,*,1.0]", 2.0)
+		else:
+			prop.color = [1.0,1.0,1.0,0.0]
+		#print("[spawned]", prop)
 		return prop
 	
 	def spawn_lamp(self, data): #thing is either a prop or entity
@@ -300,6 +305,7 @@ class CellManager:
 		return lamp
 		
 	def update(self):
+		session.profiler.start_timer('cell_manager.update()')  ##debug profiling
 		if self.load_state == 0:
 			return
 		#HACKS ENTITY HACKS HERE
@@ -313,8 +319,8 @@ class CellManager:
 				for prop in entry:
 					if prop.name == "player_location":
 						position = mathutils.Vector( prop.co )
-		if 'explorer' in scene.objects:
-			position = scene.objects['explorer'].position
+		if 'explorer2' in scene.objects:
+			position = scene.objects['explorer2'].position
 		if self.next_destination is not None:
 			position = mathutils.Vector(self.cell.destinations[self.next_destination].co)
 		
@@ -330,6 +336,7 @@ class CellManager:
 			terrain.cq_singleton.update()
 
 		if time.time() - self.updatetime > .5:
+			
 			self.updatetime = time.time()
 
 			#lamps are seperated because they need a little different setup
@@ -345,8 +352,11 @@ class CellManager:
 			for entry in self.props_in_game:
 				if entry not in found_props:
 					#ENTITY HACKS
-					if entry.name not in ["player_location","Spaceship","helicopter",'Player', 'Vehicle', 'explorer']:
-						tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
+					if entry.name not in ["player_location","Spaceship","helicopter",'player', 'Vehicle', 'explorer']:
+						if session.game.graphics_options['Fade in props']:
+							tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
+						else:
+							entry.kill()
 
 			for entry in found_props:
 				if entry not in self.props_in_game:
@@ -369,4 +379,5 @@ class CellManager:
 					if ( entry.type == "POINT" and len(self.points) > 0 ) or ( entry.type == "SPOT" and len(self.spots) > 0 ):
 						self.lamps_in_game.append(entry)
 						entry.game_object = self.spawn_lamp(entry)
-
+						
+		session.profiler.stop_timer('cell_manager.update()')

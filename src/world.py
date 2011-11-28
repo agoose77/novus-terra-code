@@ -11,6 +11,7 @@ import entities
 from ai_manager import AI_Manager
 from dialogue_system import DialogueSystem
 from paths import PATH_SOUNDS, PATH_MUSIC
+import session
 
 class World:
 
@@ -45,8 +46,10 @@ class World:
 		###
 		self.gravity = Vector([0,0, -9.8])
 		self.world_effects = {'mist color':[0.0,0.0,0.0], 'tint':[0.0,0.0,0.0]}
-
+		
 		self.fx = {
+			'prop_fade':True,
+			'terrain_lod_distance':5.0,
 			'HDR':True,
 			'Bloom':True,
 			'DOF':False,
@@ -54,7 +57,7 @@ class World:
 			'SSAA':False,
 			'Color':True,
 			'Motion Blur':True,
-			'Color settings':[1.0, 1.0, 1.0],
+			'Color settings':[1.0, 1.0, 1.0]
 		}
 
 
@@ -98,6 +101,7 @@ class World:
 
 
 	def main(self):	
+		session.profiler.start_timer('world.main')
 		self.handle_time()
 		
 		
@@ -111,4 +115,4 @@ class World:
 		self.cell_manager.update()
 		if len(self.entity_list) != 0:
 			self.ai_manager.main()
-
+		session.profiler.stop_timer('world.main')
