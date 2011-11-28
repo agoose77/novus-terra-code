@@ -26,7 +26,7 @@ class Nbox(bgui.Widget):
 			options = bgui.BGUI_CACHE, interpolate='NEAREST' )
 		image_size = self.part.image_size
 		ratio = [ self.size[0] / image_size[0], self.size[1] / image_size[1] ]
-		self.part.color, self.left.color, self.right.color = [1,1,1,.4], [1,1,1,.4], [1,1,1,.4]
+		self.part._color, self.left._color, self.right._color = [1,1,1,.4], [1,1,1,.4], [1,1,1,.4]
 		self.part.texco=[(0,0), (ratio[0],0), (ratio[0],ratio[1]), (0,ratio[1])]
 		self.left.texco=[(0,0), (1,0), (1,ratio[1]), (0,ratio[1])]
 		self.right.texco=[(0,0), (1,0), (1,ratio[1]), (0,ratio[1])]
@@ -193,9 +193,9 @@ class Fut_Button(bgui.Widget):
 		
 		csize = self.size[1]*.3
 		self.image_back = bgui.Image(self, 'image_back', './data/textures/ui/fut_menu.png' , pos=[0, 0], size=[1,1],
-			options = bgui.BGUI_CACHE | bgui.BGUI_DEFAULT | bgui.BGUI_CENTERED, interpolate="LINEAR" )
+			options = bgui.BGUI_CACHE | bgui.BGUI_DEFAULT | bgui.BGUI_CENTERED)
 		self.image = bgui.Image(self, 'back', image, pos=[0, 0], size=[1,1],
-			options = bgui.BGUI_CACHE | bgui.BGUI_DEFAULT | bgui.BGUI_CENTERED , interpolate="LINEAR")
+			options = bgui.BGUI_CACHE | bgui.BGUI_DEFAULT | bgui.BGUI_CENTERED)
 		self.image_back.texco = [ (.003, .003), (.999,.003), (.999,.999), (.003, .999) ]
 		self.image.texco = self.image_back.texco
 		self.image.visible = 0

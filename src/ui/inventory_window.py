@@ -21,19 +21,19 @@ class InventoryWindow(bgui.Widget):
 			csize = self.size[1]*.3
 			
 			self.corner1 = bgui.Image(self, 'corner1', './data/textures/ui/nbutton_corner.png', pos=[0, 0], size=[csize,csize],
-				options = bgui.BGUI_CACHE, interpolate='NEAREST' )
+				options = bgui.BGUI_CACHE )
 			self.corner1.visible = 0
 			
 			self.corner2 = bgui.Image(self, 'corner2', './data/textures/ui/nbutton_corner.png', pos=[self.size[0]-csize, 0], size=[csize,csize],
-				options = bgui.BGUI_CACHE, interpolate='NEAREST' )
+				options = bgui.BGUI_CACHE )
 			self.corner2.visible = 0
 			
 			self.corner3 = bgui.Image(self, 'corner3', './data/textures/ui/nbutton_corner.png', pos=[0, self.size[1]-csize], size=[csize,csize],
-				options = bgui.BGUI_CACHE, interpolate='NEAREST' )
+				options = bgui.BGUI_CACHE )
 			self.corner3.visible = 0
 			
 			self.corner4 = bgui.Image(self, 'corner4', './data/textures/ui/nbutton_corner.png', pos=[self.size[0]-csize, self.size[1]-csize], size=[csize,csize],
-				options = bgui.BGUI_CACHE, interpolate='NEAREST' )
+				options = bgui.BGUI_CACHE )
 			self.corner4.visible = 0
 			
 			self.corner1.texco=[ (0,1), (0,0), (1,0), (1,1)]
