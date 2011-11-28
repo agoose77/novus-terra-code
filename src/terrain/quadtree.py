@@ -188,7 +188,7 @@ class Node(object):
 		d = sqrt(pow(x, 2) + pow(y,2))
 
 
-		if d < self.size*3*self.scale:
+		if d < self.size*2*self.scale:
 			return True
 
 	def remove(self, object):
