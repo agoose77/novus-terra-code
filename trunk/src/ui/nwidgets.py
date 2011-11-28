@@ -153,7 +153,36 @@ class Fut_Input(bgui.TextInput):
 		bgui.TextInput.__init__(self, parent, name, text=text, prefix="", font='./data/fonts/olney_light.otf', pt_size=24, 
 								aspect=None, size=size, pos=pos, sub_theme=sub_theme,input_options=bgui.BGUI_INPUT_DEFAULT, options=options)
 
-					
+		
+class Fut_Radio(bgui.Widget):
+	def __init__(self, parent, name, aspect=None, text="option 1", pos=[0, 0], size=[1,1],
+				sub_theme='', options=bgui.BGUI_NONE):
+		bgui.Widget.__init__(self, parent, name, aspect=aspect, size=size, pos=pos,
+				sub_theme=sub_theme, options=options)
+				
+		self.state = 0
+		self.text = bgui.Label(self, 'text', text=text, pos=[0,0] , 
+											pt_size=14, color=[1,1,1,1], font='./data/fonts/olney_light.otf', options=bgui.BGUI_NONE)
+		self.box = bgui.Frame(self, 'box', border=1, aspect=aspect, size=[10,10], pos=[self.size[0]-10, 0],
+				sub_theme=sub_theme, options=options)
+		self.box.colors = [ [0,0,0,1]]*4
+		self.box.border = 2
+		self.box.border_color = [.4,.7,.9,.3]
+		
+	def _handle_mouse(self, pos, event):
+
+		if event == bgui.BGUI_MOUSE_CLICK:
+			self.toggle()
+		bgui.Widget._handle_mouse(self, pos, event)
+	
+	def toggle(self):
+		self.state = not self.state
+		if self.state == 1:
+			self.box.colors = [ [0,.8,.8,1]]*4
+		else:
+			self.box.colors = [ [0,0,0,1]]*4
+
+		
 class Fut_Button(bgui.Widget):
 	"""Novus UI button"""
 

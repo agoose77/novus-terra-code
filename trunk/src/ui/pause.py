@@ -12,6 +12,43 @@ import session
 import game
 import ui
 
+class OptionsScreen(bgui.Widget):
+	"""Frame for storing other widgets"""
+	def __init__(self, parent, name, aspect=None, size=[1, 1], pos=[0, 0],
+				sub_theme='', options=bgui.BGUI_DEFAULT):
+		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
+		area = self.parent.image_back
+		self.frame = bgui.Frame(self, 'frame', pos=area.position, size = area.size, options=bgui.BGUI_CENTERX)
+		self.frame.colors = [ [0,0,0,0]]*4
+		
+		#save the option settings
+		self.button = Fut_Button(self.frame, 'button', text='APPLY', size=[160, 45], pos=[230, 0],
+			options = bgui.BGUI_NONE)
+		self.button.on_click = self.apply
+		
+		self.text = bgui.Label(self.frame, 'text', text='Graphics Options', pos=[230, 440] , 
+											pt_size=18, color=[1,1,1,1], font='./data/fonts/olney_light.otf', options=bgui.BGUI_NONE)
+		
+		self.graphic_options = []		
+		i = 0
+		for entry in session.game.graphics_options:
+			if type(session.game.graphics_options[entry]) == bool:
+				i += 1
+				self.graphic_options.append(Fut_Radio(self.frame, str(entry), aspect=None, text=str(entry), 
+													pos=[230, 430-i*20], size=[130,15], sub_theme='', options=bgui.BGUI_NONE) )
+				if session.game.graphics_options[entry]:
+					self.graphic_options[-1].toggle()
+		
+	def apply(self, data):
+		for entry in self.graphic_options:
+			if entry.name in session.game.graphics_options:
+				state = entry.state
+				if state in [True, 1]:
+					session.game.graphics_options[entry.name] = True
+				else:
+					session.game.graphics_options[entry.name] = False
+		session.savefile.save_prefs()
+
 class GameScreen(bgui.Widget):
 	"""Frame for storing other widgets"""
 	def __init__(self, parent, name, aspect=None, size=[1, 1], pos=[0, 0],
@@ -30,7 +67,7 @@ class GameScreen(bgui.Widget):
 		self.button = Fut_Button(self.back1, 'button', text='NEW GAME', size=[182, 45], pos=[10, 400],
 			options = bgui.BGUI_NONE)
 		self.button.on_click = self.start_game
-		self.input = Fut_Input(self.back1, 'input', text="pen2.cell", size=[160, 30], pos=[230, 410],
+		self.input = Fut_Input(self.back1, 'input', text=session.game.default_cell, size=[160, 30], pos=[230, 410],
 			options = bgui.BGUI_NONE)
 
 			
@@ -53,6 +90,8 @@ class GameScreen(bgui.Widget):
 		try:
 			fo = safeopen('./data/cells/'+self.input.text, 'rb')
 			fo.close()
+			session.game.default_cell = self.input.text
+			session.savefile.save_prefs()
 			cell.CellManager.singleton.load('./data/cells/'+self.input.text)
 		except:
 			self.lbl.color = [1.0,0,0,1]
@@ -139,7 +178,7 @@ class Pause(bgui.Widget):
 								color=[1,1,1,1], pos=[0, 550], options = bgui.BGUI_THEMED )
 
 		self.button1 = Fut_Button(self.image_back, 'game', pos=[5, 400], size=[182, 45], text="GAME", options=bgui.BGUI_NONE)
-		self.button2 = Fut_Button(self.image_back, 'button2', pos=[5, 350], size=[182, 45], text="OPTIONS", options=bgui.BGUI_NONE)
+		self.button2 = Fut_Button(self.image_back, 'options', pos=[5, 350], size=[182, 45], text="OPTIONS", options=bgui.BGUI_NONE)
 		self.button3 = Fut_Button(self.image_back, 'inventory', pos=[5, 300], size=[182, 45], text="INVENTORY", options=bgui.BGUI_NONE)
 		self.button4 = Fut_Button(self.image_back, 'button4', pos=[5, 250], size=[182, 45], text="PLAYER", options=bgui.BGUI_NONE)
 		
@@ -150,7 +189,7 @@ class Pause(bgui.Widget):
 		for entry in self.main_menu:
 			entry.button_logic = self.button_logic
 
-		self.screens = { 'gamescreen':GameScreen(self, 'gamescreen'),
+		self.screens = { 'gamescreen':GameScreen(self, 'gamescreen'), 'options':OptionsScreen(self, 'options'),
 						'invscreen':ui.InventoryWindow(self, 'invscreen', game.Game.singleton.world.player.inventory, size=[340, 330], pos=[0,50], options=bgui.BGUI_CENTERED) }
 		for entry in self.screens:
 			self.screens[entry].visible = 0
@@ -176,5 +215,8 @@ class Pause(bgui.Widget):
 				self.current.visible = 1
 			if button.name == 'game':
 				self.current = self.screens['gamescreen']
+				self.current.visible = 1
+			if button.name == 'options':
+				self.current = self.screens['options']
 				self.current.visible = 1
 
