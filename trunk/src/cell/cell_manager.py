@@ -352,7 +352,7 @@ class CellManager:
 			for entry in self.props_in_game:
 				if entry not in found_props:
 					#ENTITY HACKS
-					if entry.name not in ["player_location","Spaceship","helicopter",'player', 'Vehicle', 'explorer']:
+					if entry.name not in ["player_location","Spaceship","helicopter",'player', 'Vehicle', 'explorer', 'explorer2']:
 						if session.game.graphics_options['Fade in props']:
 							tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
 						else:
