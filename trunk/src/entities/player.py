@@ -1,31 +1,25 @@
 import sys
 sys.path.append('./src/')
 sys.path.append('./src/weapons/')
-#import pyglet
+
+
 import math
 import random
-
 import aud
 import bge
 from mathutils import Vector, Matrix
 
-import entities
-from behavior_tree import BehaviorTree
-from finite_state_machine import FiniteStateMachine
-from paths import PATH_SOUNDS, PATH_MUSIC
 
-try:
-	from game import Game
-except:
-	print('problem importing Game')
-
-#from game import *
-from item import Item
-from weapon import Weapon
 from sound_manager import SoundManager
 from inventory import Inventory
 from dialogue_system import DialogueSystem
-#from world import World
+from finite_state_machine import FiniteStateMachine
+from paths import PATH_SOUNDS, PATH_MUSIC
+
+import entities
+from item import Item
+from weapon import Weapon
+
 import ui
 import session
 
@@ -55,7 +49,6 @@ class Player(entities.EntityBase):
 		self.jump_speed = 10.0
 
 		self.init_1 = False
-		#self.animations= ['walk','run', '']
 		self.animations = {
 			'walk':0,
 			'run':0,
@@ -95,10 +88,7 @@ class Player(entities.EntityBase):
 		#adding some items for testing:
 		self.inventory.add_item('0', amount=9 )
 		self.inventory.add_item('1', amount=9)
-		#self.inventory.add_item(1, amount=56 )
-		#self.inventory.add_item(2, amount=1 )
-		#self.inventory.add_items({3:1,4:1,5:1,6:1,7:1,8:1,9:1,10:1})
-		
+
 		#calculating this once for mouse move
 		w = bge.render.getWindowWidth()
 		h = bge.render.getWindowHeight()
@@ -106,19 +96,14 @@ class Player(entities.EntityBase):
 
 	def _wrap(self, object):
 		entities.EntityBase._wrap(self, object)
-		#JP - stuff i think might involve a specific wrapped object, was moved here from __init__
+
 		# Vehicle
 		self.current_vehicle = None
 		self.vehicle= None
 
 		self.camera = [child for child in self.children if 'camera_1' in child][0]
-		#self.h_camera = [child for child in self.children if 'camera_2' in child][0]
 		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
-		#self.armature.removeParent()
 		self.bullet_spread = [child for child in self.childrenRecursive if 'spread' in child][0]
-	#	self.testori = [child for child in self.childrenRecursive if 'camera_2' in child][0]
-		#self.hand_camera = [child for child in self.childrenRecursive if 'hand cam' in child][0]
-		#self.hand_camera.removeParent()
 
 
 		# FSM States
@@ -146,6 +131,7 @@ class Player(entities.EntityBase):
 	def _unwrap(self):
 		entities.EntityBase._unwrap(self)
 
+
 	def handle_walk_state(self, FSM):
 		keyboard = bge.logic.keyboard.events
 		vel = self.getLinearVelocity()
@@ -156,7 +142,8 @@ class Player(entities.EntityBase):
 			self.fatigue += 0.2
 			speed = self.run_speed
 		else:
-			self.fatigue += -0.3
+			if self.fatigue > 0.0:
+				self.fatigue += -0.2
 			speed = self.walk_speed
 
 		if keyboard[bge.events.WKEY]:
@@ -169,7 +156,6 @@ class Player(entities.EntityBase):
 			move[1] += speed
 
 		### Jump
-		
 		if keyboard[bge.events.SPACEKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
 			pos1 = [self.position[0],self.position[1],self.position[2]-10]
 			ray = self.rayCast(pos1, self.position, 2, '', 0, 0, 0)
@@ -186,7 +172,6 @@ class Player(entities.EntityBase):
 		if move[0] != 0 or move[1] != 0:
 			if speed == self.walk_speed:
 				self.play_animation('walk')
-				#self.armature.playAction(str(self.inventory.current_weapon.name) + "_walk", 1, 32, layer=5, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 				self.walk_temp += 1
 
 			elif speed == self.run_speed:
@@ -250,13 +235,6 @@ class Player(entities.EntityBase):
 		for name in self.animations:
 			self.animations[name] = 0
 
-
-
-	def somethin(): # Remove???
-		if p[0] == 'Item':
-			p[1] = Weapon(1, 'P90', description='', size=1, cost=0, effects={}, icon='cube.png', clip_size = 30, ammo_type = 1, weapon_type = 'Pistol')
-
-
 	def handle_fall_state(self, FSM):
 		pass
 
@@ -276,10 +254,6 @@ class Player(entities.EntityBase):
 			self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10] # add player above the vehicle
 			self.vehicle = None
 
-	# ???
-	def handle_none_state(self, FSM):
-		pass
-
 	def is_grounded(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
 		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
@@ -292,17 +266,10 @@ class Player(entities.EntityBase):
 
 	def has_entered_vehicle(self, FSM):
 		return bool(self.vehicle)
-
 	def has_exited_vehicle(self, FSM):
 		return bool(self.vehicle)
 
-	def has_pressed_jumpkey(self, FSM):
-		pass
-
-	def has_entered_none(self, FSM):
-		pass
-
-	def has_exited_none(self, FSM):
+	def handle_none_state(self, FSM):
 		pass
 
 	def reload(self):
@@ -395,63 +362,6 @@ class Player(entities.EntityBase):
 		if hit != None and 'entity_base' in hit:
 			if keyboard.events[bge.events.EKEY] == 1:
 				hit['entity_base'].on_interact(self)
-		"""
-			if 'Door' in hit:
-
-				if keyboard.events[bge.events.EKEY] == 1:
-					ui.singleton.show_loading('./data/cells/'+ hit['Door'] +'.cell')
-					try:
-						self.position = bge.logic.getCurrentScene.objects[hit['Start Object']].position
-						self.orientation = bge.logic.getCurrentScene.objects[hit['Start Object']].orientation
-					except: pass
-
-			if 'Vehicle' in hit:
-				if keyboard.events[bge.events.EKEY] == 1:
-					hit['Vehicle'] = True
-					self.vehicle = hit
-					self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
-
-
-			# Items
-			if 'Item' in hit:
-
-				if keyboard.events[bge.events.EKEY] == 1:
-				  self.inventory.add_item(hit['Item'])
-				  #self.inventory.add_item( Item( 0, 0, '22 mm ammo', description='ammo that goes in the gun', size=1, cost=0, effects={}), amount=56 )
-				  print ('added to inventory')
-				  print (self.inventory.items)
-				  hit.endObject()
-
-			# Weapons`
-			if 'WeaponC' in hit:
-				if keyboard.events[bge.events.EKEY] == 1:
-					self.inventory.replace_weapon(hit.parent['Weapon'])
-					new = self.inventory.weapon_slot_1.equip()
-					#self.inventory.weapon_slot_1.finish(new)
-					hit.parent.endObject()
-
-			# pickup
-			if 'pick' in hit:
-				if keyboard.events[bge.events.TKEY] == 1:
-					if self.lev != None:
-						self.lev.removeParent()
-						self.lev= None
-
-					else:
-						hit.position = self.set_loc.position
-						hit.setParent(self.set_loc)
-						self.lev= hit
-
-			# toggle
-			elif 'Toggle' in hit:
-				keyboard = bge.logic.keyboard
-
-				if keyboard.events[bge.events.EKEY] == 1:
-					if hit['Toogle'] == 1:
-						hit['Toogle'] = 0
-					elif hit['Toogle'] == 0:
-						hit['Toogle'] = 1
-		"""
 
 
 	def fast_travel(self, location):
@@ -462,10 +372,6 @@ class Player(entities.EntityBase):
 		bge.logic.getCurrentScene().active_camera = self.camera # set active_camera
 
 		mpos = bge.logic.mouse.position
-
-		
-
-		
 
 		bge.render.setMousePosition(self.window_middle[0], self.window_middle[1])
 		#bge.render.setMousePosition(int(w/2), int(h/2))
@@ -485,22 +391,13 @@ class Player(entities.EntityBase):
 					self.camera.applyRotation([-mouse_my, 0, 0], 1) # Y
 					self.camera['ml_rotx'] += mouse_my
 
-
 	def remove_controls(self):
 		self.stored_state = self.movement_state_machine.current_state
-
 	def restore_controls(self):
 		self.movement_state_machine.current_state = self.stored_state
 
-	def temp_pos2(self):
-		if self.temp_pos == 1:
-			#self.position = bge.logic.getCurrentScene().objects['player_location'].position
-			self.temp_pos = 2
-			#self.handle_lights()
-
 	###
 	def main(self):
-
 		if bge.logic.globalDict['pause'] == 0 and self._data:
 			entities.EntityBase.main(self)
 
