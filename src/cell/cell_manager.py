@@ -268,7 +268,7 @@ class CellManager:
 		if session.game.graphics_options['Fade in props']:
 			tweener.singleton.add(prop, "color", "[*,*,*,1.0]", 2.0)
 		else:
-			prop.color = [1.0,1.0,1.0,0.0]
+			prop.color = [1.0,1.0,1.0,1.0]
 		#print("[spawned]", prop)
 		return prop
 	

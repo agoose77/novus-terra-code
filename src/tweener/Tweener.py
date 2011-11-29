@@ -92,7 +92,7 @@ class Tween:
 					changed = self.LINEAR( time.time()-self.starting_time, self.starting_value[i], self.target[i]-self.starting_value[i], self.length )
 					l[i] = changed
 			try:
-				exec("self.object"+self.property+" = " + str(l) )
+				self.object.color = l
 			except:
 				self.parent[self] = 0
 				return
