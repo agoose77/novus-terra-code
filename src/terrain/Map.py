@@ -260,17 +260,20 @@ class Map_Manager:
 				except:
 					v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],-500])
 				
+				
+				
 				t += 1
 				if c >= self.map.width*self.map.height:
 					c = 0
+				skirt_offset = self.map.buffer[ c ]* node.scale *.01 - .1*node.scale*node.scale*node.scale
 				if i == 0:
-					top_cache.append(self.map.buffer[ c ]* node.scale *.01 - 1*node.scale*node.scale)
+					top_cache.append(skirt_offset)
 				elif i == 32:
-					bottom_cache.append(self.map.buffer[ c ]* node.scale *.01 - 1*node.scale*node.scale)
+					bottom_cache.append(skirt_offset)
 				if j == 0:
-					left_cache.append(self.map.buffer[ c ]* node.scale *.01 - 1*node.scale*node.scale)
+					left_cache.append(skirt_offset)
 				elif j == 32:
-					right_cache.append(self.map.buffer[ c ]* node.scale *.01 - 1*node.scale*node.scale)
+					right_cache.append(skirt_offset)
 				
 				
 		#Now lets set the skirt
