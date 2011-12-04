@@ -279,12 +279,20 @@ class Map_Manager:
 		#Now lets set the skirt
 		#1089 - left - top - right - bottom
 		right_cache.reverse()
-		total = top_cache + bottom_cache + [bottom_cache[32]]*2 + [bottom_cache[0]]*2 + [top_cache[32]]*2 + left_cache + right_cache
+		right_cache = right_cache[1:]+[right_cache[0]] #offsetting this seems to help?
+		left_cache.insert( 0, left_cache[0] ) #one of the first ones needs better data
+		left_cache.pop(32)
+		total = top_cache + bottom_cache + [bottom_cache[32]]*2 + [bottom_cache[0]]*2 + [top_cache[32]]*2 + left_cache + right_cache 
 		
 		for i in range(136):
 			v = mesh.getVertex(0, 1089+i)
 			v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],total[i]])
-	
+			if 1089+i > 1161 and 1089+i < 1194:
+				#v.setRGBA([0,0,0,1])
+				pass
+				
+			v = mesh.getVertex(0, 1160)
+			v.setRGBA([1,0,0,1])
 		if node.depth == node.max_depth: 
 			node.cube.reinstancePhysicsMesh()
 		
