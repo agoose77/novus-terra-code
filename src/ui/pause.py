@@ -11,6 +11,7 @@ from paths import *
 import session
 import game
 import ui
+from fx import Effects
 
 class OptionsScreen(bgui.Widget):
 	"""Frame for storing other widgets"""
@@ -51,6 +52,7 @@ class OptionsScreen(bgui.Widget):
 				else:
 					print("Camera Clip")
 
+		session.game.update_filters()
 		session.savefile.save_prefs()
 
 class GameScreen(bgui.Widget):

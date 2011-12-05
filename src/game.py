@@ -94,6 +94,48 @@ class Game:
 
 		self.console = Console(safepath('./data/fonts/phaisarn.ttf'), bge.events.ACCENTGRAVEKEY)
 
+		self.fx_object = bge.logic.getCurrentScene().objects['FX']
+		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
+
+
+	def update_filters(self):
+		print("Updating Filters v2")
+		session.profiler.start_timer('fx.update')
+
+		for prop in session.game.graphics_options:
+			if prop != 'Motion Blur':
+				self.fx_object[prop] = session.game.graphics_options[prop]
+			else:
+				self.fx_object_blur[prop] = session.game.graphics_options[prop]
+
+		session.profiler.stop_timer('fx.update')
+		print("Updating Filters v2 DONE")
+
+	def update_stuff(self):
+		scenes = bge.logic.getSceneList()
+
+		# Gets the atmosphere scene
+		for scn in scenes:
+
+			if 'Atmosphere' == scn.name:
+				objects = scn.objects
+				cam = objects['Camera']
+				#List = scenes['Construct'].objects
+				for scn2 in scenes:
+					if scn2.name == 'Construct':
+						List = scn2.objects
+			#	try:
+				cam.orientation = List['player_cam'].orientation
+				#except: print("Error")
+
+				#if 'player_cam' in objects:
+				#	own.orientation = objects['player_cam'].orientation
+				#elif 'explorer' in objects:
+				#	own.orientation = objects['explorer'].orientation
+
+
+
+
 	def update(self):
 		self.delta_time = (time.time()-self.game_started) - self.game_time
 		self.game_time += self.delta_time
@@ -104,4 +146,6 @@ class Game:
 		self.world.main()
 		self.sound_manager.main()
 		self.console.main()
+
+		#bge.logic.getCurrentScene().pre_draw = [self.update_stuff]
 
