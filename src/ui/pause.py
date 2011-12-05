@@ -20,33 +20,37 @@ class OptionsScreen(bgui.Widget):
 		area = self.parent.image_back
 		self.frame = bgui.Frame(self, 'frame', pos=area.position, size = area.size, options=bgui.BGUI_CENTERX)
 		self.frame.colors = [ [0,0,0,0]]*4
-		
+
 		#save the option settings
 		self.button = Fut_Button(self.frame, 'button', text='APPLY', size=[160, 45], pos=[230, 0],
 			options = bgui.BGUI_NONE)
 		self.button.on_click = self.apply
-		
-		self.text = bgui.Label(self.frame, 'text', text='Graphics Options', pos=[230, 440] , 
+
+		self.text = bgui.Label(self.frame, 'text', text='Graphics Options', pos=[230, 440] ,
 											pt_size=18, color=[1,1,1,1], font='./data/fonts/olney_light.otf', options=bgui.BGUI_NONE)
-		
-		self.graphic_options = []		
+
+		self.graphic_options = []
 		i = 0
 		for entry in session.game.graphics_options:
 			if type(session.game.graphics_options[entry]) == bool:
 				i += 1
-				self.graphic_options.append(Fut_Radio(self.frame, str(entry), aspect=None, text=str(entry), 
+				self.graphic_options.append(Fut_Radio(self.frame, str(entry), aspect=None, text=str(entry),
 													pos=[230, 430-i*20], size=[130,15], sub_theme='', options=bgui.BGUI_NONE) )
 				if session.game.graphics_options[entry]:
 					self.graphic_options[-1].toggle()
-		
+
 	def apply(self, data):
 		for entry in self.graphic_options:
 			if entry.name in session.game.graphics_options:
-				state = entry.state
-				if state in [True, 1]:
-					session.game.graphics_options[entry.name] = True
+				if entry.name != 'camera_clip':
+					state = entry.state
+					if state in [True, 1]:
+						session.game.graphics_options[entry.name] = True
+					else:
+						session.game.graphics_options[entry.name] = False
 				else:
-					session.game.graphics_options[entry.name] = False
+					print("Camera Clip")
+
 		session.savefile.save_prefs()
 
 class GameScreen(bgui.Widget):
@@ -70,14 +74,14 @@ class GameScreen(bgui.Widget):
 		self.input = Fut_Input(self.back1, 'input', text=session.game.default_cell, size=[160, 30], pos=[230, 410],
 			options = bgui.BGUI_NONE)
 
-			
+
 		self.button2 = Fut_Button(self.back1, 'button2', text='LOAD GAME', size=[182, 45], pos=[10, 300],
 			options = bgui.BGUI_NONE)
 		# Setup an on_click callback for the image
 		self.button2.on_click = self.load_game
 		self.input2 = Fut_Input(self.back1, 'input2', text="default.sav", size=[160, 30], pos=[230, 320],
 			options = bgui.BGUI_NONE)
-			
+
 		self.button3 = Fut_Button(self.back1, 'button3', text='SAVE GAME', size=[182, 45], pos=[10, 200],
 			options = bgui.BGUI_NONE)
 		# Setup an on_click callback for the image
@@ -85,7 +89,7 @@ class GameScreen(bgui.Widget):
 		self.input3 = Fut_Input(self.back1, 'input3', text="default.sav", size=[160, 30], pos=[230, 220],
 			options = bgui.BGUI_NONE)
 
-	
+
 	def start_game(self, data):
 		try:
 			fo = safeopen('./data/cells/'+self.input.text, 'rb')
@@ -171,21 +175,21 @@ class Pause(bgui.Widget):
 		self.frame.colors = [ [0,0,0,1]]*4
 		self.image_back = bgui.Image(self.frame, 'image_back', './data/textures/ui/show.png' , pos=[0, 0], size=[900,600],
 			options = bgui.BGUI_CACHE | bgui.BGUI_NONE | bgui.BGUI_CENTERED )
-			
+
 		self.image_back.color=[.4,.7,.9,.4]
-			
+
 		self.frame.menu_back = Fut_Box(self, 'menu_back', pos=self.image_back.position, size = [193, 450], options=bgui.BGUI_NONE)
 
-		
-		self.title = bgui.Label(self.image_back, 'title',text="NOVUS:TERRA", pt_size=48, font='./data/fonts/olney_light.otf', 
+
+		self.title = bgui.Label(self.image_back, 'title',text="NOVUS:TERRA", pt_size=48, font='./data/fonts/olney_light.otf',
 								color=[1,1,1,1], pos=[0, 550], options = bgui.BGUI_THEMED )
 
 		self.button1 = Fut_Button(self.image_back, 'game', pos=[5, 400], size=[182, 45], text="GAME", options=bgui.BGUI_NONE)
 		self.button2 = Fut_Button(self.image_back, 'options', pos=[5, 350], size=[182, 45], text="OPTIONS", options=bgui.BGUI_NONE)
 		self.button3 = Fut_Button(self.image_back, 'inventory', pos=[5, 300], size=[182, 45], text="INVENTORY", options=bgui.BGUI_NONE)
 		self.button4 = Fut_Button(self.image_back, 'button4', pos=[5, 250], size=[182, 45], text="PLAYER", options=bgui.BGUI_NONE)
-		
-		
+
+
 		# Create the button
 
 		self.main_menu = [self.button1, self.button2, self.button3, self.button4]
@@ -196,12 +200,12 @@ class Pause(bgui.Widget):
 						'invscreen':ui.InventoryWindow(self, 'invscreen', game.Game.singleton.world.player.inventory, size=[340, 330], pos=[0,50], options=bgui.BGUI_CENTERED) }
 		for entry in self.screens:
 			self.screens[entry].visible = 0
-			
+
 		self.button_logic(self.button1)
 
 
-	
-		
+
+
 	def button_logic(self, button):
 		if button in self.main_menu:
 			for entry in self.main_menu:

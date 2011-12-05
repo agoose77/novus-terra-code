@@ -17,7 +17,7 @@ import session
 def main():
 	if Game.singleton is None:
 		Game()
-		
+
 	Game.singleton.update()
 
 class Game:
@@ -39,7 +39,7 @@ class Game:
 		'WeaponPickup' : entities.WeaponPickup,
 		'Container' : entities.Container
 	}
-	
+
 	singleton = None
 
 	def __init__(self):
@@ -58,6 +58,8 @@ class Game:
 			'SSAA':False,
 			'Color':False,
 			'Motion Blur':False,
+            'Fog':True,
+            'camera_clip': 1000,
 			}
 
 		self.game_options = {
@@ -86,7 +88,7 @@ class Game:
 		}
 
 		self.default_cell = 'terrain.cell'
-		
+
 		self.world = None
 		self.sound_manager = SoundManager()
 
@@ -95,10 +97,10 @@ class Game:
 	def update(self):
 		self.delta_time = (time.time()-self.game_started) - self.game_time
 		self.game_time += self.delta_time
-		
+
 		if self.world == None:
 			self.world = World()
-		
+
 		self.world.main()
 		self.sound_manager.main()
 		self.console.main()

@@ -58,6 +58,7 @@ class World:
 			'Color':True,
 			'Motion Blur':True,
 			#'Color settings':[1.0, 1.0, 1.0]
+            'Fog':True,
 		}
 
 
