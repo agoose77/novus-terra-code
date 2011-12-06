@@ -153,8 +153,8 @@ class Map_Manager:
 				self.map.ny[ c ] = data[1][t][1]
 				self.map.nz[ c ] = data[1][t][2]
 				t += 1
-		self.save(self.filename)
-		self.load(self.filename)
+		#self.save(self.filename)
+		#self.load(self.filename)
 			
 		
 	def readChunk(self, x,y, depth, node):
