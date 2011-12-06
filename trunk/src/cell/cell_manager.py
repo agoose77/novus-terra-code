@@ -29,7 +29,7 @@ class CellManager:
 	def __init__(self):
 		CellManager.singleton = self
 		self.cell = None
-		self.props_in_game = []
+		self.props_in_game = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
 		self.lamps_in_game = []
 		self.entities_in_game = []
 		self.prop_kdtrees = []
@@ -47,7 +47,7 @@ class CellManager:
 		fo = open('./data/model_dict.data', 'rb')
 		self.blend_dict = pickle.load( fo )
 		fo.close()
-		self.updatetime = time.time()
+		self.updatetime = Game.singleton.game_time
 		
 		# needs a list of loaded libraries
 		# self.load should check libraries needed, diff that with what's loaded
@@ -116,12 +116,6 @@ class CellManager:
 		
 		if 'entity_hack' in self.__dict__: #JP forget what this is for
 			self.__dict__.pop('entity_hack')
-		
-		self.props_in_game = []
-		self.lamps_in_game = []
-		self.entities_in_game = []
-		self.prop_kdtrees = []
-		self.lamp_kdtree = None
 
 		# Update the entities setup packet, and unwrap from their objects
 		if self.cell and self.cell.name in session.savefile.entities:
@@ -134,8 +128,9 @@ class CellManager:
 					
 					
 		# Remove props
-		for prop in self.props_in_game:
-			prop.kill()
+		for prop_group in self.props_in_game:
+			for prop in prop_group:
+				prop.kill()
 		
 		# Remove dirty objects
 		for obj in scene.objects:
@@ -150,6 +145,12 @@ class CellManager:
 				self.spots.append(entry)
 			if "POINT" in entry.name:
 				self.points.append(entry)
+				
+		self.props_in_game = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+		self.lamps_in_game = []
+		self.entities_in_game = []
+		self.prop_kdtrees = []
+		self.lamp_kdtree = None
 	
 	def load_terrain(self, filename):
 		""" Load a terrain file """
@@ -303,8 +304,81 @@ class CellManager:
 		tweener.singleton.add(lamp, "color", str(data.color), 2.0)
 		print('[spawned]', lamp)
 		return lamp
-		
+	
 	def update(self):
+		if self.load_state == 0:
+			# don't do anything while the cell is changing
+			return
+			
+		scene = bge.logic.getCurrentScene()
+		
+		# get a point to update everything by
+		if self.next_destination is not None:
+			position = mathutils.Vector(self.cell.destinations[self.next_destination].co)
+		elif 'player' in scene.objects:
+			position = scene.objects['player'].worldPosition
+		elif 'player_location' in scene.objects:
+			position = scene.objects['player_location'].worldPosition
+		elif 'explorer2' in scene.objects:
+			position = scene.objects['explorer2'].worldPosition
+		else:
+			position = mathutils.Vector([0,0,0])
+			
+		if 'outdoor_sun_shadow' in scene.objects:
+			scene.objects['outdoor_sun_shadow'].position = position
+			
+		if Game.singleton.game_time > self.updatetime + 0.5:
+			# update terrain
+			if self.terrain:
+				terrain.qt_singleton.update_terrain(position)
+				terrain.cq_singleton.update()
+				
+			# update props
+			for i, props in enumerate(self.prop_kdtrees):
+				to_remove = self.props_in_game[i][:]
+				found_props = []
+				props.getVertsInRange(position, pow(2, i) * 6 + i*60 + 1, found_props)
+				
+				for prop in found_props:
+					if prop in to_remove:
+						# keep prop in scene
+						to_remove.remove(prop)
+					else:
+						# add the prop
+						self.props_in_game[i].append(prop)
+						prop.game_object = self.spawn_prop(prop)
+						
+				for prop in to_remove:
+					if prop.name not in ["player_location","Spaceship","helicopter",
+							'player', 'Vehicle', 'explorer', 'explorer2']:
+						# remove prop
+						self.props_in_game[i].remove(prop)
+						if session.game.graphics_options['Fade in props']:
+							tweener.singleton.add(prop.game_object, "color", "[*,*,*,0.0]", 2.0, callback=prop.kill)
+						else:
+							prop.kill()
+					
+			# update lamps
+			to_remove = self.lamps_in_game[:]
+			found_lamps = []
+			self.lamp_kdtree.getVertsInRange(position, 100, found_lamps)
+			for lamp in found_lamps:
+				if lamp in to_remove:
+					# keep lamp in scene
+					to_remove.remove(lamp)
+				else:
+					# add the lamp
+					if (lamp.type == "POINT" and len(self.points) > 0 ) or (lamp.type == "SPOT" and len(self.spots) > 0 ):
+						self.lamps_in_game.append(lamp)
+						lamp.game_object = self.spawn_lamp(lamp)
+						
+			for lamp in to_remove:
+				# remove the lamp
+				lamp.kill() # TODO - fade intensity?
+			
+			self.updatetime = Game.singleton.game_time
+	
+	def update1(self):
 		session.profiler.start_timer('cell_manager.update()')  ##debug profiling
 		if self.load_state == 0:
 			return
