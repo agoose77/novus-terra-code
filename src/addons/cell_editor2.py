@@ -125,7 +125,8 @@ class IE_Item(bpy.types.PropertyGroup):
 
 class IE_Inventory(bpy.types.PropertyGroup):
 	""" Property group for inventories """
-	name = bpy.props.StringProperty(name='Inv ID') # Inventory ID
+	name = bpy.props.StringProperty(name='Inventory ID') # Inventory ID
+	label = bpy.props.StringProperty(name='Inventory Label')
 	items = bpy.props.CollectionProperty(type=IE_Item, name='Items')
 		
 class CE_asset_properties(bpy.types.PropertyGroup):
@@ -242,6 +243,8 @@ class CE_load(bpy.types.Operator):
 						obj.game.properties[name].value = value.name
 						context.scene.ie_inventories.add()
 						inventory = context.scene.ie_inventories[-1]
+						inventory.name = value.id
+						inventory.label = value.name
 						for id, stacks in value.items:
 							inventory.items.add()
 							inventory.items[-1].name = id
@@ -259,7 +262,8 @@ class CE_load(bpy.types.Operator):
 						obj.game.properties[name].value = value.name
 						context.scene.ie_inventories.add()
 						inventory = context.scene.ie_inventories[-1]
-						inventory.name = value.name
+						inventory.name = value.id
+						inventoy.label = value.name
 						for id, stacks in value.items.items():
 							count = sum(stacks)
 							inventory.items.add()
@@ -380,11 +384,12 @@ class CE_bake(bpy.types.Operator):
 					if 'inventory' in properties:
 						# Switch the iventory id to an inventory object
 						inv = Inventory()
-						inv.name = properties['inventory']
 						id = properties['inventory']
 						
 						for inventory in context.scene.ie_inventories:
 							if inventory.name == id:
+								inv.id = id
+								inv.name = inventory.label
 								for item in inventory.items:
 									inv.add_item(item.name, item.amount)
 								break
@@ -744,7 +749,8 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 					if len(context.scene.ie_inventories) != 0:
 						inventory = context.scene.ie_inventories[context.scene.ie_inventory_index]
 						
-						box.row().prop(inventory, 'name', text='')
+						box.row().prop(inventory, 'name', text='ID')
+						box.row().prop(inventory, 'label', text='Name')
 						box.row().separator()
 						box.row().operator('scene.ie_item_add', icon='ZOOMIN')
 						for n in range(len(inventory.items)):

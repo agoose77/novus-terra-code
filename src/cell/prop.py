@@ -13,6 +13,5 @@ class Prop:
 		self.properties = properties
 
 	def kill(self):
-		CellManager.singleton.props_in_game.remove(self)
 		self.game_object.endObject()
 		self.game_object = False
