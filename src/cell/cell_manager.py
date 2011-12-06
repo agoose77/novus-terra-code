@@ -3,12 +3,12 @@ import pickle
 import time
 
 import tweener
-import terrain
+
 import cell
 from item import Item
 from weapon import Weapon
 import math
-
+import terrain
 
 
 try:
@@ -177,7 +177,7 @@ class CellManager:
 		depth = max(1, math.ceil(math.log(best, 2) - 5))
 		size = math.pow(2, depth+5)
 		
-		terrain.qt_singleton = terrain.Quadtree(int(size/2), [0,0], 1, max_depth=depth, scale = terrain.tr_singleton.map.scale)
+		terrain.qt_singleton = terrain.tr_singleton.map.quadtree
 		self.terrain = 1
 
 	def load_internal(self, filepath):

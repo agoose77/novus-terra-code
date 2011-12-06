@@ -1,4 +1,4 @@
-import bpy
+import bpy, math
 
 from bpy_extras.io_utils import ImportHelper
 
@@ -283,6 +283,8 @@ def new_terrain():
 
 def load_terrain(filename):
 	terrain.tr_singleton.load(filename)
+
+	
 	
 def load_png(filepathr):
 	print(filepathr)
@@ -327,6 +329,30 @@ def create_texture():
 	mtex.texture = newtex
 	mtex.texture_coords = 'UV'
 	print(dir(mtex))
+	
+def compile_terrain():
+	print ("Compiling Terrain..")
+	width = terrain.tr_singleton.map.width
+	height = terrain.tr_singleton.map.height
+	best = max(width, height)
+		## 4096 7
+		## 2048 6
+		## 1024 5
+		## 512  4
+		## 256  3
+		## 128  2
+		## 64   1
+	depth = max(1, math.ceil(math.log(best, 2) - 5))
+	size = math.pow(2, depth+5)
+	terrain.qt_singleton = terrain.Quadtree(int(size/2), [0,0], 1, max_depth=depth, scale = terrain.tr_singleton.map.scale)
+	print ("Finished!")
+	#injecting the quadtree into the map instance
+	terrain.tr_singleton.map.quadtree = terrain.qt_singleton
+	#strip off unneeded data
+	terrain.tr_singleton.map.buffer = False
+	terrain.tr_singleton.map.nx = False	
+	terrain.tr_singleton.map.ny = False
+	terrain.tr_singleton.map.nz = False
 
 ###############################
 ### Main World Baker here - Operator
@@ -355,10 +381,11 @@ def bake_world():
 	y1 = terrain.true_focus[1] #-int(terrain.tr_singleton.map.height/2)
 	terrain.tr_singleton.writeRect(data, x1,y1,
 									terrain.focus[2],terrain.focus[3] )
-	print(x1,y1, terrain.focus[2],terrain.focus[3] )
+
 def save_normals():
 	terrain.tr_singleton.save_normal_list( terrain.tr_singleton.filename[:-8]+"_norms.txt")
 
+	
 ###############################
 
 class te_3(bpy.types.Operator):
@@ -460,6 +487,25 @@ def unregister():
 
 register()
 
+class te_3(bpy.types.Operator):
+
+	'''Compiles the terrain [warning! save as]'''
+
+	bl_idname = "scene.compile_terrain"
+	bl_label = "Compile Terrain"
+
+	def execute(self, context):
+		compile_terrain()
+		return {'FINISHED'}
+
+def register():
+	bpy.utils.register_class(te_3)
+
+def unregister():
+	bpy.utils.unregister_class(te_3)
+
+register()
+
 
 class te_3(bpy.types.Operator):
 
@@ -498,6 +544,38 @@ def unregister():
 	bpy.utils.unregister_class(te_3)
 
 register()
+
+###### SAVE
+
+class terrain_save(bpy.types.Operator):
+	bl_idname = "scene.terrain_save"
+	bl_label = "Save Terrain"
+	bl_description = "Saves the terrain.."
+	filepath = bpy.props.StringProperty(subtype='FILENAME')
+	filepath_ext = ".terrain"
+	
+	@classmethod
+	def poll(cls, context):
+		return True
+	
+	def invoke(self, context, event):
+		context.window_manager.fileselect_add(self)
+		return {'RUNNING_MODAL'}
+	
+	def execute(self, context):
+		print( self.properties.filepath )
+		terrain.tr_singleton.save( self.properties.filepath )
+		return {'FINISHED'}
+
+def register():
+	bpy.utils.register_class(terrain_save)
+
+def unregister():
+	bpy.utils.unregister_class(terrain_save)
+
+register()
+
+
 
 ### LOAD
 
@@ -594,6 +672,7 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 		colR.operator("scene.new_terrain", icon='NEW')
 		colL.operator("scene.testopen", icon='FILE_FOLDER')
 		colL.operator("scene.pngopen", icon='FILE_FOLDER')
+		colL.operator("scene.terrain_save", icon='FILE_FOLDER')
 		
 		row = colR.row()
 		colR.prop
@@ -724,6 +803,9 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 
 		colL.label('New Texture:')
 		colR.operator("scene.newtexture")
+		
+		colL.label('Compile for game:')
+		colR.operator("scene.compile_terrain")
 
 		###
 
