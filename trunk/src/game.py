@@ -55,6 +55,7 @@ class Game:
 			'Bloom':False,
 			'DOF':False,
 			'SSAO':True,
+			'SSAO_samples':3,
 			'SSAA':False,
 			'Color':False,
 			'Motion Blur':False,
@@ -103,6 +104,12 @@ class Game:
 		session.profiler.start_timer('fx.update')
 
 		for prop in session.game.graphics_options:
+			"""
+			if prop != 'camera_clip':
+				pass
+			elif prop != 'SSAO_sample':
+				pass
+			"""
 			if prop != 'Motion Blur':
 				self.fx_object[prop] = session.game.graphics_options[prop]
 			else:
@@ -110,30 +117,6 @@ class Game:
 
 		session.profiler.stop_timer('fx.update')
 		print("Updating Filters v2 DONE")
-
-	def update_stuff(self):
-		scenes = bge.logic.getSceneList()
-
-		# Gets the atmosphere scene
-		for scn in scenes:
-
-			if 'Atmosphere' == scn.name:
-				objects = scn.objects
-				cam = objects['Camera']
-				#List = scenes['Construct'].objects
-				for scn2 in scenes:
-					if scn2.name == 'Construct':
-						List = scn2.objects
-			#	try:
-				cam.orientation = List['player_cam'].orientation
-				#except: print("Error")
-
-				#if 'player_cam' in objects:
-				#	own.orientation = objects['player_cam'].orientation
-				#elif 'explorer' in objects:
-				#	own.orientation = objects['explorer'].orientation
-
-
 
 
 	def update(self):
@@ -146,6 +129,4 @@ class Game:
 		self.world.main()
 		self.sound_manager.main()
 		self.console.main()
-
-		#bge.logic.getCurrentScene().pre_draw = [self.update_stuff]
 
