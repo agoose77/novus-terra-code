@@ -8,22 +8,21 @@ class ItemSwap(bgui.Widget):
 		
 		ww = parent.size[0]
 		wh = parent.size[1]
-		self.player_inventory = ui.InventoryWindow(self, 'player_inventory', game.Game.singleton.world.player.inventory, size=[340, 440], pos=[ww/2-400, 0], options=bgui.BGUI_CENTERY)
+		self.player_inventory = ui.InventoryWindow(self, 'player_inventory', game.Game.singleton.world.player.inventory, size=[340, 440], pos=[ww//2-400, 0], options=bgui.BGUI_CENTERY)
 		self.other_inventory = None
 		
-		self.player_label = bgui.Label(self, 'player_label', 'Player', pt_size=64, color=[1,1,1,1], font='./data/fonts/olney_light.otf', pos=[ww/2 - 400, wh/2 + 220 + 10], options=bgui.BGUI_NONE)
-		self.other_label = bgui.Label(self, 'other_label', '', pt_size=64, color=[1,1,1,1], font='./data/fonts/olney_light.otf', pos=[ww/2 + 60, wh/2 + 220 + 10], options=bgui.BGUI_NONE)
+		self.player_label = bgui.Label(self, 'player_label', 'Player', pt_size=64, color=[1,1,1,1], font='./data/fonts/olney_light.otf', pos=[ww//2 - 400, wh//2 + 220 + 10], options=bgui.BGUI_NONE)
+		self.other_label = bgui.Label(self, 'other_label', '', pt_size=64, color=[1,1,1,1], font='./data/fonts/olney_light.otf', pos=[ww//2 + 60, wh//2 + 220 + 10], options=bgui.BGUI_NONE)
 		
 		self.swap_button = bgui.Image(self, 'swap_iamge', './data/textures/ui/inv_swap.png', size=[110, 110], options=bgui.BGUI_CENTERED)
 		self.swap_button.on_click = self.swap
 		#self.return_but = bgui.Frame(self, 'asd', size=[0.1, 0.1], pos=[0,0])
-		self.return_but = ui.Fut_Button(self, 'game', pos=[ww/2 - 400, wh/2 - 220 - 45 - 10], size=[182, 45], text="Back", options=bgui.BGUI_NONE)
+		self.return_but = ui.Fut_Button(self, 'game', pos=[ww/2 - 400, wh//2 - 220 - 45 - 10], size=[182, 45], text="Back", options=bgui.BGUI_NONE)
 		
 	def set_inventory(self, inventory):
-		print(21212)
 		ww = self.parent.size[0]
 		wh = self.parent.size[1]
-		self.other_inventory = ui.InventoryWindow(self, 'other_inventory', inventory, size=[340, 440], pos=[ww/2+60, 0], options=bgui.BGUI_CENTERY)
+		self.other_inventory = ui.InventoryWindow(self, 'other_inventory', inventory, size=[340, 440], pos=[ww//2+60, 0], options=bgui.BGUI_CENTERY)
 		self.other_label.text = inventory.name
 		self.return_but.on_click = ui.singleton.hide_item_swap
 		
