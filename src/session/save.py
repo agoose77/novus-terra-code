@@ -43,7 +43,10 @@ class Save:
 			fo = open('./data/'+'settings.prf', 'rb')
 			prfs = pickle.load(fo)
 			fo.close()
-			session.game.graphics_options = prfs[0]
+			for entry in prfs[0]:
+				if entry in session.game.graphics_options:
+					session.game.graphics_options[entry] = prfs[0][entry]
+					
 			session.game.game_options = prfs[1]
 			session.game.sound_options = prfs[2]
 			session.game.default_cell = prfs[3]
