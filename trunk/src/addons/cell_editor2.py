@@ -408,7 +408,7 @@ class CE_bake(bpy.types.Operator):
 						print(['wtf'], name)
 						name = "WTF" # yes this is actually important
 					
-					props[i].append(Prop(name, obj.location[:], obj.scale[:], obj.dimensions[:], obj.rotation_euler[:], list(properties.items())))
+					props[i].append(Prop(name, obj.location[:], obj.scale[:], obj.dimensions[:], obj.rotation_euler[:], i, list(properties.items())))
 				
 			elif obj.type == 'LAMP':
 				# object is a light

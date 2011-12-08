@@ -352,7 +352,6 @@ class CellManager:
 					if prop.name not in ["player_location","Spaceship","helicopter",
 							'player', 'Vehicle', 'explorer', 'explorer2']:
 						# remove prop
-						self.props_in_game[i].remove(prop)
 						if session.game.graphics_options['Fade in props']:
 							tweener.singleton.add(prop.game_object, "color", "[*,*,*,0.0]", 2.0, callback=prop.kill)
 						else:
