@@ -75,6 +75,9 @@ class CellManager:
 		print("---------")
 		scene = bge.logic.getCurrentScene()
 		
+		#hook for world to handle player stuff
+		session.game.world.cell_loading()
+		
 		self.cleanup()
 		
 		try:
@@ -205,7 +208,11 @@ class CellManager:
 			if self.convert_back(lib) not in libs_to_load:
 				bge.logic.LibFree(lib)
 				print("[freed]", blend)
-
+				
+		#JP hardcoding player and a few other things, might not be the perfect place for this? MANDATORY.blend is included in cells via the editor
+		libs_to_load.append('./data/models/entities/player_file.blend')
+		libs_to_load.append('./data/models/entities/Mouselook4.blend')
+		
 		# Load terrain
 		if self.cell.terrain:
 			libs_to_load.append('./data/models/CHUNKS.blend')
@@ -218,6 +225,10 @@ class CellManager:
 
 	def load_entities(self):
 		""" Load all the entities in the current cell """
+		
+		#hook for world to handle player stuff
+		session.game.world.cell_loaded()
+		
 		if self.cell.name in session.savefile.entities:
 			# This cell has been visited before
 			self.entities_in_game = session.savefile.entities[ self.cell.name ]
@@ -260,11 +271,6 @@ class CellManager:
 		if hasattr(data, 'properties'):
 			for name, value in data.properties:
 				prop[name] = value
-		
-		if prop.name == 'player' and self.next_destination is not None: # TODO - this is probably a bad spot for this
-			prop.worldPosition = self.cell.destinations[self.next_destination].co
-			prop.worldOrientation = mathutils.Quaternion(self.cell.destinations[self.next_destination].rotation).to_matrix()
-			self.next_destination = None
 			
 		if session.game.graphics_options['Fade in props']:
 			tweener.singleton.add(prop, "color", "[*,*,*,1.0]", 2.0)
@@ -313,14 +319,11 @@ class CellManager:
 		scene = bge.logic.getCurrentScene()
 		
 		# get a point to update everything by
-		if self.next_destination is not None:
-			position = mathutils.Vector(self.cell.destinations[self.next_destination].co)
-		elif 'player' in scene.objects:
-			position = scene.objects['player'].worldPosition
-		elif 'player_location' in scene.objects:
-			position = scene.objects['player_location'].worldPosition
-		elif 'explorer2' in scene.objects:
-			position = scene.objects['explorer2'].worldPosition
+		KX_player = session.game.world.KX_player
+		#if self.next_destination is not None:
+		#	position = mathutils.Vector(self.cell.destinations[self.next_destination].co)
+		if KX_player:
+			position = KX_player.worldPosition
 		else:
 			position = mathutils.Vector([0,0,0])
 			

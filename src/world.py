@@ -1,5 +1,6 @@
 import pickle
 import random
+import mathutils
 
 import aud
 import bge
@@ -44,7 +45,35 @@ class World:
 		###
 		self.gravity = Vector([0,0, -9.8])
 		self.world_effects = {'mist color':[0.0,0.0,0.0], 'tint':[0.0,0.0,0.0]}
+		
+		self.gamestate = 'loading'
+		self.KX_player = False
 
+	def cell_loaded(self):
+		self.gamestate = 'loaded'
+		self.spawn_player()
+	def cell_loading(self):
+		self.gamestate = 'loading'
+		self.KX_player = False
+		
+	def spawn_player(self):
+		""" 
+		Spawns the player
+		"""
+		scene = bge.logic.getCurrentScene()
+		player = scene.addObject('player', "CELL_MANAGER_HOOK")
+		if self.cell_manager.next_destination:
+			destination = self.cell_manager.next_destination
+		elif 'default' in self.cell_manager.cell.destinations:
+			destination = self.cell_manager.cell.destinations['default']
+		else:
+			destination = False
+			
+		if destination:
+			player.worldPosition = destination.co
+			player.worldOrientation = mathutils.Quaternion(destination.rotation).to_matrix()
+			self.cell_manager.next_destination = None
+		self.KX_player = player
 
 	def handle_time(self):
 		# Add timescale to current time
@@ -69,13 +98,14 @@ class World:
 		session.profiler.start_timer('world.main')
 		self.handle_time()
 
-		if 'player' in bge.logic.getCurrentScene().objects:
-			if self.player._data == bge.logic.getCurrentScene().objects['player']:
+		if self.KX_player:
+			if self.player._data == self.KX_player:
+				#TODO hook in pause menu here
 				self.player.main()
 			else:
-				self.player._wrap(bge.logic.getCurrentScene().objects['player'])
+				self.player._wrap(self.KX_player)
 		else:
-			self.player._unwrap()
+			self.player._unwrap()		
 
 		self.cell_manager.update()
 		if len(self.entity_list) != 0:
