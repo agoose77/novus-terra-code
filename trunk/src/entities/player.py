@@ -86,8 +86,8 @@ class Player(entities.EntityBase):
 		self.inventory = Inventory()
 
 		#adding some items for testing:
-		self.inventory.add_item('0', amount=9 )
-		self.inventory.add_item('1', amount=9)
+		self.inventory.add_item('cube', amount=9 )
+		self.inventory.add_item('wrench', amount=9)
 
 		#calculating this once for mouse move
 		w = bge.render.getWindowWidth()
@@ -386,7 +386,7 @@ class Player(entities.EntityBase):
 			cap = 1.5
 
 			if -(self.camera['ml_rotx'] + mouse_my) < cap and -(self.camera['ml_rotx'] + mouse_my) > -cap:
-				if abs(mouse_mx) > 0.002 or abs(mouse_my) > 0.002:
+				if abs(mouse_mx) > 0.0025 or abs(mouse_my) > 0.0025:
 					self.camera.parent.applyRotation([0, 0, -mouse_mx], 0) # X
 					self.camera.applyRotation([-mouse_my, 0, 0], 1) # Y
 					self.camera['ml_rotx'] += mouse_my

@@ -60,12 +60,10 @@ class System(bgui.System):
 		self.current.visible = 1
 		self.current.set_inventory(inventory)
 		
-	def hide_item_swap(self, widget):
+	def hide_item_swap(self):
 		[scene for scene in bge.logic.getSceneList() if scene.name == 'Construct'][0].resume()
 		self.current.visible = 0
 		self.current = 0
-		
-		bge.render.setMousePosition(bge.render.getWindowWidth()//2, bge.render.getWindowHeight()//2)
 		
 	def show_start(self):
 		if self.current:

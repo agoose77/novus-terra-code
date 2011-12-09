@@ -1,8 +1,9 @@
 import math
 
-import bgui
+import bge
 
 from item import Item
+import bgui
 import game
 import ui
 
@@ -53,18 +54,57 @@ class InventoryWindow(bgui.Widget):
 		def deselect(self):
 			for corner in self.corners:
 				corner.visible = 0
+				
+	class Tabs(bgui.Widget):
+		def __init__(self, parent, name, pos=[0,0], inventories=[]):
+			bgui.Widget.__init__(self, parent, name, size=[182, 455], pos=pos, options=bgui.BGUI_NONE)
+			self.inventories = inventories
+			
+			self.box = ui.Fut_Box(self, 'box', size=[192, 455], pos=[0,0], options=bgui.BGUI_NONE)
+			
+			self.all_tab = ui.Fut_Button(self, 'all_tab', pos=[5, 455-50], size=[182, 45], text="ALL", options=bgui.BGUI_NONE)
+			self.consumeable_tab = ui.Fut_Button(self, 'comsumeable_tab', pos=[5, 455-100], size=[182, 45], text="CONSUMEABLES", options=bgui.BGUI_NONE)
+			self.weapon_tab = ui.Fut_Button(self, 'weapon_tab', pos=[5, 455-150], size=[182, 45], text="WEAPONS", options=bgui.BGUI_NONE)
+			self.ammo_tab = ui.Fut_Button(self, 'ammo_tab', pos=[5, 455-200], size=[182, 45], text="AMMO", options=bgui.BGUI_NONE)
+			self.misc_tab = ui.Fut_Button(self, 'misc_tab', pos=[5, 455-250], size=[182, 45], text="MISC", options=bgui.BGUI_NONE)
+			
+			self.tabs = [self.all_tab, self.weapon_tab, self.ammo_tab, self.consumeable_tab, self.misc_tab]
+			
+			for tab in self.tabs:
+				tab.on_click = self.change_tab
+			self.all_tab.active = True
+			
+		def change_tab(self, new_tab):
+			for tab in self.tabs:
+				if tab.active and tab == new_tab:
+					return
+				tab.active = False
+				
+			new_tab.active = True
+			
+			game.Game.singleton.sound_manager.play_sound('select.wav', None)
+			
+			for inventory_window in self.inventories:
+				inventory_window.tab = new_tab.text1.text
+				inventory_window.redraw()
 	
 	def __init__(self, parent, name, inventory, aspect=None, size=[1,1], pos=[0,0],
 			sub_theme='', options=bgui.BGUI_DEFAULT):
 		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
 		
+		wh = bge.render.getWindowHeight()
+		
 		self.inventory = inventory
-		self.top = 0 # the row number that is displayed at the top of the window
+		self.top = 0 # the row number that is displayed at the top of the window, its a scrolling thing
+		
 		self.frame = bgui.Frame(self, 'frame', sub_theme='inventory_window', size=[1,1], pos=[0,0])
+		
 		self.scrollbar = ui.Scrollbar(self, '_scrollbar', pos=[1-10/self.size[0],0], size=[10/self.size[0], 1], sub_theme='Vertical')
 		self.scrollbar.on_scroll = self.scroll
 		
+		self.capacity = bgui.ProgressBar(self, 'capacity', sub_theme='inventory_capacity', percent=0.5, pos=[0,-15], size=[self.size[0], 15], options=bgui.BGUI_THEMED)
 		self.items = []
+		self.tab = 'ALL'
 		self.redraw()
 		
 	def select_item(self, item):
@@ -88,18 +128,19 @@ class InventoryWindow(bgui.Widget):
 		n = 0
 		for id in items:
 			item = Item.items[id]
-			for j in range(len(self.inventory.items[id])):
-				x = n % 3
-				y = n // 3
-				self.items.append(InventoryWindow.Item(self, 'item_'+item.name+'_'+str(n), item, j,
-						self.inventory.items[id][j], size=[size, size], options=bgui.BGUI_NONE,
-						pos=[x*size, self.size[1] + self.parent.position[1] - (y+1)*size]))
-				self.items[-1].amount.text = 'x' + str(self.inventory.items[id][j])
-				
-				if y >= self.size[1] // 110:
-					self.items[-1].visible = 0
-				
-				n += 1
+			if self.tab == 'ALL' or self.tab.lower() == item.type.lower():
+				for j in range(len(self.inventory.items[id])):
+					x = n % 3
+					y = n // 3
+					self.items.append(InventoryWindow.Item(self, 'item_'+item.name+'_'+str(n), item, j,
+							self.inventory.items[id][j], size=[size, size], options=bgui.BGUI_NONE,
+							pos=[x*size, self.size[1] + self.parent.position[1] - (y+1)*size]))
+					self.items[-1].amount.text = 'x' + str(self.inventory.items[id][j])
+					
+					if y >= self.size[1] // 110:
+						self.items[-1].visible = 0
+					
+					n += 1
 		
 		count = 0
 		for stacks in self.inventory.items.values():
@@ -119,6 +160,7 @@ class InventoryWindow(bgui.Widget):
 		pos = (self.size[1] - self.scrollbar.slider_position - self.scrollbar.slider_size + self.position[1]) / self.scrollbar_scale
 		top = (pos + 55) // 110
 		if top > self.top:
+			# if scrolled upwards
 			dif = top - self.top
 			self.top = top
 			
@@ -128,7 +170,9 @@ class InventoryWindow(bgui.Widget):
 					item.visible = 0
 				else:
 					item.visible = 1
+					
 		elif top < self.top:
+			# if scrolled downwards
 			dif = self.top - top
 			self.top = top
 			for item in self.items:
@@ -138,48 +182,3 @@ class InventoryWindow(bgui.Widget):
 				else:
 					item.visible = 1
 	
-
-"""
-class InventoryWindow(bgui.Widget):
-	def __init__(self, parent, name, inventory, aspect=None, size=[1, 1], pos=[0, 0],
-				sub_theme='', options=bgui.BGUI_DEFAULT):
-		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
-		
-		area = self.parent.image_back
-		self.frame = bgui.Frame(self, 'frame', pos=area.position, size = area.size, options=bgui.BGUI_CENTERX)
-		self.frame.colors = [ [1,0,0,0]]*4
-		self.back1 = Fut_Box(self.frame, 'back1', pos=[250,0], size = [450, 450], options=bgui.BGUI_NONE)
-
-		self.inventory = inventory
-		self.items = []
-
-	def reconstruct_inv(self):
-		for entry in self.items:
-			self.frame._remove_widget(entry)
-		self.items = []
-
-		temp_items = []
-		for entry in self.inventory.items:
-			temp_items.append(entry)
-
-		size = 110
-		counter = 0
-		for j in range(3):
-			for i in range(4):
-				if counter < len(temp_items):
-					item = temp_items[counter]
-					imageicon = './data/textures/inventory_icons/'+item.icon
-					imagename = item.name
-					new_item_widget = Ninv_icon(self.frame, str(i)+str(j), image=imageicon,text=imagename, pos = [((size+10)*i+335),
-												( 370 - (size+10)*j)], size = [size, size], options=bgui.BGUI_NONE)
-					self.items.append( new_item_widget )
-					if session.game.world.player.inventory.items[item] > 1:
-						new_item_widget.amount.text = 'x'+str( session.game.world.player.inventory.items[item] )
-				counter += 1
-				
-	def button_logic(self, button):
-		if button in self.items:
-			for entry in self.items:
-				entry.active = 0
-			button.active = 1
-"""

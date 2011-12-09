@@ -107,7 +107,6 @@ def init():
 	
 	# cell options
 	bpy.types.Scene.ce_terrain = bpy.props.BoolProperty(name='Terrain', default=False, description='Attach a terrain file to this cell')
-	bpy.types.Scene.ce_terrain_detail = bpy.props.IntProperty(name='Terrain Detail', default=0, description='Detail level of terrain preview')
 	bpy.types.Scene.ce_terrain_file = bpy.props.StringProperty(name='Terrain File', default='', description='Path to terrain file')
 	bpy.types.Scene.ce_hdr = bpy.props.BoolProperty(name='HDR', default=False, description='Enable HDR in this cell')
 	bpy.types.Scene.ce_bloom = bpy.props.BoolProperty(name='Bloom', default=False, description='Enable bloom in this cell')
@@ -240,7 +239,7 @@ class CE_load(bpy.types.Operator):
 					if name == 'inventory':
 						# property is an inventory - add the inventory
 						# and set the property value to the inventory id
-						obj.game.properties[name].value = value.name
+						obj.game.properties[name].value = value.id
 						context.scene.ie_inventories.add()
 						inventory = context.scene.ie_inventories[-1]
 						inventory.name = value.id
@@ -259,11 +258,11 @@ class CE_load(bpy.types.Operator):
 					if name == 'inventory':
 						# inventories need to be handled seperately
 						obj.game.properties[name].type = 'STRING'
-						obj.game.properties[name].value = value.name
+						obj.game.properties[name].value = value.id
 						context.scene.ie_inventories.add()
 						inventory = context.scene.ie_inventories[-1]
 						inventory.name = value.id
-						inventoy.label = value.name
+						inventory.label = value.name
 						for id, stacks in value.items.items():
 							count = sum(stacks)
 							inventory.items.add()
@@ -305,8 +304,6 @@ class CE_load(bpy.types.Operator):
 		context.scene.ce_terrain = cell.terrain is not None
 		if context.scene.ce_terrain:
 			context.scene.ce_terrain_file = cell.terrain
-			
-		context.scene.ce_terrain_detail = 0
 		
 		return {'FINISHED'}
 	
@@ -391,9 +388,12 @@ class CE_bake(bpy.types.Operator):
 								inv.id = id
 								inv.name = inventory.label
 								for item in inventory.items:
-									inv.add_item(item.name, item.amount)
+									if item.name in inv.items:
+										inv.items[item.name][0] += item.amount
+									else:
+										inv.items[item.name] = [item.amount]
 								break
-						
+								
 						properties['inventory'] = inv
 						
 					entities.append(Entity(name, obj.location[:], obj.scale[:], obj.dimensions[:], obj.rotation_euler[:], list(properties.items()), class_))
@@ -554,63 +554,9 @@ class CE_terrain_select(bpy.types.Operator):
 		return {'RUNNING_MODAL'}
 	
 	def execute(self, context):
-		global map
 		context.scene.ce_terrain_file = self.filepath.split('\\')[-1] #JP keeping this just the file name not the local path
 		
-		file = open(self.filepath, 'rb')
-		map = pickle.load(file)
-		file.close()
-		
-		if 'CE_terrain' in context.scene.objects:
-			pass
-		else:
-			mesh = bpy.data.meshes.new('CE_terrain')
-			obj = bpy.data.objects.new('CE_terrain', mesh)
-			
-			verts = []
-			x = 0
-			y = 0
-			while (x < map.width):
-				while (y < map.height):
-					verts.append([x, y, map.buffer[x*map.height + y]])
-					y += 16
-				y = 0
-				x += 16
-				
-			obj.data.from_pydata(verts, [], [])
-			obj.data.update()
-			context.scene.objects.link(obj)
-			
-		print(map.width, map.height, len(map.buffer))
 		return {'FINISHED'}
-	
-class CE_terrain_increase(bpy.types.Operator):
-	""" Increase the level of detail for the terrain perview """
-	bl_idname = 'scene.ce_terrain_increase'
-	bl_label = 'Increase detail'
-	bl_description = 'Increase terrain detail level'
-	
-	@classmethod
-	def poll(cls, context):
-		return context.scene.ce_terrain and context.scene.ce_terrain_detail < 3
-		
-	def execute(self, context):
-		context.scene.ce_terrain_detail += 1
-		return{'FINISHED'}
-		
-class CE_terrain_decrease(bpy.types.Operator):
-	""" Decrease the level of detail for the terrain perview """
-	bl_idname = 'scene.ce_terrain_decrease'
-	bl_label = 'Decrease detail'
-	bl_description = 'Decrease terrain detail level'
-	
-	@classmethod
-	def poll(cls, context):
-		return context.scene.ce_terrain and context.scene.ce_terrain_detail > 0
-		
-	def execute(self, context):
-		context.scene.ce_terrain_detail -= 1
-		return{'FINISHED'}
 
 class CE_type_menu(bpy.types.Menu):
 	""" Menu for selecting whether to create an interior or exterior cell """
@@ -706,8 +652,6 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 						row = box.row(align=True)
 						row.prop(context.scene, 'ce_terrain_file')
 						row.operator('scene.ce_terrain_select', icon='FILESEL', text="")
-						row.operator('scene.ce_terrain_decrease', icon='BACK', text='')
-						row.operator('scene.ce_terrain_increase', icon='FORWARD', text='')
 					if bpy.context.scene.ce_tint:
 						box.row().prop(context.scene, 'ce_tint_color')
 					

@@ -219,13 +219,12 @@ class Fut_Button(bgui.Widget):
 		bgui.Widget._handle_mouse(self, pos, event)
 		
 	def _draw(self):
-		if self._hover == False:
-			self.image.visible = 0
 		if self.active == 1:
 			self.image.visible = 1
-		else:
-			pass
+			
 		bgui.Widget._draw(self)
+		
+		self.image.visible = False
 		
 	def button_logic(self, button):
 		pass
