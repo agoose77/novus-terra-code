@@ -1,7 +1,7 @@
+import pickle
 import sys
-sys.path.append('./src/')
-
 import time
+sys.path.append('./src/')
 
 import bge
 
@@ -59,8 +59,8 @@ class Game:
 			'SSAA':False,
 			'Color':False,
 			'Motion Blur':False,
-            'Fog':True,
-            'camera_clip': 1000,
+			'Fog':True,
+			'camera_clip': 1000,
 			}
 
 		self.game_options = {
@@ -97,6 +97,14 @@ class Game:
 
 		self.fx_object = bge.logic.getCurrentScene().objects['FX']
 		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
+		
+		# load items
+		file = open('./data/items.data', 'rb')
+		items = pickle.load(file)
+		file.close()
+		
+		for item in items:
+			Item(id=item[0], name=item[1], type=item[2], description=item[3], icon=item[4], cost=item[5], size=item[6], stack=item[7])
 
 
 	def update_filters(self):
