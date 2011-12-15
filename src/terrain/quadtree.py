@@ -7,7 +7,6 @@ from mathutils import Vector
 
 import terrain
 try:
-	import session
 	import bge
 	scene = bge.logic.getCurrentScene()
 	from paths import *
@@ -193,9 +192,9 @@ class Node(object):
 
 
 	def alter_height(self):
-		session.profiler.start_timer('chunk update')
+		game.Game.singleton.profiler.start_timer('chunk update')
 		terrain.tr_singleton.alter_chunk(self.pos[0], self.pos[1], self)
-		session.profiler.stop_timer('chunk update')
+		game.Game.singleton.profiler.stop_timer('chunk update')
 
 
 	####### DEBUG VISUALIZATION

@@ -1,18 +1,16 @@
+import math
 import sys
 sys.path.append('./src/')
 sys.path.append('./src/owyl/')
 
-import math
 import bge
+
 import cell
+import game
+import ui
+from ai_base import AIBase
 from queue import Queue
 from mathutils import Vector, Matrix
-from ai_base import AIBase
-import ui
-
-#import game
-#from game import Game
-import session
 
 ###
 class AI_Manager:
@@ -42,7 +40,7 @@ class AI_Manager:
 					#temp._wrap(new)
 					temp.position = obj.position
 
-					session.game.world.entity_list.append(temp)
+					game.Game.singleton.world.entity_list.append(temp)
 					self.nodes.put(temp)
 
 					obj['spawned'] = 1

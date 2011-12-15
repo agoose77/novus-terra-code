@@ -14,10 +14,10 @@ import terrain
 try:
 	import bge
 	import mathutils
-	import session
 	import ui
 	from game import Game
 	from paths import *
+	import savefile # TODO - won't need this import when saving/loading is properly implimented
 except:
 	print("BGE imports failed, normal if you are running the cell editor")
 
@@ -63,6 +63,10 @@ class CellManager:
 		""" Creates a callback to begin loading a cell
 		(cells aren't loaded straight away so the screen can fade out)
 		"""
+		
+		if Game.singleton.savefile is None:
+			Game.singleton.savefile = savefile.Savefile() # TODO - this should be handled when New Game / Load Game
+														  # options are called.
 		self.load_state = 0
 		ui.singleton.show_loading()
 		tweener.singleton.add(self, "hook", 3, length=.5, callback= lambda: self.begin_loading(filepath))
@@ -76,7 +80,7 @@ class CellManager:
 		scene = bge.logic.getCurrentScene()
 		
 		#hook for world to handle player stuff
-		session.game.world.cell_loading()
+		Game.singleton.world.cell_loading()
 		
 		self.cleanup()
 		
@@ -121,8 +125,8 @@ class CellManager:
 			self.__dict__.pop('entity_hack')
 
 		# Update the entities setup packet, and unwrap from their objects
-		if self.cell and self.cell.name in session.savefile.entities:
-			for entity in session.savefile.entities[ self.cell.name ]:
+		if self.cell and self.cell.name in Game.singleton.savefile.entities:
+			for entity in Game.singleton.savefile.entities[ self.cell.name ]:
 				if entity._data:
 					entity.packet.co = entity._data.position[:]
 					entity.packet.rotation = entity._data.orientation.to_euler()[:]
@@ -227,11 +231,11 @@ class CellManager:
 		""" Load all the entities in the current cell """
 		
 		#hook for world to handle player stuff
-		session.game.world.cell_loaded()
+		Game.singleton.world.cell_loaded()
 		
-		if self.cell.name in session.savefile.entities:
+		if self.cell.name in Game.singleton.savefile.entities:
 			# This cell has been visited before
-			self.entities_in_game = session.savefile.entities[ self.cell.name ]
+			self.entities_in_game = Game.singleton.savefile.entities[ self.cell.name ]
 			for entity in self.entities_in_game:
 				if entity.packet:
 					ob = self.spawn_prop(entity.packet)
@@ -243,7 +247,7 @@ class CellManager:
 				new_entity = Game.entity_map[entity.class_] (entity)
 				new_entity._wrap( self.spawn_prop(entity) )
 				self.entities_in_game.append( new_entity )
-			session.savefile.entities[ self.cell.name ] = self.entities_in_game
+			Game.singleton.savefile.entities[ self.cell.name ] = self.entities_in_game
 		
 		tweener.singleton.add(ui.singleton.current, "color", "[*,*,*,0.0]", length=1.0, callback=ui.singleton.clear)
 
@@ -272,7 +276,7 @@ class CellManager:
 			for name, value in data.properties:
 				prop[name] = value
 			
-		if session.game.graphics_options['Fade in props']:
+		if Game.singleton.graphics_options['Fade in props']:
 			tweener.singleton.add(prop, "color", "[*,*,*,1.0]", 2.0)
 		else:
 			prop.color = [1.0,1.0,1.0,1.0]
@@ -319,7 +323,7 @@ class CellManager:
 		scene = bge.logic.getCurrentScene()
 		
 		# get a point to update everything by
-		KX_player = session.game.world.KX_player
+		KX_player = Game.singleton.world.KX_player
 		#if self.next_destination is not None:
 		#	position = mathutils.Vector(self.cell.destinations[self.next_destination].co)
 		if KX_player:
@@ -355,7 +359,7 @@ class CellManager:
 					if prop.name not in ["player_location","Spaceship","helicopter",
 							'player', 'Vehicle', 'explorer', 'explorer2']:
 						# remove prop
-						if session.game.graphics_options['Fade in props']:
+						if Game.singleton.graphics_options['Fade in props']:
 							tweener.singleton.add(prop.game_object, "color", "[*,*,*,0.0]", 2.0, callback=prop.kill)
 						else:
 							prop.kill()
@@ -380,7 +384,7 @@ class CellManager:
 			
 			self.updatetime = Game.singleton.game_time
 	
-	def update1(self):
+	def update1(self): # old update loop
 		session.profiler.start_timer('cell_manager.update()')  ##debug profiling
 		if self.load_state == 0:
 			return

@@ -1,23 +1,20 @@
+import math
+import random
 import sys
 sys.path.append('./src/')
 sys.path.append('./src/bgui/')
-import math
 
 import aud
-from paths import PATH_SOUNDS, PATH_MUSIC
-
 import bge
 from mathutils import Vector, Matrix
 
+import game
+import ui
 from entities import EntityBase
 from finite_state_machine import FiniteStateMachine
-
-from sound_manager import SoundManager
 from inventory import Inventory
-
-import ui
-import session
-import random
+from paths import PATH_SOUNDS, PATH_MUSIC
+from sound_manager import SoundManager
 
 ###
 class AIBase(EntityBase):
@@ -213,9 +210,9 @@ class AIBase(EntityBase):
 		radar = self.aimer.controllers[0].sensors['Radar']
 
 		for objt in radar.hitObjectList:
-			objl = [temp for temp in session.game.world.entity_list if temp._data == objt]
+			objl = [temp for temp in game.Game.singleton.world.entity_list if temp._data == objt]
 
-			for temp2 in session.game.world.entity_list:
+			for temp2 in game.Game.singleton.world.entity_list:
 				if temp2.faction != self.faction:
 
 					t_dist = self.getDistanceTo(temp2.position)
@@ -402,7 +399,7 @@ class AIBase(EntityBase):
 		#self.detect_enemies()
 
 		if self.alert == 1:
-			for entity in session.game.world.entity_list:
+			for entity in game.Game.singleton.world.entity_list:
 				dist = self.getDistanceTo(entity.position)
 
 				if dist < 5:

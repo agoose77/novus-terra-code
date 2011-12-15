@@ -121,7 +121,7 @@ class IE_icon_select(bpy.types.Operator):
 		return {'FINISHED'}
 		
 class SCENE_PT_item_editor(bpy.types.Panel):
-	bl_label = "Item Editor"
+	bl_label = "NT - Item Editor"
 	bl_space_type = "PROPERTIES"
 	bl_region_type = "WINDOW"
 	bl_context = "scene"

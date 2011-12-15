@@ -12,7 +12,6 @@ import entities
 from ai_manager import AI_Manager
 from dialogue_system import DialogueSystem
 from paths import PATH_SOUNDS, PATH_MUSIC
-import session
 
 class World:
 
@@ -52,6 +51,7 @@ class World:
 	def cell_loaded(self):
 		self.gamestate = 'loaded'
 		self.spawn_player()
+		
 	def cell_loading(self):
 		self.gamestate = 'loading'
 		self.KX_player = False
@@ -95,7 +95,7 @@ class World:
 
 
 	def main(self):
-		session.profiler.start_timer('world.main')
+		game.Game.singleton.profiler.start_timer('world.main')
 		self.handle_time()
 
 		if self.KX_player:
@@ -110,4 +110,4 @@ class World:
 		self.cell_manager.update()
 		if len(self.entity_list) != 0:
 			self.ai_manager.main()
-		session.profiler.stop_timer('world.main')
+		game.Game.singleton.profiler.stop_timer('world.main')

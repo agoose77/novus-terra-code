@@ -7,7 +7,6 @@ import bge
 from mathutils import Vector, Matrix
 
 import entities
-import session
 
 ###
 class WeaponPickup(entities.EntityBase):

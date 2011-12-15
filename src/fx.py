@@ -2,7 +2,6 @@ import sys
 sys.path.append('./src/')
 
 import bge
-import session
 
 class Effects:
 	def __init__(self):
