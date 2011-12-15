@@ -20,8 +20,8 @@ import entities
 from item import Item
 from weapon import Weapon
 
+import game
 import ui
-import session
 
 
 ###
@@ -118,7 +118,7 @@ class Player(entities.EntityBase):
 		self.movement_state_machine.add_transition('walk', 'vehicle', self.has_entered_vehicle)
 		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
 
-		session.game.world.entity_list.append(self)
+		game.Game.singleton.world.entity_list.append(self)
 
 		# Dialogue
 		#self.dialogue = DialogueSystem([cont.owner.get('ds_width', bge.render.getWindowWidth()-100),cont.owner.get('ds_height', 250)], theme)
@@ -276,12 +276,12 @@ class Player(entities.EntityBase):
 		print("Reloading...")
 		if self.inventory.ammo['Assault'] > 0:
 			if self.reload_start_time == 0.0:
-				self.reload_start_time = session.game.game_time
+				self.reload_start_time = game.Game.singleton.game_time
 
-			print (session.game.game_time - self.reload_start_time)
+			print (game.Game.singleton.game_time - self.reload_start_time)
 			self.play_animation('reload')
 
-			if (session.game.game_time - self.reload_start_time) > self.inventory.weapon_slot_1.reload_time:
+			if (game.Game.singleton.game_time - self.reload_start_time) > self.inventory.weapon_slot_1.reload_time:
 				print ("DONE RELOADING")
 				self.reloading = False
 
@@ -320,9 +320,9 @@ class Player(entities.EntityBase):
 			# Shoot
 			else:
 				if self.reloading == False:
-					print (session.game.game_time - self.last_shot)
-					if (session.game.game_time - self.last_shot) > self.inventory.weapon_slot_1.fire_speed:
-						self.last_shot = session.game.game_time
+					print (game.Game.singleton.game_time - self.last_shot)
+					if (game.Game.singleton.game_time - self.last_shot) > self.inventory.weapon_slot_1.fire_speed:
+						self.last_shot = game.Game.singleton.game_time
 
 						self.inventory.weapon_slot_1.shoot(self.camera, self.bullet_spread)
 						self.play_animation('shoot')

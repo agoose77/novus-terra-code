@@ -1,16 +1,15 @@
-import bge
-from bgl import *
 import sys
 
-import tweener
-import cell
-import bgui
-from .nwidgets import *
 import bge
-from paths import *
-import session
+from bgl import *
+
+import bgui
+import cell
 import game
+import tweener
 import ui
+from .nwidgets import *
+from paths import *
 from fx import Effects
 
 class OptionsScreen(bgui.Widget):
@@ -32,28 +31,28 @@ class OptionsScreen(bgui.Widget):
 
 		self.graphic_options = []
 		i = 0
-		for entry in session.game.graphics_options:
-			if type(session.game.graphics_options[entry]) == bool:
+		for entry in game.Game.singleton.graphics_options:
+			if type(game.Game.singleton.graphics_options[entry]) == bool:
 				i += 1
 				self.graphic_options.append(Fut_Radio(self.frame, str(entry), aspect=None, text=str(entry),
 													pos=[230, 430-i*20], size=[130,15], sub_theme='', options=bgui.BGUI_NONE) )
-				if session.game.graphics_options[entry]:
+				if game.Game.singleton.graphics_options[entry]:
 					self.graphic_options[-1].toggle()
 
 	def apply(self, data):
 		for entry in self.graphic_options:
-			if entry.name in session.game.graphics_options:
+			if entry.name in game.Game.singleton.graphics_options:
 				if entry.name != 'camera_clip':
 					state = entry.state
 					if state in [True, 1]:
-						session.game.graphics_options[entry.name] = True
+						game.Game.singleton.graphics_options[entry.name] = True
 					else:
-						session.game.graphics_options[entry.name] = False
+						game.Game.singleton.graphics_options[entry.name] = False
 				else:
 					print("Camera Clip")
 
-		session.game.update_filters()
-		session.savefile.save_prefs()
+		game.Game.singleton.update_filters()
+		game.Game.singleton.save_prefs()
 
 class GameScreen(bgui.Widget):
 	"""Frame for storing other widgets"""
@@ -73,7 +72,7 @@ class GameScreen(bgui.Widget):
 		self.button = Fut_Button(self.back1, 'button', text='NEW GAME', size=[182, 45], pos=[10, 400],
 			options = bgui.BGUI_NONE)
 		self.button.on_click = self.start_game
-		self.input = Fut_Input(self.back1, 'input', text=session.game.default_cell, size=[160, 30], pos=[230, 410],
+		self.input = Fut_Input(self.back1, 'input', text=game.Game.singleton.default_cell, size=[160, 30], pos=[230, 410],
 			options = bgui.BGUI_NONE)
 
 
@@ -96,12 +95,13 @@ class GameScreen(bgui.Widget):
 		try:
 			fo = safeopen('./data/cells/'+self.input.text, 'rb')
 			fo.close()
-			session.game.default_cell = self.input.text
-			session.savefile.save_prefs()
+			game.Game.singleton.default_cell = self.input.text
+			game.Game.singleton.save_prefs()
 			cell.CellManager.singleton.load('./data/cells/'+self.input.text)
-		except:
+		except IOError:
 			self.lbl.color = [1.0,0,0,1]
 			self.lbl.text = "ERROR: cell "+self.input.text+" not found."
+			
 	def load_game(self, data):
 		pass
 	def save_game(self, data):
@@ -112,53 +112,6 @@ class GameScreen(bgui.Widget):
 		except:
 			self.lbl.color = [1.0,0,0,1]
 			self.lbl.text = "Error saving: "+self.input3.text
-
-class InvScreen(bgui.Widget):
-	"""Frame for storing other widgets"""
-	def __init__(self, parent, name, aspect=None, size=[1, 1], pos=[0, 0],
-				sub_theme='', options=bgui.BGUI_DEFAULT):
-		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
-		area = self.parent.image_back
-		self.frame = bgui.Frame(self, 'frame', pos=area.position, size = area.size, options=bgui.BGUI_CENTERX)
-		self.frame.colors = [ [1,0,0,1]]*4
-
-
-
-		self.back1 = Fut_Box(self.frame, 'back1', pos=[250,0], size = [450, 450], options=bgui.BGUI_NONE)
-
-
-		self.items = []
-
-
-	def reconstruct_inv(self):
-		for entry in self.items:
-			self.frame._remove_widget(entry)
-		self.items = []
-
-		temp_items = []
-		for entry in session.game.world.player.inventory.items:
-			temp_items.append(entry)
-
-		size = 110
-		counter = 0
-		for j in range(3):
-			for i in range(4):
-				if counter < len(temp_items):
-					item = temp_items[counter]
-					imageicon = './data/textures/inventory_icons/'+item.icon
-					imagename = item.name
-					new_item_widget = Ninv_icon(self.frame, str(i)+str(j), image=imageicon,text=imagename, pos = [((size+10)*i+335),
-												( 370 - (size+10)*j)], size = [size, size], options=bgui.BGUI_NONE)
-					self.items.append( new_item_widget )
-					if session.game.world.player.inventory.items[item] > 1:
-						new_item_widget.amount.text = 'x'+str( session.game.world.player.inventory.items[item] )
-				counter += 1
-	def button_logic(self, button):
-		if button in self.items:
-			for entry in self.items:
-				entry.active = 0
-			button.active = 1
-
 
 class Pause(bgui.Widget):
 	"""Frame for storing other widgets"""
@@ -219,7 +172,6 @@ class Pause(bgui.Widget):
 
 			if button.name == 'inventory':
 				self.current = self.screens['invscreen']
-				#self.current.reconstruct_inv()
 				self.current.redraw()
 				self.current.visible = 1
 			if button.name == 'game':

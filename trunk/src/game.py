@@ -6,13 +6,13 @@ sys.path.append('./src/')
 import bge
 
 import entities
+import profiler
 from paths import safepath
 from item import Item
 from sound_manager import SoundManager
 from world import World
 from ai_manager import AI_Manager
 from console_ import Console
-import session
 
 def main():
 	if Game.singleton is None:
@@ -89,14 +89,6 @@ class Game:
 		}
 
 		self.default_cell = 'terrain.cell'
-
-		self.world = None
-		self.sound_manager = SoundManager()
-
-		self.console = Console(safepath('./data/fonts/phaisarn.ttf'), bge.events.ACCENTGRAVEKEY)
-
-		self.fx_object = bge.logic.getCurrentScene().objects['FX']
-		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
 		
 		# load items
 		file = open('./data/items.data', 'rb')
@@ -105,13 +97,47 @@ class Game:
 		
 		for item in items:
 			Item(id=item[0], name=item[1], type=item[2], description=item[3], icon=item[4], cost=item[5], size=item[6], stack=item[7])
+			
+		self.load_prefs()
+		
+		self.world = World()
+		self.sound_manager = SoundManager()
+		self.console = Console(safepath('./data/fonts/phaisarn.ttf'), bge.events.ACCENTGRAVEKEY)
+		self.profiler = profiler.Profiler()
+		
+		self.savefile = None
 
+		self.fx_object = bge.logic.getCurrentScene().objects['FX']
+		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
+		
+		
 
+	def save_prefs(self):
+		prfs = [self.graphics_options, self.game_options, self.sound_options, self.default_cell]
+		fo = open('./data/'+'settings.prf', 'wb')
+		pickle.dump(prfs, fo)
+		fo.close()
+		
+	def load_prefs(self):
+		try:
+			fo = open('./data/'+'settings.prf', 'rb')
+			prfs = pickle.load(fo)
+			fo.close()
+			for entry in prfs[0]:
+				if entry in self.graphics_options:
+					self.graphics_options[entry] = prfs[0][entry]
+					
+			self.game_options = prfs[1]
+			self.sound_options = prfs[2]
+			self.default_cell = prfs[3]
+		except:
+			print('no prf file found')
+	
 	def update_filters(self):
 		print("Updating Filters v2")
-		session.profiler.start_timer('fx.update')
+		self.profiler.start_timer('fx.update')
 
-		for prop in session.game.graphics_options:
+		for prop in self.graphics_options:
 			"""
 			if prop != 'camera_clip':
 				pass
@@ -119,20 +145,17 @@ class Game:
 				pass
 			"""
 			if prop != 'Motion Blur':
-				self.fx_object[prop] = session.game.graphics_options[prop]
+				self.fx_object[prop] = self.graphics_options[prop]
 			else:
-				self.fx_object_blur[prop] = session.game.graphics_options[prop]
+				self.fx_object_blur[prop] = self.graphics_options[prop]
 
-		session.profiler.stop_timer('fx.update')
+		self.profiler.stop_timer('fx.update')
 		print("Updating Filters v2 DONE")
 
 
 	def update(self):
 		self.delta_time = (time.time()-self.game_started) - self.game_time
 		self.game_time += self.delta_time
-
-		if self.world == None:
-			self.world = World()
 
 		self.world.main()
 		self.sound_manager.main()
