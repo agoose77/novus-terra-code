@@ -345,14 +345,17 @@ def compile_terrain():
 	depth = max(1, math.ceil(math.log(best, 2) - 5))
 	size = math.pow(2, depth+5)
 	terrain.qt_singleton = terrain.Quadtree(int(size/2), [0,0], 1, max_depth=depth, scale = terrain.tr_singleton.map.scale)
-	print ("Finished!")
 	#injecting the quadtree into the map instance
 	terrain.tr_singleton.map.quadtree = terrain.qt_singleton
-	#strip off unneeded data
-	terrain.tr_singleton.map.buffer = False
+	# strip off unneeded data
+	# we don't need the normals
 	terrain.tr_singleton.map.nx = False	
 	terrain.tr_singleton.map.ny = False
 	terrain.tr_singleton.map.nz = False
+
+	print('Saving: ', terrain.tr_singleton.filename)
+	terrain.tr_singleton.save(terrain.tr_singleton.filename)
+	print ("Finished!")
 
 ###############################
 ### Main World Baker here - Operator
