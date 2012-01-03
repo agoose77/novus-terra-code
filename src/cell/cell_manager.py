@@ -53,11 +53,17 @@ class CellManager:
 		# self.load should check libraries needed, diff that with what's loaded
 		self.load_state = 0 # 1 when a cell has been loaded and stays that way
 		
-		# make a list of objects that aren't apart of the cell
+		# make a list of objects that aren't apart of the cell (won't get removed on clean up)
 		scene = bge.logic.getCurrentScene()
 		self.clean_object_list = []
-		for obj in scene.objects:
-			self.clean_object_list.append(obj)
+		
+		for ob, blend in self.blend_dict.items():
+			if blend == './data/models/entities/player_file.blend':
+				print(ob)
+				self.clean_object_list.append(ob)
+
+		for ob in scene.objects:
+			self.clean_object_list.append(ob.name)
 
 	def load(self, filepath):
 		""" Creates a callback to begin loading a cell
@@ -68,8 +74,8 @@ class CellManager:
 			Game.singleton.savefile = savefile.Savefile() # TODO - this should be handled when New Game / Load Game
 														  # options are called.
 		self.load_state = 0
-		ui.singleton.show_loading()
-		tweener.singleton.add(self, "hook", 3, length=.5, callback= lambda: self.begin_loading(filepath))
+		Game.singleton.ui_manager.show('loading')
+		tweener.singleton.add(self, "hook", 3, length=1.0, callback= lambda: self.begin_loading(filepath))
 		
 	def begin_loading(self, filepath):
 		""" Loads the cell """
@@ -112,9 +118,7 @@ class CellManager:
 			else:
 				self.terrain = False
 		
-		self.load_state = 1
 		tweener.singleton.add(self, "hook", 3, length=.5, callback=self.load_entities)	# using a callback so the entities are put into a built level
-		
 	
 	def cleanup(self):
 		""" Revert the scene to its default state """
@@ -128,6 +132,7 @@ class CellManager:
 		if self.cell and self.cell.name in Game.singleton.savefile.entities:
 			for entity in Game.singleton.savefile.entities[ self.cell.name ]:
 				if entity._data:
+					print(entity.name)
 					entity.packet.co = entity._data.position[:]
 					entity.packet.rotation = entity._data.orientation.to_euler()[:]
 					entity._data.endObject()
@@ -141,7 +146,7 @@ class CellManager:
 		
 		# Remove dirty objects
 		for obj in scene.objects:
-			if obj not in self.clean_object_list:
+			if obj.name not in self.clean_object_list:
 				obj.endObject()
 
 		# set up light que (in lieu of cucumber branch)
@@ -187,9 +192,6 @@ class CellManager:
 		
 		terrain.qt_singleton = terrain.tr_singleton.map.quadtree
 		self.terrain = 1
-
-	def load_internal(self, filepath):
-			pass
 	
 	def load_libs(self):
 		""" Load all the libraries required for the current cell """
@@ -207,16 +209,16 @@ class CellManager:
 				if blend not in libs_to_load:
 					libs_to_load.append(blend)
 
-		# Free un used libs
-		for lib in liblist:
-			if self.convert_back(lib) not in libs_to_load:
-				bge.logic.LibFree(lib)
-				print("[freed]", blend)
-				
 		#JP hardcoding player and a few other things, might not be the perfect place for this? MANDATORY.blend is included in cells via the editor
 		libs_to_load.append('./data/models/entities/player_file.blend')
 		libs_to_load.append('./data/models/entities/Mouselook4.blend')
-		
+
+		# Free un used libs
+		for lib in liblist:
+			if self.convert_back(lib) not in libs_to_load and 'player.blend' not in lib:
+				bge.logic.LibFree(lib)
+				print("[freed]", lib)
+				
 		# Load terrain
 		if self.cell.terrain:
 			libs_to_load.append('./data/models/CHUNKS.blend')
@@ -229,7 +231,6 @@ class CellManager:
 
 	def load_entities(self):
 		""" Load all the entities in the current cell """
-		
 		#hook for world to handle player stuff
 		Game.singleton.world.cell_loaded()
 		
@@ -249,8 +250,8 @@ class CellManager:
 				self.entities_in_game.append( new_entity )
 			Game.singleton.savefile.entities[ self.cell.name ] = self.entities_in_game
 		
-		tweener.singleton.add(ui.singleton.current, "color", "[*,*,*,0.0]", length=1.0, callback=ui.singleton.clear)
-
+		Game.singleton.ui_manager.hide('loading')
+		self.load_state = 1
 
 	def convert_lib_name(self, given):
 		given = given.replace("/","\\")
@@ -258,7 +259,8 @@ class CellManager:
 		return given
 
 	def convert_back(self, given):
-		given = given.replace("\\","/")
+		#given = given.replace("\\\\","/")
+		given = given.replace("\\", "/")
 		return given
 
 	def spawn_prop(self, data):
@@ -316,6 +318,7 @@ class CellManager:
 		return lamp
 	
 	def update(self):
+
 		if self.load_state == 0:
 			# don't do anything while the cell is changing
 			return
@@ -383,6 +386,9 @@ class CellManager:
 				lamp.kill() # TODO - fade intensity?
 			
 			self.updatetime = Game.singleton.game_time
+
+		for entity in self.entities_in_game:
+			entity.main()
 	
 	def update1(self): # old update loop
 		session.profiler.start_timer('cell_manager.update()')  ##debug profiling

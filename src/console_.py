@@ -1,3 +1,6 @@
+# original console by ideasman42
+# http://blenderartists.org/forum/showthread.php?153594-New-BGE-Interactive-Console
+
 import sys
 from code import InteractiveConsole
 

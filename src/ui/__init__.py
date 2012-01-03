@@ -10,11 +10,17 @@ ui.singleton.showInventory()
 
 """
 
-from .manager import *
+# Widgets
+from .inventory_window import *
+from .nwidgets import *
+from .scrollbar import *
+
+# Screens
+from .screen import *
 from .loading import *
 from .start import *
 from .pause import *
-from .nwidgets import *
-from .inventory_window import *
-from .scrollbar import *
 from .item_swap import *
+
+# Manager
+from .ui_manager import *

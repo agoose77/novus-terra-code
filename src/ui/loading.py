@@ -1,58 +1,51 @@
-import sys
+import time
 
-import cell
-import tweener
+import bgui
+import game
+import ui
 
-try:
-	import bge
-	import bgui
-	import bge
-except:
-	print("import bge failed, normal if you are running an addon")
+class Loading(ui.Screen):
+	def __init__(self, parent):
+		super().__init__(parent, 'screen_loading')
 
-class Loading(bgui.Widget):
-	"""Frame for storing other widgets"""
-	theme_section = 'Frame'
-	theme_options = {'Color1', 'Color2', 'Color3', 'Color4', 'BorderSize', 'BorderColor'}
+		self.frame = bgui.Frame(self, 'frame', size=[1,1], pos=[0,0])
+		self.frame.colors = [[0,0,0,0]] * 4
 
-	def __init__(self, parent, name, aspect=None, size=[1, 1], pos=[0, 0],
-				sub_theme='', options=bgui.BGUI_DEFAULT):
-		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
+		self.label = bgui.Label(self, 'label', text="Loading...", color=[1,1,0,0], sub_theme='Large',
+			options=bgui.BGUI_DEFAULT | bgui.BGUI_CENTERED)
 
-		theme = self.theme[self.theme_section] if self.theme else None
-		self.color_mod = [1,1,1,0]
-		self.win_color = [0,0,0,1]
-		self.text_color = [1,1,0,1]
-		self.win = bgui.Frame(self, 'win', size=[1, 1],
-			options=bgui.BGUI_DEFAULT|bgui.BGUI_CENTERED)
+		self.output = bgui.Label(self, 'output', text='', pos=[0,0.5])
 
+		self.fade_out = False
 
-		self.lbl = bgui.Label(self, 'label', sub_theme="Large",font='./data/fonts/akzidenze.ttf',text="Loading..", pos=[0, 0.5], color=self.text_color, options = bgui.BGUI_DEFAULT | bgui.BGUI_CENTERX)
+	def show(self, args=[]):
+		self.parent.hide('pause')
+		super().show()
 
-		self.color = self.color_mod
+	def hide(self):
+		# don't hide striaght away - fade out first
+		self.fade_out = True
 
+	def main(self):
+		if self.fade_out:
+			# Fade the menu
+			alpha = self.frame.colors[1][3]
 
-	def load(self, filename): #here we're completely hijacking the cell.singleton.load command to wrap it with fades
-		self.loadfile = filename
-		tweener.singleton.add(self, 'color', '[*,*,*,1]', length=0.1, callback = self.load_internal)
-		
-	def load_internal(self):
-		cell.CellManager.singleton.load(self.loadfile)
-		cell.CellManager.singleton.load_state = 1
+			if alpha > 0.0:
+				alpha = max(0, alpha - 3.0 * max(0.01, game.Game.singleton.delta_time))
+				self.frame.colors = [[0,0,0,alpha]] * 4
+				self.label.color = [1,1,0,alpha]
+			else:
+				self.fade_out = False
+				super().hide()
 
-	@property
-	def color(self):
-		"""The widget's name"""
-		return self.color_mod
+		else:
+			# fade in
+			alpha = self.frame.colors[1][3]
 
-	@color.setter
-	def color(self, value):
-		self.color_mod = value
-		new = []
-		for i in range(4):
-			new.append(self.win_color[i] * value[i])
-		self.win.colors = [ tuple(new) for i in range(4) ]
-		new = []
-		for i in range(4):
-			new.append(self.text_color[i] * value[i])
-		self.lbl.color = new
+			if alpha < 1.0:
+				alpha = min(1.0, alpha + 3.0 * game.Game.singleton.delta_time)
+				self.frame.colors = [[0,0,0,alpha]] * 4
+				self.label.color = [1,1,0,alpha]
+			else:
+				self.parent.hide('pause')

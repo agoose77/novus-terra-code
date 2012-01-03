@@ -113,13 +113,12 @@ class GameScreen(bgui.Widget):
 			self.lbl.color = [1.0,0,0,1]
 			self.lbl.text = "Error saving: "+self.input3.text
 
-class Pause(bgui.Widget):
+class Pause(ui.Screen):
 	"""Frame for storing other widgets"""
 
 
-	def __init__(self, parent, name, aspect=None, size=[1, 1], pos=[0, 0],
-				sub_theme='', options=bgui.BGUI_NONE):
-		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
+	def __init__(self, parent):
+		super().__init__(parent, 'screen_pause', blocking=True)
 
 		#self.info = Ninfo( self, 'info', pos=[10,10], size=[40,40], options=bgui.BGUI_NONE)
 		#print(self.info.size, self.info.position)
@@ -151,15 +150,21 @@ class Pause(bgui.Widget):
 		for entry in self.main_menu:
 			entry.button_logic = self.button_logic
 
-		self.screens = { 'gamescreen':GameScreen(self, 'gamescreen'), 'options':OptionsScreen(self, 'options'),
-						'invscreen':ui.InventoryWindow(self, 'invscreen', game.Game.singleton.world.player.inventory, size=[340, 330], pos=[0,50], options=bgui.BGUI_CENTERED) }
-		for entry in self.screens:
-			self.screens[entry].visible = 0
+		self.screens = {'gamescreen':GameScreen(self, 'gamescreen'),
+						'options':OptionsScreen(self, 'options'),
+						'invscreen':ui.InventoryWindow(self,
+						'invscreen', game.Game.singleton.world.player.inventory, size=[340, 330], pos=[0,50], options=bgui.BGUI_CENTERED)}
+
+		for screen in self.screens.values():
+			screen.visible = 0
 
 		self.button_logic(self.button1)
+	
+	def show(self, args=[]):
+		super().show()
 
-
-
+	def hide(self):
+		super().hide()
 
 	def button_logic(self, button):
 		if button in self.main_menu:
@@ -180,4 +185,4 @@ class Pause(bgui.Widget):
 			if button.name == 'options':
 				self.current = self.screens['options']
 				self.current.visible = 1
-
+	
