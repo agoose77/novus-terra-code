@@ -37,10 +37,6 @@ class method_wrapper:
 	def __call__(self, *args, **kwargs):
 		return to_entity_base(self.f(*args, **kwargs))
 
-class Container:
-	""" Hack for storing variables on EntityBase since __getattr__ and __setattr__ are overridden """
-	pass
-
 class EntityBase:
 	""" Base object for classes representing game objects.
 
@@ -56,12 +52,9 @@ class EntityBase:
 
 		# is method
 		elif inspect.isroutine(value) and not name.startswith('__'):
-		   _kx_game_object_methods.append((name, value))
-
-	_containers = {}
+		   _kx_game_object_methods.append(name)
 
 	def __init__(self, packet=0):
-		EntityBase._containers[self] = Container() # HACK - since setattr and getattr are overriden variables have to be stored on a dummy object
 		#packet is the Entity instance from the cell
 		self.packet = packet
 		self._data = None
@@ -132,29 +125,23 @@ class EntityBase:
 			for name, value in self.packet.properties:
 				self[name] = value
 
-		for name, value in EntityBase._kx_game_object_methods:
-			self.__dict__[name] = method_wrapper(getattr(self._data, name))
-
 	def _unwrap(self):
 		if self._data is not None:
 			if not self._data.invalid:
 				self._data.endObject()
 			self._data = None
 
-			for name, value in EntityBase._kx_game_object_methods:
-				self.__dict__.pop(name)
-
 	def __getattr__(self, name):
-		if name in EntityBase._kx_game_object_descriptors:
+		if name in EntityBase._kx_game_object_descriptors or name in EntityBase._kx_game_object_methods:
 			return to_entity_base(getattr(self._data, name))
 		else:
-			return getattr(EntityBase._containers[self], name)
+			raise AttributeError
 
 	def __setattr__(self, name, val):
-		if name in EntityBase._kx_game_object_descriptors:
+		if name in EntityBase._kx_game_object_descriptors or name in EntityBase._kx_game_object_methods:
 			setattr(self._data, name, from_entity_base(val))
 		else:
-			setattr(EntityBase._containers[self], name, val)
+			self.__dict__[name] = val
 
 	def __getitem__(self, item):
 		return self._data[item]
