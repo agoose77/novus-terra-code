@@ -5,40 +5,51 @@ import game
 import tweener
 import ui
 
-class ItemSwap(bgui.Widget):
+class ItemSwap(ui.Screen):
 	def __init__(self, parent, name):
-		bgui.Widget.__init__(self, parent, name, size=[1,1], pos=[0,0])
+		super().__init__(parent, name, blocking=True)
 		
 		ww = parent.size[0]
 		wh = parent.size[1]
 		
+		# a frame to darken the game screen
 		self.backdrop = bgui.Frame(self, 'backdrop', size=[1,1], pos=[0,0])
 		self.backdrop.colors = [(0,0,0,0.55)]*4
 		
-		self.player_inventory = ui.InventoryWindow(self, 'player_inventory', game.Game.singleton.world.player.inventory, size=[340, 440], pos=[ww//2-400, 0], options=bgui.BGUI_CENTERY)
+		self.player_inventory = ui.InventoryWindow(self, 'player_inventory',
+			game.Game.singleton.world.player.inventory, size=[340, 440], pos=[ww//2-400, 0],
+			options=bgui.BGUI_CENTERY)
 		self.other_inventory = None
 		
-		self.player_label = bgui.Label(self, 'player_label', 'Player', pt_size=64, color=[1,1,1,1], font='./data/fonts/olney_light.otf', pos=[ww//2 - 400, wh//2 + 220 + 10], options=bgui.BGUI_NONE)
-		self.other_label = bgui.Label(self, 'other_label', '', pt_size=64, color=[1,1,1,1], font='./data/fonts/olney_light.otf', pos=[ww//2 + 60, wh//2 + 220 + 10], options=bgui.BGUI_NONE)
+		self.player_label = bgui.Label(self, 'player_label', 'Player', pt_size=64,
+			color=[1,1,1,1], font='./data/fonts/olney_light.otf', pos=[ww//2 - 400,
+			wh//2 + 220 + 10], options=bgui.BGUI_NONE)
+		self.other_label = bgui.Label(self, 'other_label', '', pt_size=64,
+			color=[1,1,1,1], font='./data/fonts/olney_light.otf',
+			pos=[ww//2 + 60, wh//2 + 220 + 10], options=bgui.BGUI_NONE)
 		
-		self.swap_button = bgui.Image(self, 'swap_iamge', './data/textures/ui/inv_swap.png', size=[110, 110], options=bgui.BGUI_CENTERED)
+		self.swap_button = bgui.Image(self, 'swap_iamge', './data/textures/ui/inv_swap.png',
+			size=[110, 110], options=bgui.BGUI_CENTERED)
 		self.swap_button.on_click = self.swap
 		
-		self.tabs = ui.InventoryWindow.Tabs(self, 'tabs', pos=[ww//2 - 400 - 197, wh//2 - 235], inventories=[self.player_inventory, self.other_inventory])
+		self.tabs = ui.InventoryWindow.Tabs(self, 'tabs', pos=[ww//2 - 400 - 197, wh//2 - 235],
+			inventories=[self.player_inventory, self.other_inventory])
 		
-		self.return_but = ui.Fut_Button(self, 'return', pos=[ww//2 - 400 - 192, wh//2 - 220 - 10], size=[182, 45], text="BACK", options=bgui.BGUI_NONE)
+		self.return_but = ui.Fut_Button(self, 'return', pos=[ww//2 - 400 - 192, wh//2 - 220 - 10],
+			size=[182, 45], text="BACK", options=bgui.BGUI_NONE)
 		self.return_but.on_click = self.return_
 		self.tweener = tweener.TweenManager()
 		self.hook = 0.0 # for tweener
 		
 	def return_(self, widget):
 		bge.render.setMousePosition(bge.render.getWindowWidth()//2, bge.render.getWindowHeight()//2)
-		self.tweener.add(self, "hook", 3, length=0.001, callback=ui.singleton.hide_item_swap)
+		self.tweener.add(self, "hook", 3, length=0.01, callback=game.Game.singleton.ui_manager.hide('item_swap'))
 		
 	def set_inventory(self, inventory):
 		ww = self.parent.size[0]
 		wh = self.parent.size[1]
-		self.other_inventory = ui.InventoryWindow(self, 'other_inventory', inventory, size=[340, 440], pos=[ww//2+60, 0], options=bgui.BGUI_CENTERY)
+		self.other_inventory = ui.InventoryWindow(self, 'other_inventory', inventory, size=[340, 440],
+			pos=[ww//2+60, 0], options=bgui.BGUI_CENTERY)
 		self.tabs.inventories = [self.player_inventory, self.other_inventory]
 		self.other_label.text = inventory.name
 		
@@ -75,7 +86,10 @@ class ItemSwap(bgui.Widget):
 			
 		self.player_inventory.redraw()
 		self.other_inventory.redraw()
+
+	def show(self, args=[]):
+		self.set_inventory(args[0])
+		super().show()
 		
-	def _draw(self):
+	def main(self):
 		self.tweener.update()
-		bgui.Widget._draw(self)

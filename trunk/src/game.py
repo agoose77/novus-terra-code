@@ -5,14 +5,14 @@ sys.path.append('./src/')
 
 import bge
 
+import console_
 import entities
+import item
 import profiler
+import sound_manager
+import ui
+import world
 from paths import safepath
-from item import Item
-from sound_manager import SoundManager
-from world import World
-from ai_manager import AI_Manager
-from console_ import Console
 
 def main():
 	if Game.singleton is None:
@@ -95,22 +95,24 @@ class Game:
 		items = pickle.load(file)
 		file.close()
 		
-		for item in items:
-			Item(id=item[0], name=item[1], type=item[2], description=item[3], icon=item[4], cost=item[5], size=item[6], stack=item[7])
+		for item_ in items:
+			item.Item(id=item_[0], name=item_[1], type=item_[2], description=item_[3], icon=item_[4], cost=item_[5], size=item_[6], stack=item_[7])
 			
 		self.load_prefs()
 		
-		self.world = World()
-		self.sound_manager = SoundManager()
-		self.console = Console(safepath('./data/fonts/phaisarn.ttf'), bge.events.ACCENTGRAVEKEY)
+		self.world = world.World()
+		self.console = console_.Console(safepath('./data/fonts/phaisarn.ttf'), bge.events.ACCENTGRAVEKEY)
 		self.profiler = profiler.Profiler()
-		
+		self.sound_manager = sound_manager.SoundManager()
+		self.ui_manager = ui.UIManager()
+
 		self.savefile = None
 
 		self.fx_object = bge.logic.getCurrentScene().objects['FX']
 		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
-		
-		
+
+
+		self.ui_manager.show_start()
 
 	def save_prefs(self):
 		prfs = [self.graphics_options, self.game_options, self.sound_options, self.default_cell]
@@ -158,6 +160,8 @@ class Game:
 		self.game_time += self.delta_time
 
 		self.world.main()
+		self.sound_manager.main()
+		self.ui_manager.main()
 		self.sound_manager.main()
 		self.console.main()
 

@@ -1,10 +1,11 @@
 import inspect
 
-entity_map = {}
+import mathutils
 
 try:
 	import bge
 	import cell
+	import game
 	import session
 except:
 	print('bge import failed, normal if you are running an editor')
@@ -65,15 +66,54 @@ class EntityBase:
 		self.packet = packet
 		self._data = None
 
+		self.stored_linear_velocity = [0,0,0]
+		self.stored_angular_velocity = [0,0,0]
+		self.stored_position = [0,0,0]
+		self.stored_rotation = [[1,0,0], [0,1,0], [0,0,1]]
+		self.frozen = False
+
 		self.iteract_icon = None
 		self.iteract_label = None
 
 	def main(self):
-		pass
+		if not self.frozen:
+			self.applyForce(self.mass * game.Game.singleton.world.gravity)
+		else:
+			self.worldPosition = self.stored_position
+			self.worldOrientation = self.stored_rotation
 
 	def on_interact(self, instance):
-		pass
-		
+		if self.frozen:
+			self.unfreeze()
+		else:
+			self.freeze()
+
+	def freeze(self):
+		if not self.frozen:
+			self.stored_linear_velocity = self.worldLinearVelocity[:]
+			self.stored_angular_velocity = self.worldAngularVelocity[:]
+			self.stored_position = self.worldPosition[:]
+			self.stored_rotation = self.worldOrientation.copy()
+
+			self.worldLinearVelocity = [0,0,0]
+			self.worldAngularVelocity = [0.0001,0.0001,0.0001]
+
+			self.frozen = True
+
+	def unfreeze(self):
+		if self.frozen:
+			self.worldLinearVelocity = self.stored_linear_velocity
+			self.worldAngularVelocity = self.stored_angular_velocity
+			self.worldPosition = self.stored_position
+			self.worldOrientation = self.stored_rotation
+
+			self.stored_linear_velocity = [0,0,0]
+			self.stored_angular_velocity = [0,0,0]
+			self.stored_position = [0,0,0]
+			self.stored_rotation = [[1,0,0], [0,1,0], [0,0,1]]
+
+			self.frozen = False
+
 	def remove(self):
 		""" Removes any references of the entity in the cell and removes the object """
 		
@@ -97,6 +137,8 @@ class EntityBase:
 
 	def _unwrap(self):
 		if self._data is not None:
+			if not self._data.invalid:
+				self._data.endObject()
 			self._data = None
 
 			for name, value in EntityBase._kx_game_object_methods:
