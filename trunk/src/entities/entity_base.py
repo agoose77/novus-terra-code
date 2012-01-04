@@ -45,14 +45,14 @@ class EntityBase:
 	_kx_game_object_descriptors = []
 	_kx_game_object_methods = []
 
-	for name, value in inspect.getmembers(bge.types.KX_GameObject):
+	for name_, value_ in inspect.getmembers(bge.types.KX_GameObject):
 		# is property
-		if inspect.isdatadescriptor(value):
-			_kx_game_object_descriptors.append(name)
+		if inspect.isdatadescriptor(value_):
+			_kx_game_object_descriptors.append(name_)
 
 		# is method
-		elif inspect.isroutine(value) and not name.startswith('__'):
-		   _kx_game_object_methods.append(name)
+		elif inspect.isroutine(value_) and not name_.startswith('__'):
+		   _kx_game_object_methods.append(name_)
 
 	def __init__(self, packet=0):
 		#packet is the Entity instance from the cell
@@ -120,10 +120,6 @@ class EntityBase:
 	def _wrap(self, obj):
 		self._data = obj
 		self._data['entity_base'] = self
-
-		if self.packet:
-			for name, value in self.packet.properties:
-				self[name] = value
 
 	def _unwrap(self):
 		if self._data is not None:
