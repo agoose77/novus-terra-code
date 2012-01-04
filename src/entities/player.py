@@ -1,6 +1,7 @@
 import sys
 sys.path.append('./src/')
 sys.path.append('./src/weapons/')
+sys.path.append('./src/entities/')
 
 
 import math
@@ -8,7 +9,6 @@ import random
 import aud
 import bge
 from mathutils import Vector, Matrix
-
 
 from sound_manager import SoundManager
 from inventory import Inventory
@@ -35,6 +35,7 @@ class Player(entities.EntityBase):
 		# Player Stats
 		self.health = 100
 		self.faction = 1		 # Default Faction = Humans
+		#self.name = 'player'
 
 		self.hunger = 0.0
 		self.fatigue = 0.0
@@ -99,11 +100,12 @@ class Player(entities.EntityBase):
 
 		# Vehicle
 		self.current_vehicle = None
-		self.vehicle= None
+		self.in_vehicle = False
 
 		self.camera = [child for child in self.children if 'camera_1' in child][0]
 		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
 		self.bullet_spread = [child for child in self.childrenRecursive if 'spread' in child][0]
+		self.weapon_pos = [child for child in self.childrenRecursive if 'weapon_pos' in child][0]
 
 
 		# FSM States
@@ -115,8 +117,7 @@ class Player(entities.EntityBase):
 
 		# FSM Transitions
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
-		self.movement_state_machine.add_transition('walk', 'vehicle', self.has_entered_vehicle)
-		self.movement_state_machine.add_transition('vehicle', 'walk', self.has_exited_vehicle)
+		self.movement_state_machine.add_transition('walk', 'vehicle', self.is_in_vehicle)
 
 		game.Game.singleton.world.entity_list.append(self)
 
@@ -130,6 +131,14 @@ class Player(entities.EntityBase):
 
 	def _unwrap(self):
 		entities.EntityBase._unwrap(self)
+
+
+	def damage(self, amount):
+		self.health += amount
+		print("HURT")
+
+	def is_in_vehicle(self, FSM):
+		return bool(self.in_vehicle)
 
 
 	def handle_walk_state(self, FSM):
@@ -241,18 +250,21 @@ class Player(entities.EntityBase):
 	def handle_vehicle_state(self, FSM):
 		keyboard = bge.logic.keyboard
 
-		bge.logic.getCurrentScene().active_camera = self.vehicle['Camera']
+		bge.logic.getCurrentScene().active_camera = self.current_vehicle.camera
 
 		# HACK
 		self.camera_on = False # Turn off player camera
-		self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10]
+		self.position = [self.current_vehicle.position[0],self.current_vehicle.position[1],self.current_vehicle.position[2]+10]
 
 		# Get out of vehicle
 		if keyboard.events[bge.events.EKEY] == 1:
 			self.camera_on = True
-			self.vehicle['Vehicle'] = False
-			self.position = [self.vehicle.position[0],self.vehicle.position[1],self.vehicle.position[2]+10] # add player above the vehicle
-			self.vehicle = None
+			self.position = [self.current_vehicle.position[0],self.current_vehicle.position[1],self.current_vehicle.position[2]+10] # add player above the vehicle
+
+			self.current_vehicle.vehicle_on = False
+			self.in_vehicle = False
+			self.movement_state_machine.current_state = 'walk'
+			self.current_vehicle = None
 
 	def is_grounded(self, FSM):
 		pos2 = [self.position[0],self.position[1],self.position[2]-5]
@@ -336,8 +348,8 @@ class Player(entities.EntityBase):
 							if 'physics' in hit:
 								hit['physics'] = 1
 
-							if 'Health' in hit:
-								hit['Health'] += -10
+							if 'ai_controller' in hit:
+								hit['ai_controller'].damage(10)
 
 		# AIM
 		if mouse.events[bge.events.RIGHTMOUSE] == 1:
@@ -349,19 +361,15 @@ class Player(entities.EntityBase):
 		hit = ray.hitObject
 		keyboard = bge.logic.keyboard
 
-		if keyboard.events[bge.events.BKEY]: # Dominate
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_walk", 1, 32, layer=5, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
-			#self.play_animation('run')
-
-		elif keyboard.events[bge.events.NKEY]:
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_reload", 1, 32, layer=5, priority=6, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
-
-		else:
-			self.armature.stopAction(5)
-
 		if hit != None and 'entity_base' in hit:
-			if keyboard.events[bge.events.EKEY] == 1:
-				hit['entity_base'].on_interact(self)
+			if type(hit['entity_base']) is str:
+				temp = __import__("weapon_pickup")
+				temp = temp.WeaponPickup(hit, hit['info'], hit['name'])
+				hit['entity_base'] = temp
+			else:
+				if keyboard.events[bge.events.EKEY] == 1:
+					hit['entity_base'].on_interact(self)
+					print("BAMN")
 
 
 	def fast_travel(self, location):
@@ -402,13 +410,16 @@ class Player(entities.EntityBase):
 			entities.EntityBase.main(self)
 
 			self.movement_state_machine.main()
-			self.handle_camera()
-			self.handle_interactions()
 
-			if self.inventory.current_weapon.name != 'Hands':
-				self.handle_animations()
-				self.handle_weapon()
+			if self.in_vehicle == False:
+				self.handle_camera()
+				self.handle_interactions()
 
-			if self.reloading == True:
-				self.reload()
+				if self.inventory.current_weapon.name != 'Hands':
+					self.handle_animations()
+					self.handle_weapon()
+
+				if self.reloading == True:
+					self.reload()
+
 
