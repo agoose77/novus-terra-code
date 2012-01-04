@@ -111,7 +111,6 @@ class Game:
 		self.fx_object = bge.logic.getCurrentScene().objects['FX']
 		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
 
-
 		self.ui_manager.show_start()
 
 	def save_prefs(self):

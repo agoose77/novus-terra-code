@@ -7,11 +7,10 @@ sys.path.append('./src/')
 import bge
 from mathutils import Vector, Matrix
 import random
-import session
+#import session
 
 ###
 class weapon:
-
 	def __init__(self):
 		self.name = "P90"
 		self.description = 'A Cool Looking Weapon'
@@ -45,19 +44,28 @@ class weapon:
 		self.muzzle = None
 
 
-	def on_interact(self, player):
-		player.inventory.replace_weapon(hit.parent['Weapon'])
-		new = player.inventory.weapon_slot_1.equip()
-		hit.parent.endObject()
+	def on_interact(self, entity):
+		#entity.inventory.replace_weapon(hit.parent['Weapon'])
+		#new = entity.inventory.weapon_slot_1.equip()
+		#hit.parent.endObject()
+		print("WRONGE!!!!")
 
 
-	def equip(self):
+	def equip(self, entity):
 		name = self.name
 
+		new = bge.logic.getCurrentScene().addObject(name,'weapon_position')
+		new.position = entity.weapon_pos.position
+		new.orientation = entity.weapon_pos.orientation
+		new.setParent(entity.weapon_pos)
+
+
+		"""
 		new = bge.logic.getCurrentScene().addObject(name,'weapon_position')
 		new.position = bge.logic.getCurrentScene().objects['weapon_position'].position
 		new.orientation = bge.logic.getCurrentScene().objects['weapon_position'].orientation
 		new.setParent(bge.logic.getCurrentScene().objects['weapon_position'])
+		"""
 
 		# Set Objects
 		self.object = new
@@ -68,28 +76,28 @@ class weapon:
 	def reload(self):
 		self.armature.playAction(self.name + "_reload", 1, 24, layer=2, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
-	def shoot(self, camera, spread):
+	def shoot(self, point, spread):
 		self.clip += -1
 
-		session.game.sound_manager.play_sound(self.fire_sound, self.object)
+		#session.game.sound_manager.play_sound(self.fire_sound, self.object)
 
 		### Bullet Spread
 		spread['X'] = random.randrange(-self.bullet_spread,self.bullet_spread)
 		spread['Z'] = random.randrange(-self.bullet_spread,self.bullet_spread)
 
 		### Bullet Line
-		line = bge.logic.getCurrentScene().addObject(self.bullet_line, camera, 100)
+		line = bge.logic.getCurrentScene().addObject(self.bullet_line, point, 100)
 		line.position = self.muzzle.position
 		line.orientation = spread.orientation
 
 		### Flash
 		ran_flash = random.randrange(1,4)
-		flash = bge.logic.getCurrentScene().addObject(self.flash[ran_flash], camera, 100)
+		flash = bge.logic.getCurrentScene().addObject(self.flash[ran_flash], point, 100)
 		flash.position = self.muzzle.position
 		flash.setParent(self.muzzle)
 
 		### Smoke
-		smoke = bge.logic.getCurrentScene().addObject(self.smoke, camera, 100)
+		smoke = bge.logic.getCurrentScene().addObject(self.smoke, point, 100)
 		smoke.position = self.muzzle.position
 
 	###
