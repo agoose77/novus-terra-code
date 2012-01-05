@@ -113,11 +113,12 @@ class World:
 
 		if bge.logic.keyboard.events[bge.events.IKEY] == bge.logic.KX_INPUT_ACTIVE:
 			self.suspend()
-		elif bge.logic.keyboard.events[bge.events.JKEY] == bge.logic.KX_INPUT_ACTIVE:
+		elif bge.logic.keyboard.events[bge.events.JKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
 			self.resume()
 		
 		if self.player._data and self.cell_manager.load_state and not self.suspended:
-			self.player.main()	
+			self.player.main()
+		self.dialogue_manager.main()
 
 		self.cell_manager.update()
 		if len(self.entity_list) != 0:

@@ -3,3 +3,4 @@ from .door import *
 from .container import *
 from .weapon_pickup import *
 from .player import *
+from .npc import *
