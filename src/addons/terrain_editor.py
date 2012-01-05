@@ -27,13 +27,13 @@ args1 = {
 		'filename':'new.terrain',
 		'width':4096,
 		'height':4096,
-		'scale':1.0,
+		'scale':1.0
 	}
 
 args2 = {
 		'x':0,
 		'y':0,
-		'size':256, 
+		'size':256 
 	}
 	
 args3 = {
@@ -122,7 +122,7 @@ def CreateMeshUsingMatrix(VertIndices, Verts):
 
 	## TAKEN FROM USER  ValterVB
 	# create new mesh structure
-	name = str(terrain.focus)[1:]
+	name = 'TERRAIN'
 	mesh = bpy.data.meshes.new(name)
 	mesh.from_pydata(Verts, [], Faces)
 
@@ -272,6 +272,46 @@ def display_section():
 
 
 	print ('Section created.')
+
+def display_section_selected():
+	scene = bpy.context.scene
+	if scene.objects.active:
+		print (scene.objects.active)
+		loc = scene.objects.active.location / terrain.tr_singleton.map.scale
+		size = bpy.context.scene.terrain_props['size'].int
+		#now organize this so it's giving top left and bottom right corners
+		focus = []
+
+		focus.append(int(loc[0])-int(size/2))
+		focus.append(int(loc[1])+int(size/2))
+		focus.append(int(loc[0])+int(size/2))
+		focus.append(int(loc[1])-int(size/2))
+		terrain.focus = focus
+		p = focus
+
+		returned = terrain.tr_singleton.readRect_addon(p[0],p[1],p[2],p[3])
+		
+		data = returned[0]
+		offset = returned[1]
+		#keeping the section in the right place if it was requesting out of map info
+		terrain.true_focus = [ terrain.focus[0],terrain.focus[1] ]
+		terrain.focus[0] += offset[0]
+		terrain.focus[1] -= offset[1]
+		terrain.focus[2] = terrain.focus[0]+offset[2]
+		terrain.focus[3] = terrain.focus[1]-offset[3]
+		terrain.true_focus = [ offset[4],offset[5] ]
+		print( offset, "!!!!!!!" )
+		
+		width = len(data[0])
+		height = len(data)
+	
+
+		startASCIIimport(data)
+
+
+		print ('Section created.')
+	else:
+		print('no object selected')
 
 ###############################
 def new_terrain():
@@ -439,6 +479,26 @@ class te_3(bpy.types.Operator):
 
 	def execute(self, context):
 		display_section()
+		return {'FINISHED'}
+
+def register():
+	bpy.utils.register_class(te_3)
+
+def unregister():
+	bpy.utils.unregister_class(te_3)
+
+register()
+
+# Create an area of terrain around a selected object
+class te_3(bpy.types.Operator):
+
+	'''enter the coordinates of the terrain section you would like to edit. (uses size)'''
+
+	bl_idname = "scene.display_section_selected"
+	bl_label = "Display at Selection"
+
+	def execute(self, context):
+		display_section_selected()
 		return {'FINISHED'}
 
 def register():
@@ -688,8 +748,11 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 		colL = split.column()
 		colR = split.column()
 		for arg in arg_com[0]:
-			prop = bpy.context.scene.terrain_props[arg]
 
+			try:
+				prop = bpy.context.scene.terrain_props[arg]
+			except:
+				print('can"t create ',arg)
 			row = box.row()
 
 			
@@ -720,6 +783,9 @@ class OBJECT_PT_terrain_editor(bpy.types.Panel):
 
 		colL.label('Display Section:')
 		colR.operator("scene.display_section")
+
+		colL.label('Display at Selected:')
+		colR.operator("scene.display_section_selected")
 
 
 		for arg in arg_com[1]:
@@ -823,6 +889,6 @@ def unregister():
 	bpy.utils.unregister_class(OBJECT_PT_terrain_editor)
 
 
-if __name__ == "__main__":
-	create_vars()
-	register()
+
+create_vars()
+register()

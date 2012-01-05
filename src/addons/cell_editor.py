@@ -360,7 +360,7 @@ class CE_bake(bpy.types.Operator):
 		destinations = {}
 		
 		for obj in bpy.data.objects:
-			if obj.name == 'CE_terrain':
+			if obj.name == 'CE_terrain' or 'TERRAIN' in obj.name:
 				continue
 			
 			if obj.type in ['MESH', 'EMPTY', 'ARMATURE'] and not obj.parent:
