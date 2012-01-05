@@ -4,6 +4,7 @@ import bge
 
 import bgui
 import dialogue
+import game
 
 class DialogueManager:
 	def __init__(self):
@@ -11,45 +12,75 @@ class DialogueManager:
 		self.current_node = None
 		self.previous_node = None
 
-		self.init_gui()
-
-	def init_gui(self):
+		# init the gui
 		self.gui = bgui.System(theme='./data/themes/dialogue')
 
 		self.gui.message_box = dialogue.MessageBox(self.gui)
-		self.gui.name_box = dialogue.NameBox(self.gui)
 		self.gui.message_box.visible = False
-		self.gui.name_box.visible = False
 
 		self.keymap = {getattr(bge.events, val): getattr(bgui, val) for val in dir(bge.events) if val.endswith('KEY') or val.startswith('PAD')}
 		
 	def display_dialogue(self, filename):
+		game.Game.singleton.world.suspend()
 		self.current_dialogue = self.parse_dialogue(filename)
 		self.current_node = self.current_dialogue.getroot()
+		self.parent_map = dict((c, p) for p in self.current_dialogue.getiterator() for c in p)
+		self.parent_map[self.current_dialogue.getroot()] = None
 		self.previous_node = None
 		
 	def parse_dialogue(self, filename):
 		return ElementTree.parse(filename)
 
+	def end_dialogue(self):
+		self.current_dialogue = None
+		self.current_node = None
+		
+		self.gui.message_box.visible = False
+		self.gui.message_box.name = ''
+		game.Game.singleton.world.resume()
+
 	def handle_name(self):
-		self.name_box.display_name(self.current_node.text)
+		self.gui.message_box.set_name(self.current_node.text)
 		return self.get_next_node(self.current_node, self.previous_node)
 	
 	def handle_text(self):
-		self.gui.message_box .display_dialogue(self.current_node.text)
+		if not self.gui.message_box.visible:
+			self.gui.message_box.display_dialogue(self.current_node.text)
+
+			# If the next node is an option container, push updateing onto that
+			next_node = self.get_next_node(self.current_node, self.previous_node)
+			if next_node is not None and next_node.tag == 'option_container':
+				self.gui.message_box.visible = False
+				return next_node
 
 		if self.gui.message_box.done:
+			self.gui.message_box.banish()
 			return self.get_next_node(self.current_node, self.previous_node)
-		else:
-			return False
 
-	
+		return False
+
+	def handle_option_container(self):
+		if not self.gui.message_box.visible: # this is set to False in handle_text
+			options = []
+			for option in self.current_node:
+				options.append(option.attrib['choice_text'])
+
+			self.gui.message_box.display_options(options)
+
+		if self.gui.message_box.selected_option is not None:
+			option = self.gui.message_box.selected_option
+			self.gui.message_box.banish()
+			return self.current_node[option][0]
+		elif self.gui.message_box.done:
+			return None
+
+		return False
 
 	def update_current_node(self):
 		""" Update the dialogue based on the tag of the current node
 		
-		returns - next node to run, or False if the current node is still
-				  executing
+		returns - next node to run, False if the current node is still
+				  executing or None if the dialogue has ended
 		"""
 		if self.current_node.tag == 'conversation':
 			return self.current_node[0]
@@ -58,13 +89,15 @@ class DialogueManager:
 		elif self.current_node.tag == 'text':
 			return self.handle_text()
 		elif self.current_node.tag == 'option_container':
-			return self.update_option_container()
+			return self.handle_option_container()
 		elif self.current_node.tag == 'option':
-			return self.update_option()
+			# return the node after the option container
+			container = self.parent_map[self.current_node]
+			return self.get_next_node(self.parent_map[container], container)
 		
 	def get_next_node(self, current_node, prev_node):
 		""" Crawl the tree looking for the next node to run """
-		if len(self.current_node) > 0:
+		if len(current_node) > 0:
 			# the node has children, find the next child to run
 			next = False
 			for child in current_node:
@@ -80,16 +113,7 @@ class DialogueManager:
 			return None
 		else:
 			# recurse upwards
-			return self.get_next_node(current_node.find('..'), current_node)
-					
-			
-		
-	def end_dialogue(self):
-		self.current_dialogue = None
-		self.current_node = None
-		
-		self.gui.message_box.visible = False
-		self.gui.name_box.visible = False
+			return self.get_next_node(self.parent_map[current_node], current_node)
 
 	def handle_mouse(self):
 		mouse = bge.logic.mouse
@@ -135,10 +159,13 @@ class DialogueManager:
 	def main(self):
 		if self.current_dialogue:
 			next_node = self.update_current_node()
-
-			if next_node is None:
-				self.end_dialogue()
-			elif next_node:
+			while next_node is not False:
+				if next_node is None:
+					self.end_dialogue()
+					return
+				
+				self.previous_node = self.current_node
 				self.current_node = next_node
+				next_node = self.update_current_node()
 			
 			self.update_gui()

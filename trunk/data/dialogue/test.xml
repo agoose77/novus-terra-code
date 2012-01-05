@@ -1,0 +1,20 @@
+<conversation dialogue_editor_version="0.5">
+	<name>Sgt. Barkley</name>
+	<text>I think I dropped my gun in a cave two clicks to the east. That place is full of creatures and I had to make a hasty retreat. Can you go clear out the cave and find it for me?</text>
+	<option_container>
+		<option choice_text="Sound like a worthy adventure, sure thing!">
+			<text>Thanks</text>
+		</option>
+		<option choice_text="Go get your own damned gun soldier.">
+			<text>That doesn't make any sense, I'm a sergent why would you call me soldier? You're like 20 something years old..</text>
+		</option>
+		<option choice_text="Hmm.. what's in it for me?">
+			<text>I suppose I'll end up giving you the gun, its usually how these sorts of things work.</text>
+			<option_container>
+				<option choice_text="What kind of gun is it?">
+					<text>gun...</text>
+				</option>
+			</option_container>
+		</option>
+	</option_container>
+</conversation>

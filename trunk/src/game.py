@@ -37,7 +37,8 @@ class Game:
 		'Door': entities.Door,
 		'EntityBase' : entities.EntityBase,
 		'WeaponPickup' : entities.WeaponPickup,
-		'Container' : entities.Container
+		'Container' : entities.Container,
+		'NPC' : entities.NPC
 	}
 
 	singleton = None
@@ -159,7 +160,6 @@ class Game:
 		self.game_time += self.delta_time
 
 		self.world.main()
-		self.sound_manager.main()
 		self.ui_manager.main()
 		self.sound_manager.main()
 		self.console.main()
