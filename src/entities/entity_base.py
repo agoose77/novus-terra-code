@@ -68,9 +68,14 @@ class EntityBase:
 		self.iteract_icon = None
 		self.iteract_label = None
 
+	def update(self):
+		''' meant to be overidden '''
+		pass
+
 	def main(self):
 		if not self.frozen:
 			self.applyForce(self.mass * game.Game.singleton.world.gravity)
+			self.update()
 		else:
 			self.worldPosition = self.stored_position
 			self.worldOrientation = self.stored_rotation

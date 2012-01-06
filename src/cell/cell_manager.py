@@ -312,9 +312,9 @@ class CellManager:
 			lamp.spotsize = data.spot_size * 180 / 3.14
 			lamp.spotblend = data.spot_blend
 			#new.bias = data.spot_bias
-
-		tweener.singleton.add(lamp, "color", str(data.color), 2.0)
-		print('[spawned]', lamp)
+		print(data.color)
+		tweener.singleton.add(lamp, "color", str(list(data.color)), 2.0)
+		print('[spawned]', lamp, data.color)
 		return lamp
 	
 	def update(self):
