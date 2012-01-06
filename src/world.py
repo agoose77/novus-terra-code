@@ -75,11 +75,11 @@ class World:
 		scene = bge.logic.getCurrentScene()
 		player = scene.addObject('player', "CELL_MANAGER_HOOK")
 		self.KX_player = player
-		
+
 		self.player._wrap(player)
 
 		if self.cell_manager.next_destination:
-			destination = self.cell_manager.next_destination
+			destination = self.cell_manager.cell.destinations[self.cell_manager.next_destination]
 		elif 'default' in self.cell_manager.cell.destinations:
 			destination = self.cell_manager.cell.destinations['default']
 		else:
