@@ -71,10 +71,11 @@ class World:
 		""" 
 		Spawns the player
 		"""
-		# player needs to be spawned
+
 		scene = bge.logic.getCurrentScene()
 		player = scene.addObject('player', "CELL_MANAGER_HOOK")
-
+		self.KX_player = player
+		
 		self.player._wrap(player)
 
 		if self.cell_manager.next_destination:
@@ -108,7 +109,7 @@ class World:
 			atmos['Time'] = self.world_time
 
 	def main(self):
-		game.Game.singleton.profiler.start_timer('world.main')
+
 		self.handle_time()
 
 		if bge.logic.keyboard.events[bge.events.IKEY] == bge.logic.KX_INPUT_ACTIVE:
@@ -123,4 +124,4 @@ class World:
 		self.cell_manager.update()
 		if len(self.entity_list) != 0:
 			self.ai_manager.main()
-		game.Game.singleton.profiler.stop_timer('world.main')
+

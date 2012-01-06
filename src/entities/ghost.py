@@ -22,4 +22,4 @@ class Ghost(entities.EntityBase):
 			self._data.alignAxisToVect(l, 1, 1.0)
 			self._data.alignAxisToVect([0,0,1], 2, 1.0)
 
-			self._data.setLinearVelocity( [0,2,0], True)
+			self._data.setLinearVelocity( [0,6,-3], True)
