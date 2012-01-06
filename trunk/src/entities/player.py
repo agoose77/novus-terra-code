@@ -44,7 +44,7 @@ class Player(entities.EntityBase):
 		self.reloading = False
 		self.reload_start_time = 0.0
 
-		self.walk_speed = 5.0
+		self.walk_speed = 15.0
 		self.run_speed = 9.0
 		self.walk_temp = 0.0
 		self.jump_speed = 10.0
@@ -364,7 +364,7 @@ class Player(entities.EntityBase):
 		if hit != None and 'entity_base' in hit:
 			if type(hit['entity_base']) is str:
 				temp = __import__("weapon_pickup")
-				temp = temp.WeaponPickup(hit, hit['info'], hit['name'])
+				temp = temp.WeaponPickup(hit, hit['info'], hit['name']) #ex hack
 				hit['entity_base'] = temp
 			else:
 				if keyboard.events[bge.events.EKEY] == 1:

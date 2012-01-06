@@ -80,5 +80,5 @@ class AI_Manager:
 
 			object1 = self.nodes.get()
 			#AIBase.main(object1)
-			VehicleBase.main(object1)
+			#VehicleBase.main(object1)
 			self.nodes.put(object1)

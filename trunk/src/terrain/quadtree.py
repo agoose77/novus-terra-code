@@ -189,6 +189,9 @@ class Node(object):
 				print(i)
 		if self.depth == self.max_depth:
 			self.cube.reinstancePhysicsMesh()
+			self.cube.color = [1,0,0,1]
+		else:
+			self.cube.color = [1,1,1,1]
 
 
 	def alter_height(self):

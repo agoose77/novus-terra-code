@@ -9,6 +9,7 @@ from item import Item
 from weapon import Weapon
 import math
 import terrain
+import sudo
 
 
 try:
@@ -59,7 +60,6 @@ class CellManager:
 		
 		for ob, blend in self.blend_dict.items():
 			if blend == './data/models/entities/player_file.blend':
-				print(ob)
 				self.clean_object_list.append(ob)
 
 		for ob in scene.objects:
@@ -132,7 +132,6 @@ class CellManager:
 		if self.cell and self.cell.name in Game.singleton.savefile.entities:
 			for entity in Game.singleton.savefile.entities[ self.cell.name ]:
 				if entity._data:
-					print(entity.name)
 					entity.packet.co = entity._data.position[:]
 					entity.packet.rotation = entity._data.orientation.to_euler()[:]
 					entity._data.endObject()
@@ -282,7 +281,6 @@ class CellManager:
 			tweener.singleton.add(prop, "color", "[*,*,*,1.0]", 2.0)
 		else:
 			prop.color = [1.0,1.0,1.0,1.0]
-		#print("[spawned]", prop)
 		return prop
 	
 	def spawn_lamp(self, data): #thing is either a prop or entity
@@ -311,10 +309,7 @@ class CellManager:
 			lamp.type = 0
 			lamp.spotsize = data.spot_size * 180 / 3.14
 			lamp.spotblend = data.spot_blend
-			#new.bias = data.spot_bias
-		print(data.color)
 		tweener.singleton.add(lamp, "color", str(list(data.color)), 2.0)
-		print('[spawned]', lamp, data.color)
 		return lamp
 	
 	def update(self):
@@ -326,9 +321,10 @@ class CellManager:
 		scene = bge.logic.getCurrentScene()
 		
 		# get a point to update everything by
-		KX_player = Game.singleton.world.KX_player
+		KX_player = sudo.world.KX_player
 		#if self.next_destination is not None:
 		#	position = mathutils.Vector(self.cell.destinations[self.next_destination].co)
+
 		if KX_player:
 			position = KX_player.worldPosition
 		else:
@@ -390,80 +386,4 @@ class CellManager:
 		for entity in self.entities_in_game:
 			entity.main()
 	
-	def update1(self): # old update loop
-		session.profiler.start_timer('cell_manager.update()')  ##debug profiling
-		if self.load_state == 0:
-			return
-		#HACKS ENTITY HACKS HERE
-		scene = bge.logic.getCurrentScene()
-		position = 0
-		
-		if 'player' in scene.objects:
-			position = scene.objects['player'].position
-		else:
-			for entry in self.cell.props:
-				for prop in entry:
-					if prop.name == "player_location":
-						position = mathutils.Vector( prop.co )
-		if 'explorer2' in scene.objects:
-			position = scene.objects['explorer2'].position
-		if self.next_destination is not None:
-			position = mathutils.Vector(self.cell.destinations[self.next_destination].co)
-		
-		
-		if position == 0:
-			position = mathutils.Vector([0,0,0])
-		if 'outdoor_sun_shadow' in scene.objects:
-			scene.objects['outdoor_sun_shadow'].position = position
-
-		# TERRAIN
-		if self.terrain:
-			terrain.qt_singleton.update_terrain(position)
-			terrain.cq_singleton.update()
-
-		if time.time() - self.updatetime > .5:
-			
-			self.updatetime = time.time()
-
-			#lamps are seperated because they need a little different setup
-			found_props = []
-			found_lamps = []
-			for i in range( len(self.prop_kdtrees) ):
-				self.prop_kdtrees[i].getVertsInRange(position, pow(2,i)*6+i*60+1, found_props)
-			#now add the lamps to this
-			self.lamp_kdtree.getVertsInRange(position, 100, found_lamps)
-
-			#loop for props
-			to_remove = []
-			for entry in self.props_in_game:
-				if entry not in found_props:
-					#ENTITY HACKS
-					if entry.name not in ["player_location","Spaceship","helicopter",'player', 'Vehicle', 'explorer', 'explorer2']:
-						if session.game.graphics_options['Fade in props']:
-							tweener.singleton.add(entry.game_object, "color", "[*,*,*,0.0]", 2.0, callback=entry.kill)
-						else:
-							entry.kill()
-
-			for entry in found_props:
-				if entry not in self.props_in_game:
-					if entry.name in scene.objectsInactive:
-						self.props_in_game.append(entry)
-						entry.game_object = self.spawn_prop(entry)
-					else:
-						print (entry.name)
-						print( "ERROR: Trying to spawn a prop that doesn't have an object loaded")
-
-			#loop for lamps
-			to_remove = []
-			for entry in self.lamps_in_game:
-				if entry not in found_lamps:
-					if entry.game_object:
-						tweener.singleton.add(entry.game_object, "color", "[0,0,0.0]", 2.0, callback=entry.kill)
-
-			for entry in found_lamps:
-				if entry not in self.lamps_in_game:
-					if ( entry.type == "POINT" and len(self.points) > 0 ) or ( entry.type == "SPOT" and len(self.spots) > 0 ):
-						self.lamps_in_game.append(entry)
-						entry.game_object = self.spawn_lamp(entry)
-						
-		session.profiler.stop_timer('cell_manager.update()')
+	
