@@ -13,6 +13,7 @@ import sound_manager
 import ui
 import world
 from paths import safepath
+import sudo
 
 def main():
 	if Game.singleton is None:
@@ -38,7 +39,8 @@ class Game:
 		'EntityBase' : entities.EntityBase,
 		'WeaponPickup' : entities.WeaponPickup,
 		'Container' : entities.Container,
-		'NPC' : entities.NPC
+		'NPC' : entities.NPC,
+		'Ghost' : entities.Ghost
 	}
 
 	singleton = None
@@ -113,6 +115,13 @@ class Game:
 		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
 
 		self.ui_manager.show_start()
+
+		# SUDO setup
+		sudo.game = self
+		sudo.world = self.world
+		sudo.profiler = self.profiler
+		sudo.sound_manager = self.sound_manager
+
 
 	def save_prefs(self):
 		prfs = [self.graphics_options, self.game_options, self.sound_options, self.default_cell]
