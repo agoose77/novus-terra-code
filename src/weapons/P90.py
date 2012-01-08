@@ -7,7 +7,7 @@ sys.path.append('./src/')
 import bge
 from mathutils import Vector, Matrix
 import random
-#import session
+import game
 
 ###
 class weapon:
@@ -33,7 +33,7 @@ class weapon:
 		self.smoke = 'smoke'
 
 		# Sounds
-		self.fire_sound = 'weapon_sound.ogg'
+		self.fire_sound = 'weapon_sound_m.ogg'
 		self.empty_sound = ''
 		self.reload_sound = ''
 		self.equip_sound = ''
@@ -53,8 +53,9 @@ class weapon:
 
 	def equip(self, entity):
 		name = self.name
+		self.entity = entity
 
-		new = bge.logic.getCurrentScene().addObject(name,'weapon_position')
+		new = bge.logic.getCurrentScene().addObject(name,'CELL_MANAGER_HOOK')
 		new.position = entity.weapon_pos.position
 		new.orientation = entity.weapon_pos.orientation
 		new.setParent(entity.weapon_pos)
@@ -79,7 +80,8 @@ class weapon:
 	def shoot(self, point, spread):
 		self.clip += -1
 
-		#session.game.sound_manager.play_sound(self.fire_sound, self.object)
+		#game.Game.singleton.world.entity_list.append(self)
+		game.Game.singleton.sound_manager.play_sound(self.fire_sound, self.object)
 
 		### Bullet Spread
 		spread['X'] = random.randrange(-self.bullet_spread,self.bullet_spread)
@@ -92,13 +94,18 @@ class weapon:
 
 		### Flash
 		ran_flash = random.randrange(1,4)
-		flash = bge.logic.getCurrentScene().addObject(self.flash[ran_flash], point, 100)
+		flash = bge.logic.getCurrentScene().addObject(self.flash[ran_flash], point, 5)
 		flash.position = self.muzzle.position
 		flash.setParent(self.muzzle)
 
 		### Smoke
 		smoke = bge.logic.getCurrentScene().addObject(self.smoke, point, 100)
 		smoke.position = self.muzzle.position
+
+		###
+		#entity = self.entity
+		#self.object.position = entity.weapon_pos.position
+		#self.object.orientation = entity.weapon_pos.orientation
 
 	###
 	def main(self):

@@ -3,6 +3,7 @@ import random
 
 import aud
 import bge
+import game
 
 from paths import PATH_SOUNDS, PATH_MUSIC
 
@@ -38,19 +39,37 @@ class SoundManager:
 
 	def main(self):
 		device = aud.device()
+
+		device.listener_location = bge.logic.getCurrentScene().active_camera.position
+
+
 		for sound in self.sounds:
 			print(sound)
 			#if sound['Multi'] == False:
 				#if not sound['Name'] in self.handles:
 					#if sound['Type'] == 'play':
 			#handle = aud.Factory(PATH_SOUNDS+sound['Name'])
-			h = device.play(self.factories[sound['Name']])
-			self.handles.append([h, sound])
+
+			#dist = sound['Own'].getDistanceTo(game.Game.singleton.world.KX_player)
+
+			s = self.factories[sound['Name']]
+			#s = aud.Factory(PATH_SOUNDS+sound['Name'])
+			f = s.lowpass(0.5, 0.5)
+
+			h = device.play(f)
+
+			#h.location = sound['Own'].position
+			#h.distance_maximum = 100.0
+			#h.distance_reference = 5.0
+
+			self.handles.append([h, sound, sound['Own'].position])
 			self.sounds.remove(sound)
-			print("YOYOYOYOYOYYO*999999999999999999")
 
 		for handle in self.handles:
 			status = handle[0].status
+			h = handle[0]
+			#h.location = handle[2]
+			
 
 			#if status == False:
 				#self.sounds.remove(handle[1])
