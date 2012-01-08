@@ -129,6 +129,15 @@ class Player(entities.EntityBase):
 		self.set_loc = [child for child in self.childrenRecursive if 'set_loc' in child][0]
 		self.lev = None
 
+		# WEAPON STARTING
+		#temp_weap = __import__("weapon_pickup")
+		#temp_weap = temp_weap.WeaponPickup(None, 'INFO:NONE', "P90")
+		#temp_weap.on_interact(self)
+
+		self.inventory.replace_weapon("P90")
+		self.inventory.weapon_slot_1.equip(self)
+
+
 	def _unwrap(self):
 		entities.EntityBase._unwrap(self)
 
@@ -147,7 +156,7 @@ class Player(entities.EntityBase):
 		move = [0,0,0]
 
 		### Keys
-		if keyboard[bge.events.LEFTSHIFTKEY] and self.fatigue < 10:
+		if keyboard[bge.events.LEFTSHIFTKEY]:# and self.fatigue < 10:
 			self.fatigue += 0.2
 			speed = self.run_speed
 		else:
@@ -187,8 +196,8 @@ class Player(entities.EntityBase):
 				self.play_animation('run')
 				self.walk_temp += 2
 		else:
-			#self.play_animation('idle')
-			pass
+			self.play_animation('idle')
+			#pass
 
 		if self.walk_temp > 20:
 			self.walk_temp = 0
@@ -196,53 +205,39 @@ class Player(entities.EntityBase):
 			#session.game.sound_manager.play_sound('walk_grass_1.ogg', self)
 
 
+	### ANIMATIONS ###
 	def play_animation(self,name):
-		"""
-		1 = shoot
-		2 = reload
-		3 =
-		4 = idle
-		5 = walk
-		6 = run
-		"""
-
-		#if name == 'reload':
-		#	self.armature.playAction(str(self.inventory.current_weapon.name) + "_reload", 1, 45, layer=2, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
-
 		self.animations[name] = 1
 
+	def stop_animation(self, layer):
+		for n in range(0,7):
+			if n != layer:
+				self.armature.stopAction(n)
 
 	def handle_animations(self):
-		#self.armature.playAction(str(self.inventory.current_weapon.name) + "_idle", 1, 64, layer=1, priority=0, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
-
 		if self.animations['reload'] == 1:
-			print("Playing reload")
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_reload", 1, 24, layer=1, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
-			#self.animations['reload'] = 0
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_reload", 1, 64, layer=4, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
+			self.stop_animation(4)
 
 		elif self.animations['shoot'] == 1:
-			print("Playing shoot")
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_shoot", 1, 5, layer=1, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
-			#self.animations['shoot'] = 0
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_shoot", 1, 5, layer=3, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
+			self.stop_animation(3)
 
 		elif self.animations['walk'] == 1:
-			print("Playing walk")
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_walk", 1, 32, layer=1, priority=4, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
-			#self.animations['walk'] = 0
-
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_walk", 1, 32, layer=2, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.stop_animation(2)
+		
 		elif self.animations['run'] == 1:
-			print("Playing Run")
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_run", 1, 20, layer=1, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
-			#self.animations['run'] = 0
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_run", 1, 20, layer=1, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.stop_animation(1)
 
-		#elif self.animations['idle'] == 1:
-		#else:
-			#self.armature.stopAction(1)
-		#	print('playing idle')
-		#	self.armature.playAction(str(self.inventory.current_weapon.name) + "_idle", 1, 64, layer=1, priority=0, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+		else:
+			self.stop_animation(0)
+			self.armature.playAction(str(self.inventory.current_weapon.name) + "_idle", 1, 64, layer=0, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 		for name in self.animations:
 			self.animations[name] = 0
+		
 
 	def handle_fall_state(self, FSM):
 		pass
@@ -264,6 +259,7 @@ class Player(entities.EntityBase):
 			self.current_vehicle.vehicle_on = False
 			self.in_vehicle = False
 			self.movement_state_machine.current_state = 'walk'
+			self.current_vehicle.FSM.current_state = 'off'
 			self.current_vehicle = None
 
 	def is_grounded(self, FSM):
@@ -349,7 +345,8 @@ class Player(entities.EntityBase):
 								hit['physics'] = 1
 
 							if 'ai_controller' in hit:
-								hit['ai_controller'].damage(10)
+
+								hit['entity_base'].damage(10, self)
 
 		# AIM
 		if mouse.events[bge.events.RIGHTMOUSE] == 1:
@@ -410,6 +407,7 @@ class Player(entities.EntityBase):
 			entities.EntityBase.main(self)
 
 			self.movement_state_machine.main()
+			#self.handle_animations()
 
 			if self.in_vehicle == False:
 				self.handle_camera()

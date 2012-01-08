@@ -36,6 +36,8 @@ class AI_Manager:
 	###
 	def main(self):
 
+		"""
+
 		# Spawn Points
 		for obj in bge.logic.getCurrentScene().objects:
 			if 'spawn_point' in obj.name:
@@ -73,6 +75,8 @@ class AI_Manager:
 
 					obj['vehicle'] = 1
 
+		"""
+
 				
 
 		# Cycle
@@ -80,5 +84,5 @@ class AI_Manager:
 
 			object1 = self.nodes.get()
 			#AIBase.main(object1)
-			#VehicleBase.main(object1)
+			VehicleBase.main(object1)
 			self.nodes.put(object1)
