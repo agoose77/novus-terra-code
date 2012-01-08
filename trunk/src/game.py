@@ -40,7 +40,8 @@ class Game:
 		'WeaponPickup' : entities.WeaponPickup,
 		'Container' : entities.Container,
 		'NPC' : entities.NPC,
-		'Ghost' : entities.Ghost
+		'Ghost' : entities.Ghost,
+		'AIBase' : entities.AIBase,
 	}
 
 	singleton = None
