@@ -27,7 +27,7 @@ class AIBase(entities.EntityBase):
 		##################
 		# Stats
 		self.health = 100
-		self.speed = 100
+		self.speed = 400
 		self.faction = -1
 
 		# AI INFO
@@ -131,9 +131,9 @@ class AIBase(entities.EntityBase):
 
 		# Stuff
 		if speed == 'walk':
-			speed = 2
+			speed = 7
 		elif speed == 'run':
-			speed = 5
+			speed = 10
 
 		# More Stuff
 		st = self.controllers[0].actuators['Steering']
@@ -207,8 +207,8 @@ class AIBase(entities.EntityBase):
 						if 'physics' in hit:
 							hit['physics'] = 1
 
-						if 'ai_controller' in hit:
-							hit['ai_controller'].damage(10, self._data)
+						if 'entity_base' in hit:
+							hit['entity_base'].damage(10, self._data)
 
 
 						if 'player' in hit:
@@ -315,7 +315,7 @@ class AIBase(entities.EntityBase):
 		self.alignAxisToVect(-vec[1], 1, 0.1)
 		self.alignAxisToVect([0,0,1], 2, 0.1)
 
-	def damage(self, damage_amount, object):
+	def damage(self, damage_amount=1, object=None):
 		print("HIT")
 		self.target = object
 		self.target_last_pos = self.target.position.copy()
