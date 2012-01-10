@@ -24,9 +24,10 @@ class EntityManager:
 	'''  future: handles reading entities from cells, loading entity sets for cells, entity spawning and neighbor lookups'''
 	def __init__(self):
 		print('EntityManager.__init__()')
-		self.hash = Hash(20)
+		self.hash = Hash(5)
 		self.in_play = []
 		self.dist = 200
+		self.old_found = []
 
 
 	def update(self):
@@ -34,14 +35,21 @@ class EntityManager:
 			found = self.hash.neighbors(sudo.world.KX_player.position, self.dist)
 
 			for entity in found:
-				if self.get_distance(sudo.world.KX_player.position, entity.location) < self.dist*.8:
-
+				if entity in self.old_found:
+					self.old_found.remove(entity)
+				else:
 					if not entity._data:
 						if entity.packet:
 							ob = sudo.cell_manager.spawn_prop(entity.packet)
 							entity._wrap( ob )
-				else:
-					entity._unwrap()
+			for entity in self.old_found:
+				print('killing it')
+				entity.freeze()
+				tweener.singleton.add(entity._data, "color", "[*,*,*,0.0]", 2.0, callback=entity._unwrap)
+				
+			self.old_found = found
+
+			#if self.get_distance(sudo.world.KX_player.position, entity.location) < self.dist*.8:
 
 	def get_distance( self, location1, location2 ):
 		location1 = list(location1)
