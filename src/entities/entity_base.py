@@ -1,6 +1,8 @@
 import inspect
 
 import mathutils
+import sudo
+import sys
 
 try:
 	import bge
@@ -68,17 +70,40 @@ class EntityBase:
 		self.iteract_icon = None
 		self.iteract_label = None
 
+		self.in_hash = False
+		self.old_location = False
+		if type(self.packet) != int:
+			self.location = self.packet.co
+		else:
+			self.location = False
+
+		try:
+			sudo.hash.insert(self)
+			self.in_hash = True
+		except:
+			print(sys.exc_info()[0])
+
 	def update(self):
 		''' meant to be overidden '''
 		pass
 
 	def main(self):
-		if not self.frozen:
-			self.applyForce(self.mass * game.Game.singleton.world.gravity)
-			self.update()
-		else:
-			self.worldPosition = self.stored_position
-			self.worldOrientation = self.stored_rotation
+		if self._data:
+			if not self.frozen:
+				self.applyForce(self.mass * game.Game.singleton.world.gravity)
+				self.update()
+
+
+				#this rebalances a sparse hash
+				#print(type(self), self.location, self.in_hash)
+				if self.location and self.in_hash:
+					if self.location != self._data.position:
+						sudo.hash.update(self, self._data.position)
+					self.location = list(self._data.position)
+
+			else:
+				self.worldPosition = self.stored_position
+				self.worldOrientation = self.stored_rotation
 
 	def on_interact(self, instance):
 		if self.frozen:
@@ -118,13 +143,18 @@ class EntityBase:
 		cell.CellManager.singleton.entities_in_game.remove(self)
 		cell.CellManager.singleton.cell.entities.remove(self.packet)
 		cell.CellManager.singleton.cell.modified = True
-		
+		if self.in_hash:
+			sudo.hash.remove(self)
 		self.packet.game_object = None
 		self.endObject()
 
 	def _wrap(self, obj):
 		self._data = obj
+		if self.location:
+			self._data.position = self.location
 		self._data['entity_base'] = self
+
+
 
 	def _unwrap(self):
 		if self._data is not None:

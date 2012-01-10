@@ -6,7 +6,7 @@ import aud
 import bge
 from mathutils import Vector
 
-import cell
+import cell, entity
 import dialogue
 import entities
 import game
@@ -29,6 +29,7 @@ class World:
 
 		self.ai_manager = AI_Manager()
 		self.cell_manager = cell.CellManager()
+		self.entity_manager = entity.EntityManager()
 		self.dialogue_manager = dialogue.DialogueManager()
 
 		self.world_time = 80.0

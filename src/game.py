@@ -92,6 +92,10 @@ class Game:
 			Game.MOUSE_SENSITIVITY: 5.0,
 		}
 
+		self.mandatory_blends = ['./data/models/weapons/P90.blend',
+								'./data/models/entities/Mouselook4.blend',
+								'./data/models/entities/player_file.blend']
+
 		self.default_cell = 'terrain.cell'
 		
 		# load items
@@ -120,6 +124,9 @@ class Game:
 		# SUDO setup
 		sudo.game = self
 		sudo.world = self.world
+		sudo.cell_manager = self.world.cell_manager
+		sudo.entity_manager = self.world.entity_manager
+		sudo.hash = sudo.entity_manager.hash
 		sudo.profiler = self.profiler
 		sudo.sound_manager = self.sound_manager
 
