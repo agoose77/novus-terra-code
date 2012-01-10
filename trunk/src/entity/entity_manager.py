@@ -24,7 +24,7 @@ class EntityManager:
 	'''  future: handles reading entities from cells, loading entity sets for cells, entity spawning and neighbor lookups'''
 	def __init__(self):
 		print('EntityManager.__init__()')
-		self.hash = Hash(5)
+		self.hash = Hash(30)
 		self.in_play = []
 		self.dist = 200
 		self.old_found = []
@@ -44,8 +44,8 @@ class EntityManager:
 							entity._wrap( ob )
 			for entity in self.old_found:
 				print('killing it')
-				entity.freeze()
-				tweener.singleton.add(entity._data, "color", "[*,*,*,0.0]", 2.0, callback=entity._unwrap)
+				entity._unwrap()
+				
 				
 			self.old_found = found
 

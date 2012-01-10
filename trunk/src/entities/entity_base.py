@@ -3,6 +3,7 @@ import inspect
 import mathutils
 import sudo
 import sys
+import tweener
 
 try:
 	import bge
@@ -150,6 +151,9 @@ class EntityBase:
 
 	def _wrap(self, obj):
 		self._data = obj
+		c = self._data.color
+		self._data.color = [c[0],c[1],c[2],0.0]
+		tweener.singleton.add(self._data, "color", "[*,*,*,1.0]", 1.0)
 		if self.location:
 			self._data.position = self.location
 		self._data['entity_base'] = self
@@ -159,7 +163,7 @@ class EntityBase:
 	def _unwrap(self):
 		if self._data is not None:
 			if not self._data.invalid:
-				self._data.endObject()
+				tweener.singleton.add(self._data, "color", "[*,*,*,0.0]", 1.0, callback=self._data.endObject)
 			self._data = None
 
 	def __getattr__(self, name):
