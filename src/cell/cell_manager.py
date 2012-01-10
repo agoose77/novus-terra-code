@@ -210,7 +210,8 @@ class CellManager:
 
 		#JP hardcoding player and a few other things, might not be the perfect place for this? MANDATORY.blend is included in cells via the editor
 		for entry in sudo.game.mandatory_blends:
-			libs_to_load.append(entry)
+			if entry not in libs_to_load:
+				libs_to_load.append(entry)
 
 
 		# Free un used libs
