@@ -24,7 +24,7 @@ class EntityManager:
 	'''  future: handles reading entities from cells, loading entity sets for cells, entity spawning and neighbor lookups'''
 	def __init__(self):
 		print('EntityManager.__init__()')
-		self.hash = Hash(30)
+		self.hash = Hash(100)
 		self.in_play = []
 		self.dist = 200
 		self.old_found = []

@@ -420,4 +420,5 @@ class Player(entities.EntityBase):
 				if self.reloading == True:
 					self.reload()
 
+	
 
