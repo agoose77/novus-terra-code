@@ -176,7 +176,6 @@ class Node(object):
 		chunkname = terrain.cq_singleton.get_chunk()
 		
 		self.cube = self.spawnObject(chunkname, [self.pos[0]*self.scale,self.pos[1]*self.scale,0] )
-		print( self.scale, self.pos[0]*self.scale,self.pos[1]*self.scale )
 		self.cube.localScale = [self.size*self.scale, self.size*self.scale, 1] #?
 		#add to que to wait for vertex adjustment
 		#terrain.cq_singleton.need_update.append( self )

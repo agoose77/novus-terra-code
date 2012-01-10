@@ -366,7 +366,7 @@ class Player(entities.EntityBase):
 			else:
 				if keyboard.events[bge.events.EKEY] == 1:
 					hit['entity_base'].on_interact(self)
-					print("BAMN")
+
 
 
 	def fast_travel(self, location):

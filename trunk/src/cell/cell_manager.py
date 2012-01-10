@@ -209,8 +209,9 @@ class CellManager:
 					libs_to_load.append(blend)
 
 		#JP hardcoding player and a few other things, might not be the perfect place for this? MANDATORY.blend is included in cells via the editor
-		libs_to_load.append('./data/models/entities/player_file.blend')
-		libs_to_load.append('./data/models/entities/Mouselook4.blend')
+		for entry in sudo.game.mandatory_blends:
+			libs_to_load.append(entry)
+
 
 		# Free un used libs
 		for lib in liblist:
@@ -236,16 +237,12 @@ class CellManager:
 		if self.cell.name in Game.singleton.savefile.entities:
 			# This cell has been visited before
 			self.entities_in_game = Game.singleton.savefile.entities[ self.cell.name ]
-			for entity in self.entities_in_game:
-				if entity.packet:
-					ob = self.spawn_prop(entity.packet)
-					entity._wrap( ob )
+			
 		
 		else:
 			# Cell is un visited
 			for entity in self.cell.entities:
 				new_entity = Game.entity_map[entity.class_] (entity)
-				new_entity._wrap( self.spawn_prop(entity) )
 				self.entities_in_game.append( new_entity )
 			Game.singleton.savefile.entities[ self.cell.name ] = self.entities_in_game
 		
@@ -383,6 +380,7 @@ class CellManager:
 			
 			self.updatetime = Game.singleton.game_time
 
+		sudo.entity_manager.update()
 		for entity in self.entities_in_game:
 			entity.main()
 	
