@@ -142,7 +142,7 @@ class Player(entities.EntityBase):
 		entities.EntityBase._unwrap(self)
 
 
-	def damage(self, amount):
+	def damage(self, amount, object=None):
 		self.health += amount
 		print("HURT")
 
@@ -344,7 +344,7 @@ class Player(entities.EntityBase):
 							if 'physics' in hit:
 								hit['physics'] = 1
 
-							if 'ai_controller' in hit:
+							if 'entity_base' in hit:
 
 								hit['entity_base'].damage(10, self)
 

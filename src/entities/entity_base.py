@@ -88,6 +88,10 @@ class EntityBase:
 		''' meant to be overidden '''
 		pass
 
+	def damage(self, damage_amount=1, object=None):
+		''' meant to be overidden '''
+		pass
+
 	def main(self):
 		if self._data:
 			if not self.frozen:

@@ -9,6 +9,7 @@ class Ghost(entities.EntityBase):
 		super().__init__(packet)
 
 		self.interact_label = 'Talk'
+		self.health = 100
 		print ('ghost init')
 
 	def on_interact(self, player):
@@ -23,3 +24,9 @@ class Ghost(entities.EntityBase):
 			self._data.alignAxisToVect([0,0,1], 2, 1.0)
 
 			self._data.setLinearVelocity( [0,6,-3], True)
+
+	def damage(self, amount=1, object=None):
+		self.health -= amount
+		self.color = [1.0,self.health*.01,self.health*.01, 1.0]
+		if self.health < 0:
+			self.remove()

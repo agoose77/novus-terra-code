@@ -43,7 +43,6 @@ class EntityManager:
 							ob = sudo.cell_manager.spawn_prop(entity.packet)
 							entity._wrap( ob )
 			for entity in self.old_found:
-				print('killing it')
 				entity._unwrap()
 				
 				
