@@ -141,7 +141,7 @@ class Node(object):
 		#scale hacks
 		focalpoint2 = [ focalpoint[0], focalpoint[1] ]
 		#print(self.dist(focalpoint,self.pos))
-		if self.dist(focalpoint2):
+		if self.dist2(focalpoint2):
 			#if I'm a leaf, split and check children
 			if self.state == LEAF:
 				if self.depth < self.max_depth:
@@ -209,7 +209,7 @@ class Node(object):
 	def dist2(self, point):
 		x1, y1 = self.pos[0]*self.scale, self.pos[1]*self.scale
 		x2, y2 = point[0], point[1]
-		range = 2*self.size+self.size*.3*self.scale
+		range = 6*self.size+self.size*.3*self.scale
 
 		if abs(x1-x2) < range and abs(y1-y2) < range:
 			return True

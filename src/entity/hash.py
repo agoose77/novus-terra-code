@@ -42,10 +42,12 @@ class Hash(object):
 		#this is called before the object has its location changed
 
 		if self.key(location) != self.key(new_location):
-			print('move ',self.key(location), ' to ', self.key(new_location))
+			# print('move ',self.key(location), ' to ', self.key(new_location))
 
 			self.grid[ self.key(location) ].remove(object)
 			self.grid.setdefault(self.key(new_location), []).append(object)
+
+			return True
 
 			
 			
