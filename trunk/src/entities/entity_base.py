@@ -79,7 +79,7 @@ class EntityBase:
 			self.location = False
 
 		try:
-			sudo.hash.insert(self)
+			sudo.entity_manager.insert(self)
 			self.in_hash = True
 		except:
 			print(sys.exc_info()[0])
@@ -103,7 +103,7 @@ class EntityBase:
 				#print(type(self), self.location, self.in_hash)
 				if self.location and self.in_hash:
 					if self.location != self._data.position:
-						sudo.hash.update(self, self._data.position)
+						sudo.entity_manager.check_move(self, self._data.position)
 					self.location = list(self._data.position)
 
 			else:
@@ -149,7 +149,7 @@ class EntityBase:
 		cell.CellManager.singleton.cell.entities.remove(self.packet)
 		cell.CellManager.singleton.cell.modified = True
 		if self.in_hash:
-			sudo.hash.remove(self)
+			sudo.entity_manager.remove(self)
 		self.packet.game_object = None
 		self.endObject()
 
