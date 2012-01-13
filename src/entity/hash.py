@@ -16,8 +16,6 @@ class Hash(object):
 		)
 		
 	def insert(self, object):
-		#all starfield objects should have a location property
-		print('insert', object, self.key(object.location))
 		location = list(object.location)
 		self.grid.setdefault(self.key(object.location), []).append(object)
 

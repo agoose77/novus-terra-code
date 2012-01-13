@@ -18,23 +18,24 @@ class Ghost(entities.EntityBase):
 
 	def update(self):
 		if sudo.world.player.position:
-
+			scene = bge.logic.getCurrentScene()
 			if self['Steer'] == 0:
-				scene = bge.logic.getCurrentScene()
 				if random.randint(0,5) == 4:
 					name = random.choice(scene.objects)
 				else:	
 					name = scene.objects['player']
-				self.move_to(name, 3)
-		'''
-		if sudo.world.player.position:
-			loc = sudo.world.player.position
-			l = [loc[0]-self.position[0], loc[1]-self.position[1], 0]
-			self._data.alignAxisToVect(l, 1, 1.0)
-			self._data.alignAxisToVect([0,0,1], 2, 1.0)
+				if self.move_to(name, 3):
+					pass
+				else:
+					# just track to
+					if sudo.world.player.position:
+						loc = sudo.world.player.position
+						l = [loc[0]-self.position[0], loc[1]-self.position[1], 0]
+						self._data.alignAxisToVect(l, 1, 1.0)
+						self._data.alignAxisToVect([0,0,1], 2, 1.0)
 
-			self._data.setLinearVelocity( [0,6,-3], True)
-		'''
+						self._data.setLinearVelocity( [0,6,-3], True)
+
 
 	def damage(self, amount=1, object=None):
 		self.health -= amount
@@ -43,24 +44,15 @@ class Ghost(entities.EntityBase):
 			self.remove()
 
 	def move_to(self, target_obj, behavior=3):
-
-		# Stuff
-		
-		speed = 10
-
-		# More Stuff
-		st = self.controllers[0].actuators['Steering']
-		st.behaviour = behavior
-
-		# Speed
-		st.velocity = speed
-		st.acceleration = 0.5
-		st.turnspeed = 10
-
-
-		st.target = target_obj
-
-		st.navmesh = bge.logic.getCurrentScene().objects['terrain_navmesh']
-
-		# Activate it
-		self['Steer'] = 1
+		navmesh = self.find_navmesh()
+		if navmesh:		
+			st = self.controllers[0].actuators['Steering']
+			st.behaviour = behavior
+			st.velocity = 10
+			st.acceleration = 0.5
+			st.turnspeed = 10
+			st.target = target_obj
+			st.navmesh = navmesh
+			# Activate it
+			self['Steer'] = 1
+			return True

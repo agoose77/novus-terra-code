@@ -174,7 +174,7 @@ class Node(object):
 
 	def add_chunk(self):
 		chunkname = terrain.cq_singleton.get_chunk()
-		
+		print ('(terrain chunk added)') 
 		self.cube = self.spawnObject(chunkname, [self.pos[0]*self.scale,self.pos[1]*self.scale,0] )
 		self.cube.localScale = [self.size*self.scale, self.size*self.scale, 1] #?
 		#add to que to wait for vertex adjustment
@@ -185,7 +185,7 @@ class Node(object):
 				v = mesh.getVertex(0, i)
 				v.setXYZ([v.getXYZ()[0],v.getXYZ()[1],self.v_array[i] ])
 			except:
-				print(i)
+				pass
 		if self.depth == self.max_depth:
 			self.cube.reinstancePhysicsMesh()
 			self.cube.color = [1,0,0,1]
