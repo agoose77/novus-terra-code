@@ -117,7 +117,7 @@ class EntityBase:
 			self.freeze()
 
 	def freeze(self):
-		if not self.frozen:
+		if not self.frozen and self._data:
 			self.stored_linear_velocity = self.worldLinearVelocity[:]
 			self.stored_angular_velocity = self.worldAngularVelocity[:]
 			self.stored_position = self.worldPosition[:]
@@ -152,6 +152,26 @@ class EntityBase:
 			sudo.entity_manager.remove(self)
 		self.packet.game_object = None
 		self.endObject()
+
+	def find_navmesh(self):
+		""" Returns the closest navmesh or None """
+		found_nav = []
+		for entry in reversed(sudo.cell_manager.props_in_game):
+			for prop in entry:
+				print
+				if 'navmesh' in prop.game_object:
+					found_nav.append(prop.game_object)
+
+		best = False
+		if len(found_nav) == 1:
+			best = found_nav[0]
+		else:
+			for entry in found_nav:
+				if not best:
+					best = sudo.entity_manager.get_distance(list(self.position), list(entry.position))
+				elif sudo.entity_manager.get_distance(list(self.position), list(entry.position)) < best:
+					best = sudo.entity_manager.get_distance(list(self.position), list(entry.position))
+		return best
 
 	def _wrap(self, obj):
 		self._data = obj

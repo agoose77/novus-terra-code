@@ -124,6 +124,7 @@ class Game:
 		# SUDO setup
 		sudo.game = self
 		sudo.world = self.world
+		sudo.player = self.world.player
 		sudo.cell_manager = self.world.cell_manager
 		sudo.entity_manager = self.world.entity_manager
 		sudo.hash = sudo.entity_manager.hash
