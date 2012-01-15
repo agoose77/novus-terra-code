@@ -21,7 +21,7 @@ class UIManager(bgui.System):
 		self.focused_widget = self.frame
 		self.paused = 0
 		self.current = None
-		#self.tweener = tweener.TweenManager
+		#self.tweener = tweener.TweenManager()
 
 		# Create a keymap for keyboard input
 		self.keymap = {getattr(bge.events, val): getattr(bgui, val) for val in dir(bge.events) if val.endswith('KEY') or val.startswith('PAD')}
@@ -30,7 +30,7 @@ class UIManager(bgui.System):
 						 'start': ui.Start(self, 'start'),
 						 'loading': ui.Loading(self),
 						 'item_swap': ui.ItemSwap(self, 'item_swap')}
-						 #'dialogue': }
+
 		for entry in self.screens:
 			self.screens[entry].visible = 0
 		

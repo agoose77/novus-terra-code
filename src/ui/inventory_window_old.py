@@ -102,6 +102,8 @@ class InventoryWindow(bgui.Widget):
 		self.scrollbar = ui.Scrollbar(self, '_scrollbar', pos=[1-10/self.size[0],0], size=[10/self.size[0], 1], sub_theme='Vertical')
 		self.scrollbar.on_scroll = self.scroll
 		
+		self.border = ui.MetalBorder(self, 'border', pos=[0,0], size=[1,1])
+
 		self.capacity = bgui.ProgressBar(self, 'capacity', sub_theme='inventory_capacity', percent=0.5, pos=[0,-15], size=[self.size[0], 15], options=bgui.BGUI_THEMED)
 		self.items = []
 		self.tab = 'ALL'

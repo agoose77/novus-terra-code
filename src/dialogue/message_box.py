@@ -130,6 +130,7 @@ class MessageBox(bgui.Widget):
 		self.visible = True
 		self.done = False
 		self.top = 0
+		self.more_button.text = 'More'
 
 		for line in self.lines:
 			self._remove_widget(line)
@@ -188,6 +189,7 @@ class MessageBox(bgui.Widget):
 		self.visible = True
 		self.done = False
 		self.top = 0
+		self.more_button.text = 'Cancel'
 
 		self.option_start = {}
 		self.option_lines = {}

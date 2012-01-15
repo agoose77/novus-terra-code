@@ -1,3 +1,5 @@
+import pickle
+
 class Item:
 
 	CONSUMABLE = 1
@@ -23,3 +25,11 @@ class Item:
 
 	def activate_item(self):
 		pass
+
+def load_items():
+	file = open('./data/items.data', 'rb')
+	items = pickle.load(file)
+	file.close()
+	
+	for item_ in items:
+		Item(id=item_[0], name=item_[1], type=item_[2], description=item_[3], icon=item_[4], cost=item_[5], size=item_[6], stack=item_[7])

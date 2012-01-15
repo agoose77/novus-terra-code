@@ -1,6 +1,5 @@
 import entities
 import game
-import inventory
 
 class Container(entities.EntityBase):
 	def __init__(self, packet=None):

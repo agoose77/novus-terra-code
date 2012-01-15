@@ -11,7 +11,7 @@ import bge
 from mathutils import Vector, Matrix
 
 from sound_manager import SoundManager
-from inventory import Inventory
+from inventory2 import Inventory
 from dialogue_system import DialogueSystem
 from finite_state_machine import FiniteStateMachine
 from paths import PATH_SOUNDS, PATH_MUSIC
