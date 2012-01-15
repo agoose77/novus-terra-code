@@ -25,7 +25,8 @@ from bpy_extras.io_utils import ImportHelper, ExportHelper
 
 sys.path.append('./src/')
 from cell import Prop, Lamp, Cell, Entity, Destination
-from inventory import Inventory
+from inventory2 import Inventory
+from item import Item
 
 CELL_NONE = ""
 CELL_INTERIOR = 'Interior'
@@ -271,15 +272,14 @@ class CE_load(bpy.types.Operator):
 						# inventories need to be handled seperately
 						obj.game.properties[name].type = 'STRING'
 						obj.game.properties[name].value = value.id
-						context.scene.ie_inventories.add()
-						inventory = context.scene.ie_inventories[-1]
+						context.scene.ce_inventories.add()
+						inventory = context.scene.ce_inventories[-1]
 						inventory.name = value.id
 						inventory.label = value.name
-						for id, stacks in value.items.items():
-							count = sum(stacks)
+						for id, amount in value.items:
 							inventory.items.add()
 							inventory.items[-1].name = id
-							inventory.items[-1].amount = count
+							inventory.items[-1].amount = amount
 					else:
 						if isinstance(value, float):
 							obj.game.properties[name].type = 'FLOAT'
@@ -400,10 +400,8 @@ class CE_bake(bpy.types.Operator):
 								inv.id = id
 								inv.name = inventory.label
 								for item in inventory.items:
-									if item.name in inv.items:
-										inv.items[item.name][0] += item.amount
-									else:
-										inv.items[item.name] = [item.amount]
+									print(inv)
+									inv.add_item(item.name, item.amount)
 								break
 								
 						properties['inventory'] = inv
@@ -697,7 +695,7 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 				elif context.scene.ce_mode == MODE_IE:
 					box = layout.box()
 					row = box.row()
-					row.template_list(context.scene, 'ce_inventorces', context.scene, 'ce_inventory_index', rows=3, maxrows=3)
+					row.template_list(context.scene, 'ce_inventories', context.scene, 'ce_inventory_index', rows=3, maxrows=3)
 					col = row.column(align=True)
 					col.operator('scene.ce_inv_add', icon='ZOOMIN', text='')
 					col.operator('scene.ce_inv_del', icon='ZOOMOUT', text='')

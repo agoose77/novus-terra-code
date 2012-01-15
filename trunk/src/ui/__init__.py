@@ -11,7 +11,7 @@ ui.singleton.showInventory()
 """
 
 # Widgets
-from .inventory_window import *
+from .inventory_window2 import *
 from .nwidgets import *
 from .scrollbar import *
 

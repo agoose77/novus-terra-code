@@ -33,7 +33,7 @@ class IE_Item(bpy.types.PropertyGroup):
 	description = bpy.props.StringProperty(name='Description')
 	
 	cost = bpy.props.IntProperty(name='Cost', min=0)
-	size = bpy.props.FloatProperty(name='Size', min=0)
+	size = bpy.props.IntVectorProperty(name='Size', default=(1,1), min=1, size=2)
 	stack = bpy.props.IntProperty(name='Stack Size', min=0)
 	icon = bpy.props.StringProperty(name='Icon')
 	
@@ -74,7 +74,7 @@ class IE_save_db(bpy.types.Operator):
 	def execute(self, context):
 		items = []
 		for item in context.scene.ie_items:
-			items.append((item.name, item.name2, item.type, item.description, item.icon, item.cost, item.size, item.stack))
+			items.append((item.name, item.name2, item.type, item.description, item.icon, item.cost, item.size[:], item.stack))
 			
 		file = open('./data/items.data', 'wb')
 		pickle.dump(items, file)
@@ -143,7 +143,6 @@ class SCENE_PT_item_editor(bpy.types.Panel):
 		
 		if 0 <= context.scene.ie_item_index < len(context.scene.ie_items):
 			item = context.scene.ie_items[context.scene.ie_item_index]
-			
 			box.prop(item, 'name')
 			box.prop(item, 'name2')
 			box.prop(item, 'type')
@@ -151,8 +150,8 @@ class SCENE_PT_item_editor(bpy.types.Panel):
 			row = box.row(align=True)
 			row.prop(item, 'icon')
 			row.operator('scene.ie_icon_select', icon='FILESEL', text='')
-			box.prop(item, 'cost')
 			box.prop(item, 'size')
+			box.prop(item, 'cost')
 			box.prop(item, 'stack')
 		
 def register():

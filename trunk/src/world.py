@@ -64,6 +64,7 @@ class World:
 			entity.freeze()
 
 	def resume(self):
+		self.player.hold_mouse_update = 10 # don't update mouse look for 1 frame, stops jump
 		self.suspended = False
 		for entity in self.cell_manager.entities_in_game:
 			entity.unfreeze()

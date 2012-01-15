@@ -7,8 +7,40 @@ import bgui
 import bge
 import time
 
-
-
+class MetalBorder(bgui.Widget):
+	def __init__(self, parent, name, size=[0,0], pos=[0,0], options=bgui.BGUI_DEFAULT):
+		super().__init__(parent, name, size=size, pos=pos, options=options)
+		
+		# Corners
+		w = self.size[0]
+		h = self.size[1]
+		self.bg_top_left = bgui.Image(self, 'bg_top_left', img='./data/textures/ui/button_border.png',
+			size=[10,10], pos=[0, h - 10], texco=((0, .75), (.25, .75), (.25, 1), (0, 1)),
+			options=bgui.BGUI_THEMED)
+		self.bg_top_right = bgui.Image(self, 'bg_top_right', img='./data/textures/ui/button_border.png',
+			size=[10,10], pos=[w - 10, h - 10], texco=((.75, .75), (1, .75), (1, 1), (.75, 1)),
+			options=bgui.BGUI_THEMED)
+		self.bg_bot_left = bgui.Image(self, 'bg_bot_left', img='./data/textures/ui/button_border.png',
+			size=[10,10], pos=[0, 0], texco=((0,0), (.25, 0), (.25, .25), (0, .25)),
+			options=bgui.BGUI_THEMED)
+		self.bg_bot_right = bgui.Image(self, 'bg_bot_right', img='./data/textures/ui/button_border.png',
+			size=[10,10], pos=[w - 10, 0], texco=((.75, 0), (1, 0), (1, .25), (.75, .25)),
+			options=bgui.BGUI_THEMED)
+		
+		# Sides
+		self.bg_left = bgui.Image(self, 'bg_left', img='./data/textures/ui/button_border.png',
+			size=[10, h - 20], pos=[0, 10], texco=((0, .25), (.25, .25), (.25, .75), (0, .75)),
+			options=bgui.BGUI_THEMED)
+		self.bg_right = bgui.Image(self, 'bg_right', img='./data/textures/ui/button_border.png',
+			size=[10, h - 20], pos=[w - 10, 10], texco=((.75, .25), (1, .25), (1, .75), (.75, .75)),
+			options=bgui.BGUI_THEMED)
+		self.bg_top = bgui.Image(self, 'bg_top', img='./data/textures/ui/button_border.png',
+			size=[w - 20, 10], pos=[10, h - 10], texco=((.25, .75), (.75, .75), (.75, 1), (.25, 1)),
+			options=bgui.BGUI_THEMED)
+		self.bg_bot = bgui.Image(self, 'bg_bot', img='./data/textures/ui/button_border.png',
+			size=[w - 20, 10], pos=[10, 0], texco=((.25, 0), (.75, 0), (.75, .25), (.25, .25)),
+			options=bgui.BGUI_THEMED)
+		
 class Nbox(bgui.Widget):
 	"""Novus UI background box"""
 

@@ -11,7 +11,7 @@ import bge
 from mathutils import Vector, Matrix
 
 from sound_manager import SoundManager
-from inventory import Inventory
+from inventory2 import Inventory
 from dialogue_system import DialogueSystem
 from finite_state_machine import FiniteStateMachine
 from paths import PATH_SOUNDS, PATH_MUSIC
@@ -48,6 +48,8 @@ class Player(entities.EntityBase):
 		self.run_speed = 9.0
 		self.walk_temp = 0.0
 		self.jump_speed = 10.0
+
+		self.hold_mouse_update = 0 # stops the mouse look uddating for a frame
 
 		self.init_1 = False
 		self.animations = {
@@ -87,8 +89,8 @@ class Player(entities.EntityBase):
 		self.inventory = Inventory()
 
 		#adding some items for testing:
-		self.inventory.add_item('cube', amount=9 )
-		self.inventory.add_item('wrench', amount=9)
+		self.inventory.add_item('cube', item_amount=9 )
+		self.inventory.add_item('wrench', item_amount=9)
 
 		#calculating this once for mouse move
 		w = bge.render.getWindowWidth()
@@ -376,10 +378,16 @@ class Player(entities.EntityBase):
 	def handle_camera(self):
 		bge.logic.getCurrentScene().active_camera = self.camera # set active_camera
 
-		mpos = bge.logic.mouse.position
+		mpos = bge.logic.mouse.position[:]
 
+		if self.hold_mouse_update != 0:
+			self.hold_mouse_update -= 1
+			mpos = [0.5, 0.5]
+			print(1)
+			
 		bge.render.setMousePosition(self.window_middle[0], self.window_middle[1])
-		#bge.render.setMousePosition(int(w/2), int(h/2))
+			
+		print(mpos)
 
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))

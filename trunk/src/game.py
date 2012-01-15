@@ -15,6 +15,9 @@ import world
 from paths import safepath
 import sudo
 
+def __call__():
+	print(1)
+
 def main():
 	if Game.singleton is None:
 		Game()
@@ -98,14 +101,8 @@ class Game:
 
 		self.default_cell = 'terrain.cell'
 		
-		# load items
-		file = open('./data/items.data', 'rb')
-		items = pickle.load(file)
-		file.close()
-		
-		for item_ in items:
-			item.Item(id=item_[0], name=item_[1], type=item_[2], description=item_[3], icon=item_[4], cost=item_[5], size=item_[6], stack=item_[7])
-			
+		item.load_items()
+
 		self.load_prefs()
 		
 		self.world = world.World()

@@ -35,7 +35,6 @@ class AI_Manager:
 
 	###
 	def main(self):
-
 		"""
 
 		# Spawn Points

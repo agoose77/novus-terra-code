@@ -152,12 +152,11 @@ class Pause(ui.Screen):
 
 		self.screens = {'gamescreen':GameScreen(self, 'gamescreen'),
 						'options':OptionsScreen(self, 'options'),
-						'invscreen':ui.InventoryWindow(self,
-						'invscreen', game.Game.singleton.world.player.inventory, size=[340, 330], pos=[0,50], options=bgui.BGUI_CENTERED)}
+						'invscreen':ui.InventoryWindow2(self,
+						'invscreen', game.Game.singleton.world.player.inventory, pos=[0,50], options=bgui.BGUI_CENTERED|bgui.BGUI_THEMED)}
 
 		for screen in self.screens.values():
 			screen.visible = 0
-
 		self.button_logic(self.button1)
 	
 	def show(self, args=[]):
