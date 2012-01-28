@@ -44,7 +44,7 @@ class Player(entities.EntityBase):
 		self.reloading = False
 		self.reload_start_time = 0.0
 
-		self.walk_speed = 20.0
+		self.walk_speed = 40.0
 		self.run_speed = 9.0
 		self.walk_temp = 0.0
 		self.jump_speed = 10.0
