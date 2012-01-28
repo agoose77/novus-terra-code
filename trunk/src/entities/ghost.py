@@ -23,7 +23,7 @@ class Ghost(entities.EntityBase):
 				if random.randint(0,5) == 4:
 					name = random.choice(scene.objects)
 				else:	
-					name = scene.objects['player']
+					name = sudo.world.KX_player
 				if self.move_to(name, 3):
 					pass
 				else:

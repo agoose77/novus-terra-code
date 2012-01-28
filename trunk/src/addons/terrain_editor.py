@@ -300,7 +300,7 @@ def display_section_selected():
 		terrain.focus[2] = terrain.focus[0]+offset[2]
 		terrain.focus[3] = terrain.focus[1]-offset[3]
 		terrain.true_focus = [ offset[4],offset[5] ]
-		print( offset, "!!!!!!!" )
+
 		
 		width = len(data[0])
 		height = len(data)

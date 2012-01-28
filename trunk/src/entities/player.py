@@ -44,7 +44,7 @@ class Player(entities.EntityBase):
 		self.reloading = False
 		self.reload_start_time = 0.0
 
-		self.walk_speed = 15.0
+		self.walk_speed = 20.0
 		self.run_speed = 9.0
 		self.walk_temp = 0.0
 		self.jump_speed = 10.0
@@ -108,6 +108,8 @@ class Player(entities.EntityBase):
 		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
 		self.bullet_spread = [child for child in self.childrenRecursive if 'spread' in child][0]
 		self.weapon_pos = [child for child in self.childrenRecursive if 'weapon_pos' in child][0]
+
+
 
 
 		# FSM States
@@ -383,11 +385,9 @@ class Player(entities.EntityBase):
 		if self.hold_mouse_update != 0:
 			self.hold_mouse_update -= 1
 			mpos = [0.5, 0.5]
-			print(1)
 			
 		bge.render.setMousePosition(self.window_middle[0], self.window_middle[1])
 			
-		print(mpos)
 
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))

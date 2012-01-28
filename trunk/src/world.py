@@ -107,7 +107,7 @@ class World:
 			lighting['Time'] = self.world_time
 			sun['Time'] = self.world_time
 
-			atmos = bge.logic.getSceneList()[0].objects[self.atmosphere_ctrl]
+			atmos = bge.logic.getCurrentScene().objects[self.atmosphere_ctrl]
 			atmos['Time'] = self.world_time
 
 	def main(self):
