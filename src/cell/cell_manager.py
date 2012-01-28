@@ -166,10 +166,10 @@ class CellManager:
 	def load_terrain(self, filename):
 		""" Load a terrain file """
 		print("cell_manager.load_terrain()")
-		bge.logic.addScene("background", 0)
+		#bge.logic.addScene("background", 0)
 		scene = bge.logic.getCurrentScene()
 		new = scene.addObject('outdoor_sun_shadow', "CELL_MANAGER_HOOK")
-
+		#atmosphere = scene.addObject('Atmosphere2', "CELL_MANAGER_HOOK")
 		terrain.tr_singleton = terrain.Map_Manager() #should do this in cell manager init
 		if len(filename.split('\\')) > 1:
 			filename = filename.split('\\')[-1]  #redundant, but making sure it's just the filename not the path
@@ -341,8 +341,15 @@ class CellManager:
 			for i, props in enumerate(self.prop_kdtrees):
 				to_remove = self.props_in_game[i][:]
 				found_props = []
-				props.getVertsInRange(position, pow(2, i) * 6 + i*60 + 1, found_props)
-				
+
+				try:
+					v = sudo.game.graphics_options['Prop distance']
+					g = sudo.game.graphics_options['Grass distance']
+				except:
+					v = 5
+					g = 2
+				props.getVertsInRange(position, pow(2, i) * (v*2) + i*60 + 3 + g*10, found_props)
+				self.found_props = found_props
 				for prop in found_props:
 					if prop in to_remove:
 						# keep prop in scene

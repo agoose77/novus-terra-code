@@ -32,7 +32,6 @@ class Chunk_Que:
 	def __init__(self):
 		self.available = []
 		for entry in scene.objectsInactive:
-			print( 'chunk que init:::')
 			if "Chunk" in entry.name:
 				self.available.append( entry.name )
 
@@ -174,7 +173,7 @@ class Node(object):
 
 	def add_chunk(self):
 		chunkname = terrain.cq_singleton.get_chunk()
-		print ('(terrain chunk added)') 
+		#print ('(terrain chunk added)') 
 		self.cube = self.spawnObject(chunkname, [self.pos[0]*self.scale,self.pos[1]*self.scale,0] )
 		self.cube.localScale = [self.size*self.scale, self.size*self.scale, 1] #?
 		#add to que to wait for vertex adjustment
@@ -188,9 +187,10 @@ class Node(object):
 				pass
 		if self.depth == self.max_depth:
 			self.cube.reinstancePhysicsMesh()
-			self.cube.color = [1,0,0,1]
+			#self.cube.color = [1,0,0,1]
 		else:
-			self.cube.color = [1,1,1,1]
+			#self.cube.color = [1,1,1,1]
+			pass
 
 
 	def alter_height(self):
@@ -281,7 +281,11 @@ class Node(object):
 				c = x1 + (y1+(i*sample))*map.width + (j*sample) 
 				
 				try:
-					self.v_array[terrain.tr_singleton.translate_vertex_order(t)] = ( map.buffer[ c ]* self.scale *.01 )
+					# hack for southern band 
+					if c < 4194304:
+						self.v_array[terrain.tr_singleton.translate_vertex_order(t)] = ( map.buffer[ c ]* self.scale *.01 )
+					else:
+						self.v_array[terrain.tr_singleton.translate_vertex_order(t)] = -600
 				except:
 					self.v_array.append( -500 )
 				t += 1

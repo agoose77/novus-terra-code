@@ -44,7 +44,8 @@ class Game:
 		'Container' : entities.Container,
 		'NPC' : entities.NPC,
 		'Ghost' : entities.Ghost,
-		'AIBase' : entities.AIBase,
+		'Morgoar' : entities.Morgoar,
+		'AIBase' : entities.AIBase
 	}
 
 	singleton = None
@@ -58,6 +59,8 @@ class Game:
 
 		self.graphics_options = {
 			'Fade in props':True,
+			'Prop distance':10,
+			'Grass distance':10,
 			'HDR':False,
 			'Bloom':False,
 			'DOF':False,
@@ -95,7 +98,9 @@ class Game:
 			Game.MOUSE_SENSITIVITY: 5.0,
 		}
 
-		self.mandatory_blends = ['./data/models/weapons/P90.blend',
+		self.mandatory_blends = [
+								'./data/models/weapons/P90.blend',
+								
 								'./data/models/entities/Mouselook4.blend',
 								'./data/models/entities/player_file.blend']
 

@@ -48,8 +48,6 @@ class Nbox(bgui.Widget):
 	def __init__(self, parent, name, aspect=None, size=[1, 1], pos=[0, 0],
 				sub_theme='', options=bgui.BGUI_THEMED):	
 		bgui.Widget.__init__(self, parent, name, aspect, size, pos, sub_theme, options)
-		
-		print( "NBOX: width = ", self.size)
 		self.part = bgui.Image(self, 'part', './data/textures/ui/ui_middle.png', pos=[32, 0], size=[self.size[0]-32, self.size[1]],
 			options = bgui.BGUI_CACHE, interpolate='NEAREST' )
 		self.left = bgui.Image(self, 'left', './data/textures/ui/ui_left.png', pos=[0, 0], size=[32, self.size[1]],
@@ -101,7 +99,7 @@ class Nbutton(bgui.Widget):
 		self.corners = [self.corner1, self.corner2, self.corner3, self.corner4]
 		
 		self.text1 = bgui.Label(self, 'text1', text=text, pt_size=39, color=[0,0,0,1], font='./data/fonts/olney_light.otf', options=bgui.BGUI_CENTERED)
-		print( self.text1.position)
+
 		off = [ self.text1.position[0]+shadow[0]-self.position[0], self.text1.position[1]+shadow[1] -self.position[1] ]
 		self.text2 = bgui.Label(self, 'text2', text=text, pos=off , 
 											pt_size=39, color=[1,1,1,1], font='./data/fonts/olney_light.otf', options=bgui.BGUI_NONE)
@@ -236,7 +234,6 @@ class Fut_Button(bgui.Widget):
 		
 		
 		self.text1 = bgui.Label(self, 'text1', text=text, pt_size=18, color=[0,0,0,1], pos=[7, self.size[1]-23], font='./data/fonts/olney_light.otf', options=bgui.BGUI_NONE)
-		print( self.text1.position)
 		off = [ self.text1.position[0]+shadow[0]-self.position[0], self.text1.position[1]+shadow[1] -self.position[1] ]
 		self.text2 = bgui.Label(self, 'text2', text=text, pos=off , 
 											pt_size=18, color=[1,1,1,1], font='./data/fonts/olney_light.otf', options=bgui.BGUI_NONE)

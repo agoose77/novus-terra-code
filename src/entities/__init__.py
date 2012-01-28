@@ -6,3 +6,4 @@ from .player import *
 from .npc import *
 from .ghost import *
 from .ai_base import *
+from .morgoar import *
