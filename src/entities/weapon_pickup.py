@@ -13,7 +13,8 @@ class WeaponPickup(entities.EntityBase):
 
 	def __init__(self, object, info, name, packet=None):
 		print ("WeaponPickup.__init__()")
-		entities.EntityBase.__init__(self, packet)
+		if object != None:
+			entities.EntityBase.__init__(self, packet)
 
 		self.iteract_label = 'pickup'
 		self.interact_info = info
