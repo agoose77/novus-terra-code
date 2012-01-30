@@ -44,8 +44,8 @@ class Player(entities.EntityBase):
 		self.reloading = False
 		self.reload_start_time = 0.0
 
-		self.walk_speed = 40.0
-		self.run_speed = 9.0
+		self.walk_speed = 15.0
+		self.run_speed = 45.0
 		self.walk_temp = 0.0
 		self.jump_speed = 10.0
 
@@ -104,7 +104,7 @@ class Player(entities.EntityBase):
 		self.current_vehicle = None
 		self.in_vehicle = False
 
-		self.camera = [child for child in self.children if 'camera_1' in child][0]
+		self.camera = [child for child in self.children if 'camera_temp' in child][0]
 		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
 		self.bullet_spread = [child for child in self.childrenRecursive if 'spread' in child][0]
 		self.weapon_pos = [child for child in self.childrenRecursive if 'weapon_pos' in child][0]

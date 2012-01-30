@@ -410,7 +410,7 @@ class AIBase(entities.EntityBase):
 
 	### NO COVER ###
 	def handle_no_cover(self, FSM):
-		print("Out of Cover")
+		#print("Out of Cover")
 		ran = random.randrange(1,10)
 
 

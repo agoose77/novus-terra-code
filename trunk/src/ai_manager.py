@@ -9,8 +9,8 @@ import bge
 import cell
 import game
 import ui
-from ai_base import AIBase
-from vehicle_base import VehicleBase
+#from ai_base import AIBase
+#from vehicle_base import VehicleBase
 
 from queue import Queue
 from mathutils import Vector, Matrix
@@ -83,5 +83,5 @@ class AI_Manager:
 
 			object1 = self.nodes.get()
 			#AIBase.main(object1)
-			VehicleBase.main(object1)
+			#VehicleBase.main(object1)
 			self.nodes.put(object1)

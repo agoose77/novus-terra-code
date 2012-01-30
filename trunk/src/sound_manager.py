@@ -41,6 +41,7 @@ class SoundManager:
 		device = aud.device()
 
 		device.listener_location = bge.logic.getCurrentScene().active_camera.position
+		#device
 
 
 		for sound in self.sounds:
@@ -50,17 +51,24 @@ class SoundManager:
 					#if sound['Type'] == 'play':
 			#handle = aud.Factory(PATH_SOUNDS+sound['Name'])
 
-			#dist = sound['Own'].getDistanceTo(game.Game.singleton.world.KX_player)
+			dist = sound['Own'].getDistanceTo(game.Game.singleton.world.KX_player)
 
 			s = self.factories[sound['Name']]
 			#s = aud.Factory(PATH_SOUNDS+sound['Name'])
-			f = s.lowpass(0.5, 0.5)
+
+			e = 10000-(dist*dist)#abs(((dist/100)-1.0)*1000)
+			print(e)
+
+			#ray = sound['Own'].rayCast(sound['Own'].position, bge.logic.getCurrentScene().active_camera.position, 0, '',0,0,0)
+			#print(ray)
+
+			f = s.lowpass(e, 0.1)
 
 			h = device.play(f)
 
-			#h.location = sound['Own'].position
-			#h.distance_maximum = 100.0
-			#h.distance_reference = 5.0
+			h.location = sound['Own'].position
+			h.distance_maximum = 100.0
+			h.distance_reference = 5.0
 
 			self.handles.append([h, sound, sound['Own'].position])
 			self.sounds.remove(sound)
