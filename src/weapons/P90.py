@@ -23,7 +23,7 @@ class weapon:
 		self.clip_size = 20
 		self.clip = 100
 		self.ammo_type = 1
-		self.bullet_spread = 5
+		self.bullet_spread = 5.0
 		self.fire_speed = 0.1
 		self.reload_time = 1.0
 
