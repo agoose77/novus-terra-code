@@ -32,8 +32,8 @@ class World:
 		self.entity_manager = entity.EntityManager()
 		self.dialogue_manager = dialogue.DialogueManager()
 
-		self.world_time = 80.0
-		self.world_time_scale = 0.01
+		self.world_time = 0.0
+		self.world_time_scale = 0.1
 
 		### Light
 		self.light_sources = None
@@ -101,7 +101,7 @@ class World:
 
 		### HACK - set the Time prop for all the lighting effects
 		if cell.CellManager.singleton.terrain != False:
-			lighting = bge.logic.getCurrentScene().objects[self.outside_lighting_ctrl]
+			lighting = bge.logic.getCurrentScene().objects["outdoor_sun_shadow"]
 			sun = bge.logic.getCurrentScene().objects['Sun_Main']
 
 			lighting['Time'] = self.world_time
@@ -109,6 +109,8 @@ class World:
 
 			atmos = bge.logic.getCurrentScene().objects[self.atmosphere_ctrl]
 			atmos['Time'] = self.world_time
+
+		#print(self.world_time)
 
 	def main(self):
 

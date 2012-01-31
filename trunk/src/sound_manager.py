@@ -19,8 +19,8 @@ class SoundManager:
 			if sound.endswith('.wav') or sound.endswith('.ogg'):
 				self.factories[sound] = aud.Factory.file(PATH_SOUNDS+sound).buffer()
 
-	def play_sound(self, sound_name, object, type='play', multi=False):
-		info = {'Name':sound_name, 'Own':object, 'Type':type, 'Multi':multi}
+	def play_sound(self, sound_name, object, type='play', multi=False, use_3d=True, use_LP=True, occlude_LP=True):
+		info = {'Name':sound_name, 'Own':object, 'Type':type, 'Multi':multi, "3d":use_3d, "LP":use_LP, "occlude":occlude_LP}
 		self.sounds.append(info)
 		print ('--- Sound Played ---')
 
@@ -41,34 +41,35 @@ class SoundManager:
 		device = aud.device()
 
 		device.listener_location = bge.logic.getCurrentScene().active_camera.position
-		#device
+		device.listener_orientation = bge.logic.getCurrentScene().active_camera.orientation.to_quaternion()
 
 
 		for sound in self.sounds:
-			print(sound)
-			#if sound['Multi'] == False:
-				#if not sound['Name'] in self.handles:
-					#if sound['Type'] == 'play':
-			#handle = aud.Factory(PATH_SOUNDS+sound['Name'])
+			s = self.factories[sound['Name']] # Get factory
+			dist = sound['Own'].getDistanceTo(bge.logic.getCurrentScene().active_camera.position)
 
-			dist = sound['Own'].getDistanceTo(game.Game.singleton.world.KX_player)
+			# LP Filter
+			if sound['LP'] == True:					
+				e = 10000-(dist*dist) # Low Pass Filter
 
-			s = self.factories[sound['Name']]
-			#s = aud.Factory(PATH_SOUNDS+sound['Name'])
+				### Lowpass for sounds blocked by object
+				if sound['occlude'] == True:
+					#ray = sound['Own'].rayCast(sound['Own'].position, bge.logic.getCurrentScene().active_camera.position, 0, '',0,0,0) 
+					pass
 
-			e = 10000-(dist*dist)#abs(((dist/100)-1.0)*1000)
-			print(e)
+				f = s.lowpass(e, 0.5)
+				h = device.play(f)
+			
+			# No LP
+			else:
+				h = device.play(s)
 
-			#ray = sound['Own'].rayCast(sound['Own'].position, bge.logic.getCurrentScene().active_camera.position, 0, '',0,0,0)
-			#print(ray)
 
-			f = s.lowpass(e, 0.1)
-
-			h = device.play(f)
-
-			h.location = sound['Own'].position
-			h.distance_maximum = 100.0
-			h.distance_reference = 5.0
+			###
+			if sound['3d'] == True:				
+				h.location = sound['Own'].position
+				h.distance_maximum = 100.0
+				h.distance_reference = 5.0
 
 			self.handles.append([h, sound, sound['Own'].position])
 			self.sounds.remove(sound)
