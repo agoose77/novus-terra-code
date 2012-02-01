@@ -37,17 +37,6 @@ class Game:
 	SHOOT_WEAPON_KEY = 9
 	MOUSE_SENSITIVITY = 6
 
-	entity_map = { # Maps class names to class definitions
-		'Door': entities.Door,
-		'EntityBase' : entities.EntityBase,
-		'WeaponPickup' : entities.WeaponPickup,
-		'Container' : entities.Container,
-		'NPC' : entities.NPC,
-		'Ghost' : entities.Ghost,
-		'Morgoar' : entities.Morgoar,
-		'AIBase' : entities.AIBase
-	}
-
 	singleton = None
 
 	def __init__(self):

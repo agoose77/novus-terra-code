@@ -5,6 +5,7 @@ import time
 import tweener
 
 import cell
+import entities
 from item import Item
 from weapon import Weapon
 import math
@@ -243,7 +244,7 @@ class CellManager:
 		else:
 			# Cell is un visited
 			for entity in self.cell.entities:
-				new_entity = Game.entity_map[entity.class_] (entity)
+				new_entity = getattr(entities, entity.class_)(entity)
 				self.entities_in_game.append( new_entity )
 			Game.singleton.savefile.entities[ self.cell.name ] = self.entities_in_game
 		
