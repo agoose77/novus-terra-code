@@ -109,9 +109,6 @@ class Player(entities.EntityBase):
 		self.bullet_spread = [child for child in self.childrenRecursive if 'spread' in child][0]
 		self.weapon_pos = [child for child in self.childrenRecursive if 'weapon_pos' in child][0]
 
-
-
-
 		# FSM States
 		self.movement_state_machine = FiniteStateMachine(self)
 		self.movement_state_machine.add_state('walk', self.handle_walk_state)

@@ -424,7 +424,7 @@ class AIBase(entities.EntityBase):
 			dist = self.getDistanceTo(self.target.position)
 
 			# Sighted
-			if self.is_in_sight(self.target._data.name) == True:
+			if self.is_in_sight(self.target.name) == True:
 				self.target_last_pos = self.target._data.position.copy()
 				self.target_in_sight = True
 
@@ -455,7 +455,7 @@ class AIBase(entities.EntityBase):
 
 				# Close enough
 				else:
-					if self.is_in_sight(self.target._data.name) == True:
+					if self.is_in_sight(self.target.name) == True:
 						self.attack()
 						self['Steer'] = 0
 						#self.sighted = 1

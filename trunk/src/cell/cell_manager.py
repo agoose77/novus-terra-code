@@ -5,7 +5,6 @@ import time
 import tweener
 
 import cell
-import entities
 from item import Item
 from weapon import Weapon
 import math
@@ -17,6 +16,7 @@ try:
 	import bge
 	import mathutils
 	import ui
+	import entities
 	from game import Game
 	from paths import *
 	import savefile # TODO - won't need this import when saving/loading is properly implimented

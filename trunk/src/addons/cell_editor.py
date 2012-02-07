@@ -83,6 +83,7 @@ def walk_dir(path):
 				assets.extend(walk_dir(path + "/" + file))
 		elif file.endswith('.blend'):
 			assets.append(path + "/" + file)
+			print(file)
 	
 	return assets
 	

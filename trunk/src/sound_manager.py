@@ -6,6 +6,7 @@ import bge
 import game
 
 from paths import PATH_SOUNDS, PATH_MUSIC
+import sudo
 
 class SoundManager:
 
@@ -19,8 +20,8 @@ class SoundManager:
 			if sound.endswith('.wav') or sound.endswith('.ogg'):
 				self.factories[sound] = aud.Factory.file(PATH_SOUNDS+sound).buffer()
 
-	def play_sound(self, sound_name, object, type='play', multi=False, use_3d=True, use_LP=True, occlude_LP=True):
-		info = {'Name':sound_name, 'Own':object, 'Type':type, 'Multi':multi, "3d":use_3d, "LP":use_LP, "occlude":occlude_LP}
+	def play_sound(self, sound_name, object, type='play', multi=False, use_3d=True, use_LP=True, occlude_LP=True, alert=True):
+		info = {'Name':sound_name, 'Own':object, 'Type':type, 'Multi':multi, "3d":use_3d, "LP":use_LP, "occlude":occlude_LP, "alert":alert}
 		self.sounds.append(info)
 		print ('--- Sound Played ---')
 
@@ -71,8 +72,19 @@ class SoundManager:
 				h.distance_maximum = 100.0
 				h.distance_reference = 5.0
 
+
+			# Alert Entities
+			if sound['alert'] == True:					
+				entities = sudo.entity_manager.get_within(sound['Own'].position, 100)
+
+				for ent in entities:
+					ent.alert_entity(sound['Own'])
+
+
+			###
 			self.handles.append([h, sound, sound['Own'].position])
 			self.sounds.remove(sound)
+
 
 		for handle in self.handles:
 			status = handle[0].status
