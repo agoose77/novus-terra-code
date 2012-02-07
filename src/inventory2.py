@@ -44,6 +44,8 @@ class Inventory:
 		self.weapon_slot_1 = temp.weapon()
 		self.current_weapon = self.weapon_slot_1
 
+		print("Replaced weapon!!!")
+
 	def add_item(self, item_id, item_amount=1, pos=None):
 		""" add an item into the grid.
 		*** Check that the grid spaces are free before you add ***
