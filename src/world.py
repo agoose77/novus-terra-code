@@ -94,7 +94,7 @@ class World:
 
 	def handle_time(self):
 		# Add timescale to current time
-		if self.world_time < 240:
+		if self.world_time < 256:
 			self.world_time += self.world_time_scale
 		else:
 			self.world_time = 1.0
