@@ -1,16 +1,19 @@
 from item import Item
+import sudo
+
 
 class Inventory:
-	""" Implements a grid based inventory such as in stalker or diablo. The items are stored in two differet places in the code.
-	Firstly, in the ._items attribute which is a dictionary where the values are [item_id, item_amount] and secondly in ._item_grid
-	which is a 2D array where the values are the keys to the ._items dictionary.
+	""" Implements a grid based inventory such as in stalker or diablo. The items are stored in
+	two differet places in the code. Firstly, in the ._items attribute which is a dictionary
+	where the values are [item_id, item_amount] and secondly in ._item_grid which is a 2D
+	array where the values are the keys to the ._items dictionary.
 	"""
 
 	def __init__(self):
 		self.id = ''
-		self._item_id = 0 # id count for self.items, increased everytime a new item is added
+		self._item_id = 0  # id count for self.items, increased everytime a new item is added
 		self.name = ''
-		self.size = [6, 8]
+		self.size = [6, 8]  # Number of grid spaces TODO - make this variable
 
 		# The values in this dict are the items in a [item_id, item_amoumt]
 		# format. The keys are unique IDs assosiated to the grid
@@ -22,9 +25,10 @@ class Inventory:
 			self._item_grid.append([None] * self.size[1])
 
 		# Weapon
-		self.weapon_slot_1 = None
-		self.weapon_slot_2 = None
-		self.current_weapon = None
+		self.primary_weapon = None
+		self.secondary_weapon = None
+
+		self.current_weapon = self.primary_weapon
 
 	@property
 	def items(self):
@@ -81,7 +85,6 @@ class Inventory:
 				break
 
 			return pos
-		
 
 		item = Item.items[item_id]
 
@@ -90,10 +93,10 @@ class Inventory:
 			for grid_id, (id, amount) in self._items.items():
 				if id == item_id and amount < item.stack:
 					# we can add to it
-					n = min(item.stack - amount, item_amount) # amount to add
+					n = min(item.stack - amount, item_amount)  # amount to add
 					self._items[grid_id][1] += n
 					item_amount -= n
-				
+
 			# create new stacks
 			while item_amount != 0:
 				pos = get_pos()
@@ -112,7 +115,6 @@ class Inventory:
 						self._item_grid[x][y] = self._item_id
 
 				self._item_id += 1
-
 
 		else:
 			# add the item into the item list
@@ -134,7 +136,7 @@ class Inventory:
 					return item_amount
 
 				# add the item into the item list
-				self._items[self._item_id] = [item_id, min(item.stack, item_amoutn)]
+				self._items[self._item_id] = [item_id, min(item.stack, item_amount)]
 				item_amount -= min(item.stack, item_amount)
 
 				# add the item to the item grid
@@ -143,7 +145,7 @@ class Inventory:
 						self._item_grid[x][y] = self._item_id
 
 				self._item_id += 1
-		
+
 		# all items were added successfully
 		return True
 
@@ -157,11 +159,11 @@ class Inventory:
 
 		if item_amount != 0:
 			return self.add_item(item_id, item_amount)
-		
+
 		return True
 
 	def remove_grid_id(self, grid_id):
-		""" Remove and item from the grid based on its grid_id """
+		""" Remove an item from the grid based on its grid_id """
 		for x in range(self.size[0]):
 			for y in range(self.size[1]):
 				if self._item_grid[x][y] == grid_id:
@@ -169,32 +171,40 @@ class Inventory:
 
 		self._items.pop(grid_id)
 
-	def check_pos(self, pos, size=[1,1]):
+		# Handle the instances when the item being removed is currently equipped
+		if self.primary_weapon is not None and self.primary_weapon.grid_id == grid_id:
+			self.primary_weapon.unequip(sudo.player)
+			self.primary_weapon = None
+		elif self.secondary_weapon is not None and self.secondary_weapon.grid_id == grid_id:
+			self.secondary_weapon.unequip(sudo.player)
+			self.secondary_weapon = None
+
+
+	def check_pos(self, pos, size=[1, 1]):
 		""" Check a position to see if another item is in it, checks bounds """
 		# Check if out of index bounds
 		if pos[0] + size[0] > self.size[0] or pos[1] + size[1] > self.size[1]:
 			return False
 
-		for x in range(pos[0], pos[0]+size[0]):
-			for y in range(pos[1], pos[1]+size[1]):
+		for x in range(pos[0], pos[0] + size[0]):
+			for y in range(pos[1], pos[1] + size[1]):
 				if self._item_grid[x][y] is not None:
 					# an item is in this position, return the item id
 					return self._items[self._item_grid[x][y]][0]
 
 		return True
 
-	def clear_pos(self, pos, size=[1,1]):
+	def clear_pos(self, pos, size=[1, 1]):
 		""" Clear a position in the item grid, won't check bounds """
-		for x in range(pos[0], pos[0]+size[0]):
-			for y in range(pos[1], pos[1]+size[1]):
+		for x in range(pos[0], pos[0] + size[0]):
+			for y in range(pos[1], pos[1] + size[1]):
 				self._item_grid[x][y] = None
 
-	def set_pos(self, grid_id, pos, size=[1,1]):
+	def set_pos(self, grid_id, pos, size=[1, 1]):
 		""" Set a position in the item grid to an ID, won't check bounds """
-		for x in range(pos[0], pos[0]+size[0]):
-			for y in range(pos[1], pos[1]+size[1]):
+		for x in range(pos[0], pos[0] + size[0]):
+			for y in range(pos[1], pos[1] + size[1]):
 				self._item_grid[x][y] = grid_id
-
 
 	def get_pos(self, grid_id):
 		""" Get the bottom left corner of the item associated to the grid id """
@@ -207,4 +217,15 @@ class Inventory:
 		return None, None
 
 	def get_id(self, pos):
+		""" Given a point on the item grid, return the grid id """
 		return self._item_grid[pos[0]][pos[1]]
+
+	def get_amount(self, item_id):
+		""" Return the number of items in the inventory """
+		amount = 0
+
+		for item in self._items:
+			if item[0] == item_id:
+				amount += item[1]
+
+		return amount

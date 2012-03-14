@@ -14,6 +14,7 @@ ui.singleton.showInventory()
 from .inventory_window2 import *
 from .nwidgets import *
 from .scrollbar import *
+from .context_menu import *
 
 # Screens
 from .screen import *

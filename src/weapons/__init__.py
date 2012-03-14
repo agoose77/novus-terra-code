@@ -1,1 +1,3 @@
-from .P90 import *
+from .weapon_base import *
+from .gun import *
+from .p90 import *

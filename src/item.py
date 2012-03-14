@@ -1,17 +1,19 @@
 import pickle
 
+
 class Item:
 
 	CONSUMABLE = 1
 	QUEST = 2
 	CLOTHING = 4
+	WEAPON = 8
 
 	items = {}
 
-	def __init__(self, id, type, name, description='', size=1, cost=0, stack=10, effects={}, icon='cube.png'):
+	def __init__(self, id, name, type, description='', icon='cube.png',
+		cost=0, size=[1, 1], stack=10, properties={}):
 		self.id = id
 		self.type = type
-		self.on_interact= 0
 
 		self.name = name
 		self.description = description
@@ -20,16 +22,18 @@ class Item:
 		self.cost = cost
 		self.stack = stack
 
-		self.effects=effects
+		self.properties = properties
+
 		Item.items[id] = self
 
 	def activate_item(self):
 		pass
 
+
 def load_items():
 	file = open('./data/items.data', 'rb')
 	items = pickle.load(file)
 	file.close()
-	
+
 	for item_ in items:
-		Item(id=item_[0], name=item_[1], type=item_[2], description=item_[3], icon=item_[4], cost=item_[5], size=item_[6], stack=item_[7])
+		Item(*item_)
