@@ -1,27 +1,16 @@
+import math
 import sys
 sys.path.append('./src/')
 sys.path.append('./src/weapons/')
 sys.path.append('./src/entities/')
 
-
-import math
-import random
-import aud
 import bge
-from mathutils import Vector, Matrix
-
-from sound_manager import SoundManager
-from inventory2 import Inventory
-from dialogue_system import DialogueSystem
-from finite_state_machine import FiniteStateMachine
-from paths import PATH_SOUNDS, PATH_MUSIC
+import mathutils
 
 import entities
-from item import Item
-from weapon import Weapon
-
 import game
-import ui
+from inventory2 import Inventory
+from finite_state_machine import FiniteStateMachine
 
 
 ###
@@ -49,16 +38,18 @@ class Player(entities.EntityBase):
 		self.walk_temp = 0.0
 		self.jump_speed = 10.0
 
-		self.hold_mouse_update = 0 # stops the mouse look uddating for a frame
+		# Stops mouse events from triggering for a frame
+		# Used for when a UI screen is exited
+		self.hold_mouse_update = False
 
 		self.init_1 = False
 		self.animations = {
-			'walk':0,
-			'run':0,
-			'shoot':0,
-			'reload':0,
-			'idle':1,
-			'cround':0
+			'walk': 0,
+			'run': 0,
+			'shoot': 0,
+			'reload': 0,
+			'idle': 1,
+			'cround': 0
 			}
 
 		self.bullets_auto = 10
@@ -67,17 +58,17 @@ class Player(entities.EntityBase):
 
 		#
 		self.impants = []
-		self.stats = {'temp':'temp'}
+		self.stats = {'temp': 'temp'}
 
 		#
-		self.current_weapon= None
-		self.current_animations= {
-			'walk':None,
-			'run':None,
-			'reload':None,
-			'attack':None,
-			'switch':None,
-			'aim':None,
+		self.current_weapon = None  # TODO - outdated reference, has this been moved to inventory?
+		self.current_animations = {
+			'walk': None,
+			'run': None,
+			'reload': None,
+			'attack': None,
+			'switch': None,
+			'aim': None,
 		}
 
 		self.talking = False
@@ -88,14 +79,16 @@ class Player(entities.EntityBase):
 		# Inventory
 		self.inventory = Inventory()
 
-		#adding some items for testing:
-		self.inventory.add_item('cube', item_amount=9 )
+		# adding some items for testing: # TODO - remove
+		self.inventory.add_item('cube', item_amount=9)
 		self.inventory.add_item('wrench', item_amount=9)
+		self.inventory.add_item('p90')
 
-		#calculating this once for mouse move
+		# calculating this once for mouse move
 		w = bge.render.getWindowWidth()
 		h = bge.render.getWindowHeight()
-		self.window_middle = [ int((w - int(w)%2)/2), int((h - int(h)%2)/2) ]
+		self.window_middle = [int((w - int(w) % 2) / 2),
+							int((h - int(h) % 2) / 2)]
 
 	def _wrap(self, object):
 		entities.EntityBase._wrap(self, object)
@@ -120,11 +113,6 @@ class Player(entities.EntityBase):
 		self.movement_state_machine.add_transition('fall', 'walk', self.is_grounded)
 		self.movement_state_machine.add_transition('walk', 'vehicle', self.is_in_vehicle)
 
-		game.Game.singleton.world.entity_list.append(self)
-
-		# Dialogue
-		#self.dialogue = DialogueSystem([cont.owner.get('ds_width', bge.render.getWindowWidth()-100),cont.owner.get('ds_height', 250)], theme)
-
 		# HACKS
 		self.temp_pos = 1
 		self.set_loc = [child for child in self.childrenRecursive if 'set_loc' in child][0]
@@ -135,13 +123,11 @@ class Player(entities.EntityBase):
 		#temp_weap = temp_weap.WeaponPickup(None, 'INFO:NONE', "P90")
 		#temp_weap.on_interact(self)
 
-		self.inventory.replace_weapon("P90")
-		self.inventory.weapon_slot_1.equip(self)
-
+		#self.inventory.replace_weapon("P90")
+		#self.inventory.weapon_slot_1.equip(self)
 
 	def _unwrap(self):
 		entities.EntityBase._unwrap(self)
-
 
 	def damage(self, amount, object=None):
 		self.health += amount
@@ -150,14 +136,13 @@ class Player(entities.EntityBase):
 	def is_in_vehicle(self, FSM):
 		return bool(self.in_vehicle)
 
-
 	def handle_walk_state(self, FSM):
 		keyboard = bge.logic.keyboard.events
 		vel = self.getLinearVelocity()
-		move = [0,0,0]
+		move = [0, 0, 0]
 
 		### Keys
-		if keyboard[bge.events.LEFTSHIFTKEY]:# and self.fatigue < 10:
+		if keyboard[bge.events.LEFTSHIFTKEY]:  # and self.fatigue < 10:
 			self.fatigue += 0.2
 			speed = self.run_speed
 		else:
@@ -176,7 +161,7 @@ class Player(entities.EntityBase):
 
 		### Jump
 		if keyboard[bge.events.SPACEKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
-			pos1 = [self.position[0],self.position[1],self.position[2]-10]
+			pos1 = [self.position[0], self.position[1], self.position[2] - 10]
 			ray = self.rayCast(pos1, self.position, 2, '', 0, 0, 0)
 
 			if ray[0] != None:
@@ -184,8 +169,8 @@ class Player(entities.EntityBase):
 				self.walk_temp = 19
 
 		###
-		com = vel[2]+move[2]
-		self.localLinearVelocity = [move[1],move[0], com]
+		com = vel[2] + move[2]
+		self.localLinearVelocity = [move[1], move[0], com]
 
 		###
 		if move[0] != 0 or move[1] != 0:
@@ -205,40 +190,40 @@ class Player(entities.EntityBase):
 			print("Play Sound")
 			#session.game.sound_manager.play_sound('walk_grass_1.ogg', self)
 
-
 	### ANIMATIONS ###
-	def play_animation(self,name):
+	def play_animation(self, name):
 		self.animations[name] = 1
 
 	def stop_animation(self, layer):
-		for n in range(0,7):
+		for n in range(0, 7):
 			if n != layer:
 				self.armature.stopAction(n)
 
 	def handle_animations(self):
+		weapon = self.inventory.primary_weapon
+
 		if self.animations['reload'] == 1:
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_reload", 1, 64, layer=4, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
+			self.armature.playAction(str(weapon.name) + "_reload", 1, 64, layer=4, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
 			self.stop_animation(4)
 
 		elif self.animations['shoot'] == 1:
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_shoot", 1, 5, layer=3, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
+			self.armature.playAction(str(weapon.name) + "_shoot", 1, 5, layer=3, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
 			self.stop_animation(3)
 
 		elif self.animations['walk'] == 1:
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_walk", 1, 32, layer=2, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.playAction(str(weapon.name) + "_walk", 1, 32, layer=2, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 			self.stop_animation(2)
-		
+
 		elif self.animations['run'] == 1:
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_run", 1, 20, layer=1, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.playAction(str(weapon.name) + "_run", 1, 20, layer=1, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 			self.stop_animation(1)
 
 		else:
 			self.stop_animation(0)
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_idle", 1, 64, layer=0, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.playAction(str(weapon.name) + "_idle", 1, 64, layer=0, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 		for name in self.animations:
 			self.animations[name] = 0
-		
 
 	def handle_fall_state(self, FSM):
 		pass
@@ -249,13 +234,17 @@ class Player(entities.EntityBase):
 		bge.logic.getCurrentScene().active_camera = self.current_vehicle.camera
 
 		# HACK
-		self.camera_on = False # Turn off player camera
-		self.position = [self.current_vehicle.position[0],self.current_vehicle.position[1],self.current_vehicle.position[2]+10]
+		self.camera_on = False  # Turn off player camera
+		self.position = [self.current_vehicle.position[0],
+						self.current_vehicle.position[1],
+						self.current_vehicle.position[2] + 10]
 
 		# Get out of vehicle
 		if keyboard.events[bge.events.EKEY] == 1:
 			self.camera_on = True
-			self.position = [self.current_vehicle.position[0],self.current_vehicle.position[1],self.current_vehicle.position[2]+10] # add player above the vehicle
+			self.position = [self.current_vehicle.position[0],
+							self.current_vehicle.position[1],
+							self.current_vehicle.position[2] + 10]  # add player above the vehicle
 
 			self.current_vehicle.vehicle_on = False
 			self.in_vehicle = False
@@ -264,17 +253,18 @@ class Player(entities.EntityBase):
 			self.current_vehicle = None
 
 	def is_grounded(self, FSM):
-		pos2 = [self.position[0],self.position[1],self.position[2]-5]
+		pos2 = [self.position[0], self.position[1], self.position[2] - 5]
 		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
 		return bool(ray2[0])
 
 	def is_falling(self, FSM):
-		pos2 = [self.position[0],self.position[1],self.position[2]-5]
+		pos2 = [self.position[0], self.position[1], self.position[2] - 5]
 		ray2 = self.rayCast(pos2, self._data, 0, '', 0, 0, 0)
 		return not bool(ray2[0])
 
 	def has_entered_vehicle(self, FSM):
 		return bool(self.vehicle)
+
 	def has_exited_vehicle(self, FSM):
 		return bool(self.vehicle)
 
@@ -306,53 +296,11 @@ class Player(entities.EntityBase):
 		else:
 			print("Out Of Ammo!!")
 
-
 	def handle_weapon(self):
-		ray = self.bullet_spread.controllers[0].sensors['weapon_ray']
-		ray.range = 200#self.current_weapon.range
+		weapon = self.inventory.primary_weapon  # TODO - add secondary weapon
 
-		hit = ray.hitObject
-		mouse = bge.logic.mouse
-		keyboard = bge.logic.keyboard
-
-		# Reload
-		if keyboard.events[bge.events.RKEY] == 1:
-			self.reloading = True
-
-		# SHOOT
-		if mouse.events[bge.events.LEFTMOUSE]:
-
-			# Reload
-			if self.inventory.weapon_slot_1.clip == 0:
-				self.reloading = True
-
-			# Shoot
-			else:
-				if self.reloading == False:
-					print (game.Game.singleton.game_time - self.last_shot)
-					if (game.Game.singleton.game_time - self.last_shot) > self.inventory.weapon_slot_1.fire_speed:
-						self.last_shot = game.Game.singleton.game_time
-
-						self.inventory.weapon_slot_1.shoot(self.camera, self.bullet_spread)
-						self.play_animation('shoot')
-
-						if hit != None:
-							new = bge.logic.getCurrentScene().addObject('B_Hole', self.camera, 100)
-							new.position = ray.hitPosition
-							new.alignAxisToVect(ray.hitNormal, 2, 1.0)
-							new.setParent(hit)
-
-							if 'physics' in hit:
-								hit['physics'] = 1
-
-							if 'entity_base' in hit:
-
-								hit['entity_base'].damage(10, self)
-
-		# AIM
-		if mouse.events[bge.events.RIGHTMOUSE] == 1:
-			pass
-
+		if weapon is not None:
+			weapon.main()
 
 	def handle_interactions(self):
 		ray = self.camera.controllers[0].sensors['interact_ray']
@@ -362,29 +310,26 @@ class Player(entities.EntityBase):
 		if hit != None and 'entity_base' in hit:
 			if type(hit['entity_base']) is str:
 				temp = __import__("weapon_pickup")
-				temp = temp.WeaponPickup(hit, hit['info'], hit['name']) #ex hack
+				temp = temp.WeaponPickup(hit, hit['info'], hit['name'])  # ex hack
 				hit['entity_base'] = temp
 			else:
 				if keyboard.events[bge.events.EKEY] == 1:
 					hit['entity_base'].on_interact(self)
-
-
 
 	def fast_travel(self, location):
 		self.position = location_id.position
 		# handle world cells
 
 	def handle_camera(self):
-		bge.logic.getCurrentScene().active_camera = self.camera # set active_camera
+		bge.logic.getCurrentScene().active_camera = self.camera  # set active_camera
 
 		mpos = bge.logic.mouse.position[:]
 
 		if self.hold_mouse_update != 0:
 			self.hold_mouse_update -= 1
 			mpos = [0.5, 0.5]
-			
+
 		bge.render.setMousePosition(self.window_middle[0], self.window_middle[1])
-			
 
 		if not 'ml_rotx' in self.camera:
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))
@@ -397,12 +342,13 @@ class Player(entities.EntityBase):
 
 			if -(self.camera['ml_rotx'] + mouse_my) < cap and -(self.camera['ml_rotx'] + mouse_my) > -cap:
 				if abs(mouse_mx) > 0.0025 or abs(mouse_my) > 0.0025:
-					self.camera.parent.applyRotation([0, 0, -mouse_mx], 0) # X
-					self.camera.applyRotation([-mouse_my, 0, 0], 1) # Y
+					self.camera.parent.applyRotation([0, 0, -mouse_mx], 0)  # X
+					self.camera.applyRotation([-mouse_my, 0, 0], 1)  # Y
 					self.camera['ml_rotx'] += mouse_my
 
 	def remove_controls(self):
 		self.stored_state = self.movement_state_machine.current_state
+
 	def restore_controls(self):
 		self.movement_state_machine.current_state = self.stored_state
 
@@ -418,12 +364,9 @@ class Player(entities.EntityBase):
 				self.handle_camera()
 				self.handle_interactions()
 
-				if self.inventory.current_weapon.name != 'Hands':
+				if self.inventory.primary_weapon is not None:
 					self.handle_animations()
 					self.handle_weapon()
 
-				if self.reloading == True:
-					self.reload()
-
-	
-
+				#if self.reloading == True:
+				#	self.reload()

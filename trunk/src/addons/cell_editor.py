@@ -402,6 +402,7 @@ class CE_bake(bpy.types.Operator):
 								inv.name = inventory.label
 								for item in inventory.items:
 									print(inv)
+									print(item, item.name, item.amount)
 									inv.add_item(item.name, item.amount)
 								break
 								

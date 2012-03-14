@@ -3,30 +3,30 @@ import bge
 import bgui
 import ui
 
+
 class MessageBox(bgui.Widget):
 	""" Message box for displaying dialogue in, displays batches of text or
 	several options to choose """
-	PADDING = 30 # pixels to pad text by
-	LINE_PADDING = 5 # pixels to put in between each line of text
+	PADDING = 30  # pixels to pad text by
+	LINE_PADDING = 5  # pixels to put in between each line of text
 
 	class Divider(bgui.Frame):
-		def __init__(self, parent, name, pos=[0,0]):
+		def __init__(self, parent, name, pos=[0, 0]):
 			super().__init__(parent, name, size=[parent.size[0] - MessageBox.PADDING * 2 - 14, 3], pos=pos, options=bgui.BGUI_NONE)
 
-			self.colors = [[0.5,0.5,0.5,1]] * 4
-
+			self.colors = [[0.5, 0.5, 0.5, 1]] * 4
 
 	def __init__(self, parent):
 		ww = bge.render.getWindowWidth()
 		wh = bge.render.getWindowHeight()
 
-		w = ww*0.7 # width of the message window is 70% of horinztonal screen space
-		h = wh*0.4 # 40% of vertical space
+		w = ww * 0.7  # width of the message window is 70% of horinztonal screen space
+		h = wh * 0.4  # 40% of vertical space
 
 		PADDING = MessageBox.PADDING
 		super().__init__(parent, name='message_box', size=[w, h], pos=[0, 15],\
-			options=bgui.BGUI_THEMED|bgui.BGUI_CENTERX)
-		
+			options=bgui.BGUI_THEMED | bgui.BGUI_CENTERX)
+
 		# Make the background image
 		# Corners
 		self.bg_top_left = bgui.Image(self, 'bg_top_left', img='./data/textures/ui/dialogue_back.png',
