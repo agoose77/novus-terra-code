@@ -179,7 +179,6 @@ class Inventory:
 			self.secondary_weapon.unequip(sudo.player)
 			self.secondary_weapon = None
 
-
 	def check_pos(self, pos, size=[1, 1]):
 		""" Check a position to see if another item is in it, checks bounds """
 		# Check if out of index bounds

@@ -11,7 +11,6 @@ import dialogue
 import entities
 import game
 from ai_manager import AI_Manager
-from dialogue_system import DialogueSystem
 from paths import PATH_SOUNDS, PATH_MUSIC
 
 class World:

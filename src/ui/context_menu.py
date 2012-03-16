@@ -63,5 +63,7 @@ class ContextMenu(bgui.Widget):
 		if bge.logic.mouse.events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_ACTIVE:
 			if int(i) >= 0 and int(i) < len(self.lines):
 				self.lines[::-1][int(i)].action()
+			else:
+				self.visible = False
 
 		super()._draw()
