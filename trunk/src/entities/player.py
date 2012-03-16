@@ -33,7 +33,7 @@ class Player(entities.EntityBase):
 		self.reloading = False
 		self.reload_start_time = 0.0
 
-		self.walk_speed = 15.0
+		self.walk_speed = 5.0
 		self.run_speed = 45.0
 		self.walk_temp = 0.0
 		self.jump_speed = 10.0
@@ -78,6 +78,7 @@ class Player(entities.EntityBase):
 
 		# Inventory
 		self.inventory = Inventory()
+		self.inventory.id = 'Player'
 
 		# adding some items for testing: # TODO - remove
 		self.inventory.add_item('cube', item_amount=9)
