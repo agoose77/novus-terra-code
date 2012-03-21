@@ -48,13 +48,16 @@ class Gun(weapons.WeaponBase):
 		""" Reload the gun """
 		if self.reload_start_time == 0.0:
 			self.reload_start_time = sudo.game.game_time
-			self.play_anim('reload')
+			self.entity.play_animation('reload')
+			self.gun_arm.playAction(self.name + "_reload", 1, 24, layer=2, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 			self.reloading = True
 
 		elif self.reload_start_time + self.reload_time < sudo.game.game_time:
 			self.reload_start_time = 0.0
 			self.in_clip = self.clip_size
 			self.reloading = False
+
+		self.entity.play_animation('reload')
 
 	def fire(self, point1, point2):
 		""" Fire the weapon,
@@ -126,7 +129,7 @@ class Gun(weapons.WeaponBase):
 			self.check_fire()):
 				bullet_spread = sudo.player.bullet_spread
 				ray = bullet_spread.controllers[0].sensors['weapon_ray']
-				ray.range = 200  # self.current_weapon.range
+				ray.range = self.range
 
 				self.fire(bullet_spread.worldPosition,
 						bullet_spread.worldPosition + mathutils.Vector(ray.rayDirection))

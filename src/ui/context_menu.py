@@ -32,18 +32,18 @@ class ContextMenu(bgui.Widget):
 		wh = self.parent.size[1]
 
 		# Reposition everything based on the new max width and height values
-		self.size = [(width + PADDING * 2) / ww, (PADDING + (height + PADDING) * len(self.lines)) / wh]
+		self.size = [(width + PADDING * 2) / ww, (0 + (height + PADDING) * len(self.lines)) / wh]
 		self.position[1] -= self.size[1]
 
 		self.frame = bgui.Frame(self, 'frame', size=[1, 1], pos=[0, 0], sub_theme='context_menu')
 
+		self.cursor = bgui.Frame(self, 'cursor', size=[self.size[0] - 4, self.size[1] / len(self.lines) - 4],
+			pos=[2, 0], sub_theme='context_menu_cursor', options=bgui.BGUI_THEMED)
+
 		for i, line in enumerate(self.lines[::-1]):
 			self._remove_widget(line)
 			self._attach_widget(line)
-			line.position = [PADDING / self.size[0], (PADDING + i * (height + PADDING)) / self.size[1]]
-
-		self.cursor = bgui.Frame(self, 'cursor', size=[self.size[0], self.size[1] / len(self.lines)],
-			pos=[0, 0], options=bgui.BGUI_THEMED)
+			line.position = [PADDING / self.size[0], (PADDING / 2 + i * (height + PADDING)) / self.size[1]]
 
 	def _draw(self):
 		# Grab the mouse coordinates
@@ -55,8 +55,16 @@ class ContextMenu(bgui.Widget):
 		i = (pos[1] - self.position[1]) / (self.size[1] / len(self.lines))
 		if i >= 0 and i < len(self.lines):
 			self.cursor.visible = True
-			self.cursor.position = [0, self.lines[::-1][int(i)].position[1] - self.position[1] - 5]
+			self.cursor.position = [2, self.lines[::-1][int(i)].position[1] - self.position[1] - 3]
+			for line in self.lines:
+				line.color = [1, 1, 1, 1]
+			line = self.lines[::-1][int(i)]
+			line.color = [0, 0, 0, 1]
+			self._remove_widget(line)
+			self._attach_widget(line)
 		else:
+			for line in self.lines:
+				line.color = [1, 1, 1, 1]
 			self.cursor.visible = False
 
 		# Call an item if its clicked

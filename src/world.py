@@ -61,17 +61,17 @@ class World:
 		self.suspended = True
 		for entity in self.cell_manager.entities_in_game:
 			entity.freeze()
+		self.player.freeze()
 
 	def resume(self):
-		self.player.hold_mouse_update = 10 # don't update mouse look for 1 frame, stops jump
+		self.player.hold_mouse_update = 10  # don't update mouse look for 1 frame, stops jump
 		self.suspended = False
 		for entity in self.cell_manager.entities_in_game:
 			entity.unfreeze()
+		self.player.unfreeze()
 
 	def spawn_player(self):
-		""" 
-		Spawns the player
-		"""
+		""" Spawns the player """
 
 		scene = bge.logic.getCurrentScene()
 		player = scene.addObject('player', "CELL_MANAGER_HOOK")
@@ -85,7 +85,7 @@ class World:
 			destination = self.cell_manager.cell.destinations['default']
 		else:
 			destination = False
-		
+
 		if destination:
 			self.player.worldPosition = destination.co
 			self.player.worldOrientation = mathutils.Quaternion(destination.rotation).to_matrix()
@@ -120,7 +120,7 @@ class World:
 		elif bge.logic.keyboard.events[bge.events.JKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
 			self.resume()
 		
-		if self.player._data and self.cell_manager.load_state and not self.suspended:
+		if self.player._data and self.cell_manager.load_state:
 			self.player.main()
 		self.dialogue_manager.main()
 

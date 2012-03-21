@@ -298,6 +298,10 @@ class Player(entities.EntityBase):
 			print("Out Of Ammo!!")
 
 	def handle_weapon(self):
+		if self.hold_mouse_update != 0:
+			# Don't fire the gun after exiting a screen
+			return
+
 		weapon = self.inventory.primary_weapon  # TODO - add secondary weapon
 
 		if weapon is not None:
@@ -356,18 +360,19 @@ class Player(entities.EntityBase):
 	###
 	def main(self):
 		if bge.logic.globalDict['pause'] == 0 and self._data:
-			entities.EntityBase.main(self)
 
-			self.movement_state_machine.main()
+			entities.EntityBase.main(self)
+			if not self.frozen:
+				self.movement_state_machine.main()
 			#self.handle_animations()
 
-			if self.in_vehicle == False:
-				self.handle_camera()
-				self.handle_interactions()
+				if self.in_vehicle == False:
+					self.handle_camera()
+					self.handle_interactions()
 
-				if self.inventory.primary_weapon is not None:
-					self.handle_animations()
-					self.handle_weapon()
+					if self.inventory.primary_weapon is not None:
+						self.handle_animations()
+						self.handle_weapon()
 
-				#if self.reloading == True:
-				#	self.reload()
+					#if self.reloading == True:
+					#	self.reload()

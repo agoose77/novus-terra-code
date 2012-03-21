@@ -68,9 +68,9 @@ class InventoryWindow2(bgui.Widget):
 				if self.inventory.id == 'Player':
 					if item.type == 'weapons':
 						self.context_menu = ui.ContextMenu(self, 'context_menu',
-							[('Equip as primary', self.cm_equip_primary)],
-							#('Equip as secondary', self.cm_equip_secondary),
-							#('Drop', self.cm_drop)],
+							[('Equip as primary', self.cm_equip_primary),
+							('Equip as secondary', self.cm_equip_secondary),
+							('Drop', self.cm_drop)],
 							pos=pos, sub_theme='context_menu')
 						self.context_item = self.hover_item.grid_id
 
@@ -80,11 +80,17 @@ class InventoryWindow2(bgui.Widget):
 						pos=pos, sub_theme='context_menu')
 					self.context_item = self.hover_item.grid_id
 
+				# Remove linked inventory context menu
+				#if self.linked_inventory and self.linked_inventory.context_menu:
+					#self.linked_inventory.remove_context_menu()
+
 			self.description_window.visible = False
 
 	def remove_context_menu(self):
 		""" Mark the context menu for removal, it is removed at the end of the draw function """
 		self.delete_context_menu = True
+		if self.context_menu:
+			self.context_menu.visible = False
 
 	def cm_equip_primary(self):
 		""" Context menu action - equip weapon as primary weapon """
@@ -156,6 +162,8 @@ class InventoryWindow2(bgui.Widget):
 
 				self.items.append(item)
 
+		self.remove_context_menu()
+
 	def link(self, inventory):
 		""" Link another inventory to drag to """
 		self.linked_inventory = inventory
@@ -169,7 +177,7 @@ class InventoryWindow2(bgui.Widget):
 		""" Initiate item dragging """
 		if self.context_menu:
 			# Remove context menu if it is active
-			self.remove_context_menu()
+			#self.remove_context_menu()
 			return
 
 		if self.linked_inventory and self.linked_inventory.context_menu:
