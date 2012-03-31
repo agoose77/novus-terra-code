@@ -75,9 +75,6 @@ class UIManager(bgui.System):
 				self.current.visible = 0
 		self.current = self.screens['pause']
 		self.current.visible = 1
-
-		game.Game.singleton.sound_manager.play_sound("breathofdeath.ogg", volume=0.5)
-		game.Game.singleton.sound_manager.play_song("Long Note Two.ogg", volume=2.0)
 		
 	def pause(self):
 		if bge.logic.globalDict['pause'] == 0:
