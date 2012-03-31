@@ -6,6 +6,7 @@ sys.path.append('../..')
 import bgui
 import bge
 import time
+import game
 
 class MetalBorder(bgui.Widget):
 	def __init__(self, parent, name, size=[0,0], pos=[0,0], options=bgui.BGUI_DEFAULT):
@@ -238,21 +239,30 @@ class Fut_Button(bgui.Widget):
 		self.text2 = bgui.Label(self, 'text2', text=text, pos=off , 
 											pt_size=18, color=[1,1,1,1], font='./data/fonts/olney_light.otf', options=bgui.BGUI_NONE)
 											
-		self.active = 0									
+		self.active = 0
+		self.sound_played = 0							
 
 	def _handle_mouse(self, pos, event):
 		if event == bgui.BGUI_MOUSE_NONE:
 			self.image.visible = 1
 		elif event == bgui.BGUI_MOUSE_CLICK:
 			self.button_logic(self)
+			game.Game.singleton.sound_manager.play_sound("select.wav", use_3d=False,volume=0.5)
+
 		bgui.Widget._handle_mouse(self, pos, event)
 		
 	def _draw(self):
+		if self._hover == True:
+			if self.sound_played == 0:
+				game.Game.singleton.sound_manager.play_sound("click.wav", use_3d=False,volume=0.5)
+				self.sound_played = 1
+		else:
+			self.sound_played = 0
+
 		if self.active == 1:
 			self.image.visible = 1
 			
-		bgui.Widget._draw(self)
-		
+		bgui.Widget._draw(self)		
 		self.image.visible = False
 		
 	def button_logic(self, button):

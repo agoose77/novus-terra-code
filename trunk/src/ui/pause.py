@@ -135,7 +135,7 @@ class Pause(ui.Screen):
 		self.frame.menu_back = Fut_Box(self, 'menu_back', pos=self.image_back.position, size = [193, 450], options=bgui.BGUI_NONE)
 
 
-		self.title = bgui.Label(self.image_back, 'title',text="NOVUS:TERRA", pt_size=48, font='./data/fonts/olney_light.otf',
+		self.title = bgui.Label(self.image_back, 'title',text="Survive", pt_size=48, font='./data/fonts/olney_light.otf',
 								color=[1,1,1,1], pos=[0, 550], options = bgui.BGUI_THEMED )
 
 		self.button1 = Fut_Button(self.image_back, 'game', pos=[5, 400], size=[182, 45], text="GAME", options=bgui.BGUI_NONE)

@@ -18,7 +18,7 @@ FONTPATH = './data/fonts/'
 class System(bgui.System):
 	def __init__(self):
 		# Initiate the system
-		bgui.System.__init__(self, safepath('./data/themes/default'))
+		bgui.System.__init__(self)#safepath('./data/themes/default'))
 		
 		# Use a frame to store all of our widgets
 		self.frame = bgui.Frame(self, 'window', border=0)
@@ -33,7 +33,8 @@ class System(bgui.System):
 		self.screens = { 'pause': Pause(self, 'pause', size=self.size),
 						 'start': Start(self, 'start'),
 						 'loading': Loading(self, 'loading'),
-						 'item_swap': ui.ItemSwap(self, 'item_swap')}
+						 'item_swap': ui.ItemSwap(self, 'item_swap'),
+						 'hud': ui.HUD(self, 'hud')}
 		for entry in self.screens:
 			self.screens[entry].visible = 0
 		
@@ -42,6 +43,13 @@ class System(bgui.System):
 		if self.current:
 			if self.current.name in self.children:
 				self.current.visible = 0
+
+	def show_hud(self):
+		if self.current:
+			if self.current.name in self.children:
+				self.current.visible = 0
+		self.current = self.screens['hud']
+		self.current.visible = 1
 			
 	def show_loading(self):
 		if self.current:
@@ -71,7 +79,7 @@ class System(bgui.System):
 				self.current.visible = 0
 		self.current = self.screens['pause']
 		self.current.visible = 1
-		
+				
 	def pause(self):
 		if bge.logic.globalDict['pause'] == 0:
 			bge.logic.globalDict['pause'] = 1
@@ -121,7 +129,7 @@ class System(bgui.System):
 	def update(self):
 		bge.render.showMouse(1)
 		"""A high-level method to be run every frame"""
-		
+						
 		self.handle_mouse()
 		self.handle_keyboard()
 		

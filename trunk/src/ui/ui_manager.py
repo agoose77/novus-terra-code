@@ -7,13 +7,14 @@ except:
 #import widgets from the ui module here
 from paths import *
 import ui
+import game
 
 FONTPATH = './data/fonts/'
 
 class UIManager(bgui.System):
 	def __init__(self):
 		# Initiate the system
-		bgui.System.__init__(self, safepath('./data/themes/default'))
+		bgui.System.__init__(self)#safepath('./data/themes/default'))
 
 		# Use a frame to store all of our widgets
 		self.frame = bgui.Frame(self, 'window', border=0)
@@ -68,12 +69,15 @@ class UIManager(bgui.System):
 		self.current.visible = 0
 		self.current = 0
 		
-	def show_start(self):
+	def show_start(self):	
 		if self.current:
 			if self.current.name in self.children:
 				self.current.visible = 0
 		self.current = self.screens['pause']
 		self.current.visible = 1
+
+		game.Game.singleton.sound_manager.play_sound("breathofdeath.ogg", volume=0.5)
+		game.Game.singleton.sound_manager.play_song("Long Note Two.ogg", volume=2.0)
 		
 	def pause(self):
 		if bge.logic.globalDict['pause'] == 0:
