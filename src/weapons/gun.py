@@ -3,12 +3,14 @@ import mathutils
 
 import sudo
 import weapons
+import game
 
 
 class Gun(weapons.WeaponBase):
 	""" Base class for conventional guns """
-	def __init__(self, grid_id, name, gun_name, damage=1.0, rate_of_fire=10.0,
-				range=200, clip_size=10, reload_time=2.0, burst=0, ammo_id=''):
+	def __init__(self, grid_id, name, gun_name, attack_sound, damage=1.0, 
+				rate_of_fire=10.0,range=200, clip_size=10, reload_time=2.0, 
+				burst=0, ammo_id=''):
 		super().__init__(grid_id)
 
 		self.name = name  # The name (label) of the gun
@@ -23,7 +25,7 @@ class Gun(weapons.WeaponBase):
 
 		self.fired_in_burst = 0  # number of bullets fired in current burst sofar
 		self.reload_start_time = 0.0  # the time that the reload was started
-		self.in_clip = 20  # number of bullets in the current clip
+		self.in_clip = clip_size  # number of bullets in the current clip
 		self.last_fire = 0.0  # The time when the gun was last fired
 
 		self.entity = None  # The entity which the weapon is equipped to
@@ -32,6 +34,8 @@ class Gun(weapons.WeaponBase):
 		self.gun_muzzle = None  # The bge object to create muzzle flashes at
 		self.gun_arm = None  # The bge armature attached to the gun
 
+		self.components = {} # Weapon customizations
+		self.attack_sound = attack_sound
 		self.reloading = False
 
 	def check_fire(self):
@@ -67,6 +71,11 @@ class Gun(weapons.WeaponBase):
 		self.fired_in_burst += 1
 		self.in_clip -= 1
 
+		# Flash
+		fp = bge.logic.getCurrentScene().objects['flashpoint']
+		fp.position = game.Game.singleton.world.player._data.position
+		fp['prop'] = 4.0
+
 		# Cast the ray
 		hit_ob, hit_pos, hit_norm = self.gun_muzzle.rayCast(point2, point1, self.range)
 
@@ -86,6 +95,9 @@ class Gun(weapons.WeaponBase):
 		hole.position = hit_pos
 		hole.alignAxisToVect(hit_norm, 2, 1.0)
 		hole.setParent(hit_ob)
+
+		# Play Sound
+		sudo.sound_manager.play_sound(self.attack_sound, self.gun_ob)
 
 		# Deal damanage to hit object
 		if hit_ob:
@@ -118,6 +130,9 @@ class Gun(weapons.WeaponBase):
 
 	def play_anim(self, anim):
 		""" Override this method to play the right animation """
+		pass
+
+	def update_(self):
 		pass
 
 	def main(self):
