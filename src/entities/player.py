@@ -120,12 +120,8 @@ class Player(entities.EntityBase):
 		self.lev = None
 
 		# WEAPON STARTING
-		#temp_weap = __import__("weapon_pickup")
-		#temp_weap = temp_weap.WeaponPickup(None, 'INFO:NONE', "P90")
-		#temp_weap.on_interact(self)
-
-		#self.inventory.replace_weapon("P90")
-		#self.inventory.weapon_slot_1.equip(self)
+		self.inventory.replace_weapon("F2000")
+		self.inventory.primary_weapon.equip(self)
 
 	def _unwrap(self):
 		entities.EntityBase._unwrap(self)

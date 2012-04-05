@@ -89,6 +89,7 @@ class Game:
 
 		self.mandatory_blends = [
 								'./data/models/weapons/P90.blend',
+								'./data/models/weapons/F2000.blend',
 								
 								'./data/models/entities/Mouselook4.blend',
 								'./data/models/entities/player_file.blend']

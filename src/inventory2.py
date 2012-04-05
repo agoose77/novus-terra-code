@@ -1,6 +1,6 @@
 from item import Item
 import sudo
-
+import weapons
 
 class Inventory:
 	""" Implements a grid based inventory such as in stalker or diablo. The items are stored in
@@ -43,10 +43,8 @@ class Inventory:
 			self.current_weapon = self.weapon_slot_1
 
 	def replace_weapon(self, weapon):
-		#if self.current_weapon == self.weapon_slot_1:
-		temp = __import__(weapon)
-		self.weapon_slot_1 = temp.weapon()
-		self.current_weapon = self.weapon_slot_1
+		self.primary_weapon = getattr(weapons, weapon)(None)
+		self.current_weapon = self.primary_weapon
 
 		print("Replaced weapon!!!")
 
