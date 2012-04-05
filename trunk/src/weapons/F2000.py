@@ -3,7 +3,7 @@ import weapons
 
 class F2000(weapons.Gun):
 	def __init__(self, grid_id):
-		weapons.Gun.__init__(self, grid_id, 'F2000', 'F2000_FPS', 'weapon_sound_m.ogg',
+		weapons.Gun.__init__(self, grid_id, 'F2000', 'F2000', 'weapon_sound_m.ogg',
 			damage=25.0,
 			rate_of_fire=10.0,
 			clip_size=200,
