@@ -41,6 +41,9 @@ model_dict = {}
 
 map = None  # Terrain file
 
+folder_list = []  # List of folders that get drawn in the asset manager
+asset_list = []  # list of assets, used for expanding
+
 
 def construct_blend_dict(assets):
 	""" Open a list of .blends and find out what objects are within it
@@ -94,7 +97,7 @@ def init():
 	""" Setup all the properties """
 	# Cell editor props
 	bpy.types.Scene.ce_asset_dir = bpy.props.StringProperty(name='Asset Directory', default='./data/models', description='Filepath to asset folder')
-	bpy.types.Scene.ce_assets = bpy.props.CollectionProperty(type=CE_asset_properties)
+	bpy.types.Scene.ce_assets = bpy.props.PointerProperty(type=CE_asset_folder)
 	bpy.types.Scene.ce_name = bpy.props.StringProperty(name='Cell Name', default='')
 	bpy.types.Scene.ce_type = bpy.props.StringProperty(default=CELL_NONE)
 	bpy.types.Scene.ce_mode = bpy.props.EnumProperty(
@@ -138,6 +141,18 @@ class CE_asset_properties(bpy.types.PropertyGroup):
 	label = bpy.props.StringProperty(default='')
 	filepath = bpy.props.StringProperty(default='')
 	loaded = bpy.props.BoolProperty(default=False)
+	expanded = bpy.props.BoolProperty(default=False)
+
+
+class CE_asset_folder(bpy.types.PropertyGroup):
+	""" A folder, containing a list of .blends """
+	label = bpy.props.StringProperty(default='')
+	filepath = bpy.props.StringProperty(default='')
+	
+	assets = bpy.props.CollectionProperty(type=CE_asset_properties)
+	expanded = bpy.props.BoolProperty(default=False)
+
+CE_asset_folder.folders = bpy.props.CollectionProperty(type=CE_asset_folder)
 
 
 class CE_interior(bpy.types.Operator):
@@ -202,27 +217,19 @@ class CE_load(bpy.types.Operator):
 			for prop in prop_group:
 				blend = model_dict[prop.name]
 
-				loaded = False
-				for asset in context.scene.ce_assets:
-					if asset.filepath == blend and asset.loaded:
-						loaded = True
-						break
-
+				loaded = prop.name in context.scene.objects
 				if loaded:
-					bpy.ops.object.select_name(name=prop.name)
-					bpy.ops.object.duplicate()
-					obj = bpy.context.scene.objects[-1]
+					bpy.ops.object.select_all(action='DESELECT')
+					context.scene.objects[prop.name].select = True
+					bpy.ops.object.duplicate(linked=True)
 				else:
-					for asset in context.scene.ce_assets:
-						if asset.filepath == blend:
-							asset.loaded = True
-							break
 					directory = blend + "/Object/"
 					bpy.ops.wm.link_append(directory=directory, filename=prop.name, link=False, instance_groups=False, autoselect=True)
 					bpy.ops.object.make_local()  # Appending doesn't seem to work, this makes linked objects local
-
-					obj = bpy.context.selected_objects[0]
-				bpy.ops.object.select_name(name=obj.name)  # Make the selected object the active objected
+				
+				obj = bpy.context.selected_objects[0]
+				bpy.ops.object.select_all(action='DESELECT')
+				obj.select = True  # Make the selected object the active objected
 				obj.location = prop.co
 				obj.rotation_euler = prop.rotation
 				obj.scale = prop.scale
@@ -504,6 +511,23 @@ class CE_load_model_dict(bpy.types.Operator):
 	bl_description = "Refresh the asset list based on the model dict"
 
 	def execute(self, context):
+		def construct_folder(folder):
+			for file in os.listdir(folder.filepath):
+				if os.path.isdir(folder.filepath + file) and not file.startswith('.'):
+					# Is a folder, add it to the folders list and recurse
+					new_folder = folder.folders.add()
+					new_folder.label = file
+					new_folder.filepath = folder.filepath + file + '/'
+					construct_folder(new_folder)
+
+				elif file.endswith('.blend'):
+					# Is an asset, add it to the assets list
+					asset = folder.assets.add()
+					asset.label = file
+					asset.filepath = folder.filepath + file
+					asset.loaded = False
+
+
 		global blend_dict, model_dict
 
 		file = open('./data/model_dict.data', 'rb')
@@ -518,15 +542,15 @@ class CE_load_model_dict(bpy.types.Operator):
 			blend_dict[blend].append(model)
 
 		ce_assets = context.scene.ce_assets
-		for i in range(len(ce_assets)):
-			ce_assets.remove(0)
+		ce_assets.label = 'models'
+		ce_assets.filepath = './data/models/'
+		ce_assets.expanded = True
+		for i in range(len(ce_assets.folders)):
+			ce_assets.folders.remove(0)
+		for i in range(len(ce_assets.assets)):
+			ce_assets.assets.remove(0)
 
-		for file in sorted(blend_dict.keys(), key=lambda s: s[s.rindex('/'):].lower()):
-			if file.endswith('.blend'):
-				ce_assets.add()
-				ce_assets[-1].label = file[file.rindex('/') + 1:]
-				ce_assets[-1].filepath = file
-				ce_assets[-1].loaded = False
+		construct_folder(ce_assets)
 
 		return {'FINISHED'}
 
@@ -651,6 +675,47 @@ class CE_item_del(bpy.types.Operator):
 
 		return {'FINISHED'}
 
+class CE_folder_expand(bpy.types.Operator):
+	""" Expand/contract a folder in the manage view """
+	bl_idname = "scene.ce_folder_expand"
+	bl_label = "Expand/Contract folder"
+	folder = bpy.props.IntProperty()
+
+	def execute(self, context):
+		global folder_list
+		folder_list[self.folder].expanded = not folder_list[self.folder].expanded
+
+		return {'FINISHED'}
+
+
+class CE_asset_expand(bpy.types.Operator):
+	""" Expand/contract a folder in the manage view """
+	bl_idname = "scene.ce_asset_expand"
+	bl_label = "Expand/Contract asset"
+	asset = bpy.props.IntProperty()
+
+	def execute(self, context):
+		global asset_list
+		asset_list[self.asset].expanded = not asset_list[self.asset].expanded
+
+		return {'FINISHED'}
+
+
+class CE_load_asset(bpy.types.Operator):
+	""" Expand/contract a folder in the manage view """
+	bl_idname = "scene.ce_load_asset"
+	bl_label = "Load the selected asset"
+	asset = bpy.props.StringProperty()
+
+	def invoke(self, context, event):
+		directory = self.asset.split('|')[0] + "/Object/"
+		filename = self.asset.split('|')[1]
+
+		bpy.ops.wm.link_append(directory=directory, filename=filename, link=False, instance_groups=False, autoselect=True)
+		bpy.ops.object.make_local()
+
+		return {'FINISHED'}
+
 
 class SCENE_PT_cell_editor(bpy.types.Panel):
 	bl_label = "NT - Cell Editor"
@@ -659,7 +724,57 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 	bl_context = "scene"
 
 	def draw(self, context):
+		global folder_list, asset_list, blend_dict
+		def draw_folder(folder, layout, depth):
+			global folder_list, asset_list, blend_dict
+
+			index = len(folder_list)
+			folder_list.append(folder)
+
+			row = layout.row(align=True)
+			if depth != 0:
+				split = row.split(percentage=0.05*depth)
+				col = split.column()
+				col = split.column()
+				row = col.row(align=True)
+
+			if folder.expanded:
+				row.operator("scene.ce_folder_expand", text='', icon="TRIA_DOWN", emboss=False).folder = index
+				row.label(folder.label)
+				for new_folder in folder.folders:
+					draw_folder(new_folder, layout, depth+1)
+				for asset in folder.assets:
+					row = layout.row(align=True)
+					split = row.split(percentage=0.05*(depth+1))
+					col = split.column()
+					col = split.column()
+					row = col.row(align=True)
+
+					index2 = len(asset_list)
+					asset_list.append(asset)
+
+					icon = ['TRIA_RIGHT', 'TRIA_DOWN'][asset.expanded]
+					row.operator("scene.ce_asset_expand", icon=icon, emboss=False, text='').asset = index2
+					row.label(asset.label)
+
+					if asset.expanded:
+						for model in blend_dict[asset.filepath]:
+							row = layout.row(align=True)
+							split = row.split(percentage=0.05*(depth+2))
+							col = split.column()
+							col = split.column()
+							row = col.row(align=True)
+							row.operator("scene.ce_load_asset", icon="ZOOMIN", text='', emboss=False).asset = asset.filepath+'|'+model
+							row.label(model)
+							
+			else:
+
+				row.operator("scene.ce_folder_expand", text='', icon="TRIA_RIGHT", emboss=False).folder = index
+				row.label(folder.label)
+
 		layout = self.layout
+		folder_list = []
+		asset_list = []
 		#row = layout.row(align=True)
 		#row.prop(context.scene, "ce_nt_root")
 		#row.operator('scene.ce_root_select', icon='FILESEL')
@@ -699,20 +814,22 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 					row.prop(context.scene, 'ce_asset_dir')
 					row.operator("scene.ce_index_blends", text='', icon='FILE_REFRESH')
 
-					row = box.row()
-					split = row.split(percentage=0.5)
-					colA = split.column()
-					colB = split.column()
-					for id, asset in enumerate(context.scene.ce_assets):
+					draw_folder(context.scene.ce_assets, box, 0)
 
-						if asset.loaded:
-							row = colB.row()
-							row.operator("scene.ce_free_lib", text='', icon='LINKED').asset = id
-							row.label(asset.label)
-						else:
-							row = colA.row()
-							row.label(asset.label)
-							row.operator("scene.ce_load_lib", text='', icon='UNLINKED').asset = id
+					# row = box.row()
+					# split = row.split(percentage=0.5)
+					# colA = split.column()
+					# colB = split.column()
+					# for id, asset in enumerate(context.scene.ce_assets):
+
+					# 	if asset.loaded:
+					# 		row = colB.row()
+					# 		row.operator("scene.ce_free_lib", text='', icon='LINKED').asset = id
+					# 		row.label(asset.label)
+					# 	else:
+					# 		row = colA.row()
+					# 		row.label(asset.label)
+					# 		row.operator("scene.ce_load_lib", text='', icon='UNLINKED').asset = id
 
 				elif context.scene.ce_mode == MODE_IE:
 					box = layout.box()
