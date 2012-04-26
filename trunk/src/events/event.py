@@ -1,7 +1,5 @@
-from events.actions.Action import FINISHED, FAILED
-import events.actions as actions
 import xml.etree.ElementTree as ElementTree
-
+import events.actions as actions
 
 class Event:
 	_current_event = None
@@ -13,7 +11,7 @@ class Event:
 		Event._current_event = self
 		self.action_stack = []
 
-	def register_aciton(self, action):
+	def register_action(self, action):
 		self.action_stack.append(action)
 
 	def run(self):
@@ -21,9 +19,9 @@ class Event:
 			return Event.FINISHED
 		else:
 			code = self.action_stack[-1].run()
-			if code == FINISHED:
+			if code == actions.Action.FINISHED:
 				self.action_stack.pop(-1)
-			elif code == FAILED:
+			elif code == actions.Action.FAILED:
 				print('failed')
 				return Event.FAILED
 			return Event.RUNNING
@@ -34,5 +32,5 @@ class Event:
 		xml = ElementTree.parse(filename)
 		root = xml.getroot()
 		for child in root:
-			actions.Actions.parse(child)
+			actions.Action.parse(child)
 		return event

@@ -7,89 +7,78 @@ except:
 #import widgets from the ui module here
 from paths import *
 import ui
-import game
 
-FONTPATH = './data/fonts/'
 
 class UIManager(bgui.System):
+	""" Manages a stack of Screen objects, drawing and updating them in the correct order """
+
 	def __init__(self):
 		# Initiate the system
-		bgui.System.__init__(self)#safepath('./data/themes/default'))
+		bgui.System.__init__(self, safepath('./data/themes/default'))
 
-		# Use a frame to store all of our widgets
-		self.frame = bgui.Frame(self, 'window', border=0)
-		self.frame.colors = [(0, 0, 0, 0)] * 4
-		self.focused_widget = self.frame
-		self.paused = 0
-		self.current = None
-		#self.tweener = tweener.TweenManager()
+		# A stack of screens, screens at the back are drawn first
+		self.current = []
 
 		# Create a keymap for keyboard input
 		self.keymap = {getattr(bge.events, val): getattr(bgui, val) for val in dir(bge.events) if val.endswith('KEY') or val.startswith('PAD')}
 
+		# Initialise all the screens
 		self.screens = { 'pause': ui.Pause(self),
 						 'start': ui.Start(self, 'start'),
 						 'loading': ui.Loading(self),
-						 'item_swap': ui.ItemSwap(self, 'item_swap')}
+						 'item_swap': ui.ItemSwap(self, 'item_swap'),
+						 'hud': ui.HUD(self, 'hud')}
 
-		for entry in self.screens:
-			self.screens[entry].visible = 0
-		
+		# Initially disable the visibility of each screen
+		for screen in self.screens:
+			self.screens[screen].visible = False
 	
-	def show(self, screen, blocking=False, args=[]):
+	def show(self, screen, args=[]):
+		""" Display a screen.
+
+		screen : The name of the screen.
+		args : (optional) A list of arguments to pass to the screen's show method."""
 		if not self.screens[screen].visible:
+			self.current.append(self.screens[screen])
 			self.screens[screen].show(args=args)
 
 	def hide(self, screen):
 		if self.screens[screen].visible:
+			self.current.remove(self.screens[screen])
 			self.screens[screen].hide()
 
 	def toggle(self, screen):
-		print(screen)
+		""" Toggle the visibility of a screen (doesn't pass arguments) """
 		if self.screens[screen].visible:
+			self.current.remove(self.screens[screen])
 			self.screens[screen].hide()
 		else:
-			self.screens[screen].show()
+			self.current.append(self.screens[screen])
+			self.screens[screen].show(args=[])
 
 	def hide_current(self):
-		for screen in self.screens.values():
-			if screen.visible:
-				screen.hide()
+		""" Hide the top most screen """
+		if len(self.current) != 0:
+			screen = self.current.pop(-1)
+			screen.hide()
 
 	def clear(self):
-		if self.current:
-			if self.current.name in self.children:
-				self.current.visible = 0
-		
-	def show_item_swap(self, inventory):
-		pass
-		
-	def hide_item_swap(self):
-		[scene for scene in bge.logic.getSceneList() if scene.name == 'Construct'][0].resume()
-		self.current.visible = 0
-		self.current = 0
-		
-	def show_start(self):	
-		if self.current:
-			if self.current.name in self.children:
-				self.current.visible = 0
-		self.current = self.screens['pause']
-		self.current.visible = 1
-		
-	def pause(self):
-		if bge.logic.globalDict['pause'] == 0:
-			bge.logic.globalDict['pause'] = 1
-			if self.current:
-				if self.current.name in self.children:
-					self.current.visible = 0
-			self.current = self.screens['pause']
-			self.current.visible = 1
-		else:
-			bge.logic.globalDict['pause'] = 0
-			#get rid of the pause menu
-			if self.current:
-				self.current.visible = 0
-				self.current = 0
+		""" Hide all visible screens """
+		while len(self.current) != 0:
+			screen = self.current.pop(-1)
+			screen.hide()
+
+	def _draw(self):
+		""" Override the draw function to draw the screens in proper order """
+		# Update screens from the front backwards until a blocking screen is reached.
+		for screen in self.current[::-1]:
+			screen.main()
+			if screen.blocking:
+				break
+
+		# Now draw the screens from the back to the front.
+		for screen in self.current:
+			screen._draw()
 	
 	def handle_mouse(self):
 		mouse = bge.logic.mouse
@@ -115,24 +104,19 @@ class UIManager(bgui.System):
 		keyboard = bge.logic.keyboard
 		
 		key_events = keyboard.events
-		is_shifted = key_events[bge.events.LEFTSHIFTKEY] == bge.logic.KX_INPUT_ACTIVE or \
-					key_events[bge.events.RIGHTSHIFTKEY] == bge.logic.KX_INPUT_ACTIVE
+		is_shifted = (key_events[bge.events.LEFTSHIFTKEY] == bge.logic.KX_INPUT_ACTIVE or
+					key_events[bge.events.RIGHTSHIFTKEY] == bge.logic.KX_INPUT_ACTIVE)
 					
 		for key, state in keyboard.events.items():
 			if state == bge.logic.KX_INPUT_JUST_ACTIVATED:
 				self.update_keyboard(self.keymap[key], is_shifted)
 		
 	def main(self):
-		bge.render.showMouse(1)
 		"""A high-level method to be run every frame"""
+		bge.render.showMouse(1)
 		
 		self.handle_mouse()
 		self.handle_keyboard()
-
-		# Upadte the screens
-		for screen in self.screens.values():
-			if screen.visible and isinstance(screen, ui.Screen):
-				screen.main()
 		
 		# Now setup the scene callback so we can draw
 		if self.render not in bge.logic.getCurrentScene().post_draw:

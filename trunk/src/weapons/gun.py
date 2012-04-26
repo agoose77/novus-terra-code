@@ -1,9 +1,12 @@
-import bge
+try:
+	import bge
+	import game
+except ImportError:
+	print('Unable to import bge, normal if running editor')
 import mathutils
 
 import sudo
 import weapons
-import game
 
 
 class Gun(weapons.WeaponBase):

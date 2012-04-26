@@ -111,7 +111,8 @@ class Game:
 		self.fx_object = bge.logic.getCurrentScene().objects['FX']
 		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
 
-		self.ui_manager.show_start()
+		self.ui_manager.show('hud')
+		self.ui_manager.show('pause')
 
 		# SUDO setup
 		sudo.game = self
@@ -122,6 +123,7 @@ class Game:
 		sudo.hash = sudo.entity_manager.hash
 		sudo.profiler = self.profiler
 		sudo.sound_manager = self.sound_manager
+		sudo.ui_manager = self.ui_manager
 
 
 	def save_prefs(self):

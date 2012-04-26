@@ -184,4 +184,3 @@ class Pause(ui.Screen):
 			if button.name == 'options':
 				self.current = self.screens['options']
 				self.current.visible = 1
-	

@@ -1,6 +1,6 @@
 import time
 
-import events.actions.Action as Action
+from .action import Action
 
 
 class wait(Action):
