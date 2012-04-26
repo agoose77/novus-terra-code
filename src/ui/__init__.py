@@ -18,10 +18,11 @@ from .context_menu import *
 
 # Screens
 from .screen import *
-from .loading import *
-from .start import *
-from .pause import *
+from .hud import *
 from .item_swap import *
+from .loading import *
+from .pause import *
+from .start import *
 
 # Manager
 from .ui_manager import *

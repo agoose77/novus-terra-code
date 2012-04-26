@@ -258,7 +258,7 @@ class CE_load(bpy.types.Operator):
 			bpy.ops.object.make_local()  # Make object local
 
 			obj = bpy.context.selected_objects[0]
-			bpy.ops.object.select_name(name=obj.name)  # Make object active
+			bpy.context.scene.objects.active = obj
 			obj.location = entity.co
 			obj.rotation_euler = entity.rotation
 			obj.scale = entity.scale
@@ -305,6 +305,8 @@ class CE_load(bpy.types.Operator):
 						elif isinstance(value, str):
 							obj.game.properties[name].type = 'STRING'
 						obj.game.properties[name].value = value
+
+			bpy.ops.object.select_all(action='DESELECT')
 
 		# load destinations
 		for destination in cell.destinations.values():

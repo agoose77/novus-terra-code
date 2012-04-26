@@ -62,8 +62,8 @@ class EntityBase:
 
 		self.frozen = False
 
-		self.iteract_icon = None
-		self.iteract_label = None
+		self.interact_icon = None
+		self.interact_label = None
 
 		self.in_hash = False
 		self.old_location = False

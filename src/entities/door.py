@@ -16,7 +16,7 @@ class Door(entities.EntityBase):
 	def __init__(self, packet=None):
 		entities.EntityBase.__init__(self, packet)
 
-		self.iteract_label = 'Enter'
+		self.iteract_label = 'Enter ' + self.get('label', '')
 
 	def on_interact(self, player):
 		# TODO play sound - door open

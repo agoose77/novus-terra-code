@@ -31,7 +31,7 @@ class World:
 		self.ai_manager = AI_Manager()
 		self.cell_manager = cell.CellManager()
 		self.entity_manager = entity.EntityManager()
-		#self.dialogue_manager = dialogue.DialogueManager()
+		self.dialogue_manager = dialogue.DialogueManager()
 
 		### Time and date
 		self.world_time = 0.0
@@ -213,7 +213,7 @@ class World:
 		
 		if self.player._data and self.cell_manager.load_state:
 			self.player.main()
-		#self.dialogue_manager.main()
+		self.dialogue_manager.main()
 
 		self.cell_manager.update()
 		if len(self.entity_list) != 0:

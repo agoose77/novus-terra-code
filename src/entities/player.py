@@ -9,6 +9,7 @@ import mathutils
 
 import entities
 import game
+import sudo
 from inventory2 import Inventory
 from finite_state_machine import FiniteStateMachine
 
@@ -309,6 +310,7 @@ class Player(entities.EntityBase):
 		keyboard = bge.logic.keyboard
 
 		if hit != None and 'entity_base' in hit:
+			sudo.ui_manager.screens['hud'].set_interact_text(hit['entity_base'].interact_label, hit['entity_base'].interact_icon)
 			if type(hit['entity_base']) is str:
 				temp = __import__("weapon_pickup")
 				temp = temp.WeaponPickup(hit, hit['info'], hit['name'])  # ex hack
@@ -316,6 +318,8 @@ class Player(entities.EntityBase):
 			else:
 				if keyboard.events[bge.events.EKEY] == 1:
 					hit['entity_base'].on_interact(self)
+		else:
+			sudo.ui_manager.screens['hud'].set_interact_text('')
 
 	def fast_travel(self, location):
 		self.position = location_id.position

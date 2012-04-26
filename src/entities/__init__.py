@@ -7,3 +7,4 @@ from .npc import *
 from .ghost import *
 from .ai_base import *
 from .morgoar import *
+from .trigger import *
