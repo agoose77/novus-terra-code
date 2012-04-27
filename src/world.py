@@ -7,9 +7,11 @@ import aud
 import bge
 from mathutils import Vector
 
-import cell, entity
+import cell
 import dialogue
 import entities
+import entity
+import events
 import game
 from ai_manager import AI_Manager
 #from dialogue_system import DialogueSystem
@@ -31,6 +33,7 @@ class World:
 		self.ai_manager = AI_Manager()
 		self.cell_manager = cell.CellManager()
 		self.entity_manager = entity.EntityManager()
+		self.event_manager = events.EventManager()
 		self.dialogue_manager = dialogue.DialogueManager()
 
 		### Time and date
@@ -218,3 +221,5 @@ class World:
 		self.cell_manager.update()
 		if len(self.entity_list) != 0:
 			self.ai_manager.main()
+
+		self.event_manager.main()

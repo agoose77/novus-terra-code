@@ -26,7 +26,7 @@ from bpy_extras.io_utils import ImportHelper, ExportHelper
 sys.path.append('./src/')
 from cell import Prop, Lamp, Cell, Entity, Destination
 from inventory2 import Inventory
-from item import Item
+from item import Item, load_items
 
 CELL_NONE = ""
 CELL_INTERIOR = 'Interior'
@@ -95,6 +95,7 @@ def walk_dir(path):
 
 def init():
 	""" Setup all the properties """
+	load_items()
 	# Cell editor props
 	bpy.types.Scene.ce_asset_dir = bpy.props.StringProperty(name='Asset Directory', default='./data/models', description='Filepath to asset folder')
 	bpy.types.Scene.ce_assets = bpy.props.PointerProperty(type=CE_asset_folder)

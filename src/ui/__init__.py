@@ -1,12 +1,13 @@
-"""
+""" The UI system is a high level interface, built
+on top of bgui. 
 
-Novus Terra UI module
+The system consists of the UIManager,
+which moniters a stack of Screens, updating and drawing
+them as required.
 
-This wraps BGUI to provide high level ui interaction
-
-Hopefully something along the lines of
-
-ui.singleton.showInventory()
+Screens take up the whole screen space and are,
+essentially, a UI screen displaying specific
+information.
 
 """
 

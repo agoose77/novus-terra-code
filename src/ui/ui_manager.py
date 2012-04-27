@@ -16,6 +16,8 @@ class UIManager(bgui.System):
 		# Initiate the system
 		bgui.System.__init__(self, safepath('./data/themes/default'))
 
+		self.focused_widget = self
+
 		# A stack of screens, screens at the back are drawn first
 		self.current = []
 
@@ -41,11 +43,13 @@ class UIManager(bgui.System):
 		if not self.screens[screen].visible:
 			self.current.append(self.screens[screen])
 			self.screens[screen].show(args=args)
+			self._update_order()
 
 	def hide(self, screen):
 		if self.screens[screen].visible:
 			self.current.remove(self.screens[screen])
 			self.screens[screen].hide()
+			self._update_order()
 
 	def toggle(self, screen):
 		""" Toggle the visibility of a screen (doesn't pass arguments) """
@@ -55,6 +59,8 @@ class UIManager(bgui.System):
 		else:
 			self.current.append(self.screens[screen])
 			self.screens[screen].show(args=[])
+
+		self._update_order()
 
 	def hide_current(self):
 		""" Hide the top most screen """
@@ -68,15 +74,17 @@ class UIManager(bgui.System):
 			screen = self.current.pop(-1)
 			screen.hide()
 
+	def _update_order(self):
+		""" Update the order of the screens in the children dictionary
+		to ensure the screen on the top of the stack recieves input
+		last, therefore retains the focused_widget prpoerty """
+		for screen in self.current:
+			self._remove_widget(screen)
+			self._attach_widget(screen)
+
 	def _draw(self):
 		""" Override the draw function to draw the screens in proper order """
-		# Update screens from the front backwards until a blocking screen is reached.
-		for screen in self.current[::-1]:
-			screen.main()
-			if screen.blocking:
-				break
-
-		# Now draw the screens from the back to the front.
+		# Draw the screens from the back to the front.
 		for screen in self.current:
 			screen._draw()
 	
@@ -117,7 +125,13 @@ class UIManager(bgui.System):
 		
 		self.handle_mouse()
 		self.handle_keyboard()
-		
+
+		# Update screens from the front backwards until a blocking screen is reached.
+		for screen in self.current[::-1]:
+			screen.main()
+			if screen.blocking:
+				break
+
 		# Now setup the scene callback so we can draw
 		if self.render not in bge.logic.getCurrentScene().post_draw:
 			bge.logic.getCurrentScene().post_draw.append(self.render)
