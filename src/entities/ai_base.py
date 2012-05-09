@@ -14,7 +14,7 @@ import game
 import ui
 from entities import EntityBase
 from finite_state_machine import FiniteStateMachine
-from inventory2 import Inventory
+from inventory import Inventory
 from paths import PATH_SOUNDS, PATH_MUSIC
 from sound_manager import SoundManager
 

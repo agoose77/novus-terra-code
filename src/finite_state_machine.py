@@ -25,10 +25,10 @@ class FiniteStateMachine:
 
     def main(self):
         for transition in self.transitions[self.current_state]:
-            if transition[1] (self):
+            if transition[1](self):
                 self.current_state = transition[0]
                 if callable(transition[2]):
-                    transition[2] (self)
+                    transition[2](self)
 
         if callable(self.states[self.current_state]):
-            self.states[self.current_state] (self)
+            self.states[self.current_state](self)

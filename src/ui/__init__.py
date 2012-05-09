@@ -1,5 +1,5 @@
 """ The UI system is a high level interface, built
-on top of bgui. 
+on top of bgui.
 
 The system consists of the UIManager,
 which moniters a stack of Screens, updating and drawing
@@ -12,7 +12,7 @@ information.
 """
 
 # Widgets
-from .inventory_window2 import *
+from .inventory_window import *
 from .nwidgets import *
 from .scrollbar import *
 from .context_menu import *

@@ -9,7 +9,7 @@ import weapons
 from item import Item
 
 
-class InventoryWindow2(bgui.Widget):
+class InventoryWindow(bgui.Widget):
 	""" A bgui widget that displays the contents of an inventory. Displays a single inventory, which can be linked to another one
 	so items can be dragged from inventory to inventory.
 	"""
@@ -81,8 +81,8 @@ class InventoryWindow2(bgui.Widget):
 					self.context_item = self.hover_item.grid_id
 
 				# Remove linked inventory context menu
-				#if self.linked_inventory and self.linked_inventory.context_menu:
-					#self.linked_inventory.remove_context_menu()
+				if self.linked_inventory and self.linked_inventory.context_menu:
+					self.linked_inventory.remove_context_menu()
 
 			self.description_window.visible = False
 

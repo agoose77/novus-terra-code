@@ -19,10 +19,10 @@ class ItemSwap(ui.Screen):
 		self.backdrop = bgui.Frame(self, 'backdrop', size=[1, 1], pos=[0, 0])
 		self.backdrop.colors = [(0, 0, 0, 0.55)] * 4
 
-		self.player_inventory = ui.InventoryWindow2(self, 'player_inventory',
+		self.player_inventory = ui.InventoryWindow(self, 'player_inventory',
 			game.Game.singleton.world.player.inventory, pos=[ww // 2 - 310, 0], options=bgui.BGUI_CENTERY)
 
-		self.other_inventory = ui.InventoryWindow2(self, 'other_inventory', None, pos=[ww // 2 + 10, 0],
+		self.other_inventory = ui.InventoryWindow(self, 'other_inventory', None, pos=[ww // 2 + 10, 0],
 			options=bgui.BGUI_CENTERY)
 
 		self.player_label = bgui.Label(self, 'player_label', 'Player', pt_size=48,

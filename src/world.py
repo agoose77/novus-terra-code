@@ -1,9 +1,7 @@
-import pickle
 import random
 import mathutils
 import datetime
 
-import aud
 import bge
 from mathutils import Vector
 
@@ -12,10 +10,8 @@ import dialogue
 import entities
 import entity
 import events
-import game
 from ai_manager import AI_Manager
-#from dialogue_system import DialogueSystem
-from paths import PATH_SOUNDS, PATH_MUSIC
+
 
 class World:
 
@@ -40,7 +36,7 @@ class World:
 		self.world_time = 0.0
 		self.world_time_scale = 0.05
 
-		self.date = datetime.date(2050, 1, 1) #Y, M, D
+		self.date = datetime.date(2050, 1, 1)  # Y, M, D
 
 		### Weather:
 		self.current_weather = None
@@ -53,10 +49,10 @@ class World:
 		self.atmosphere_ctrl = 'atmosphere_time'
 
 		###
-		self.gravity = Vector([0,0, -9.8])
-		bge.logic.setGravity([0,0,0])
-		self.world_effects = {'mist color':[0.0,0.0,0.0], 'tint':[0.0,0.0,0.0]}
-		
+		self.gravity = Vector([0, 0, -9.8])
+		bge.logic.setGravity([0, 0, 0])
+		self.world_effects = {'mist color': [0.0, 0.0, 0.0], 'tint': [0.0, 0.0, 0.0]}
+
 		self.gamestate = 'loading'
 		self.suspended = False
 		self.KX_player = False
@@ -64,11 +60,11 @@ class World:
 	def cell_loaded(self):
 		self.gamestate = 'loaded'
 		self.spawn_player()
-		
+
 	def cell_loading(self):
 		self.gamestate = 'loading'
 		self.KX_player = False
-		
+
 	def suspend(self):
 		self.suspended = True
 		for entity in self.cell_manager.entities_in_game:
@@ -76,7 +72,7 @@ class World:
 		self.player.freeze()
 
 	def resume(self):
-		self.player.hold_mouse_update = 10  # don't update mouse look for 1 frame, stops jump
+		self.player.hold_mouse_update = 5  # don't update mouse look for 1 frame, stops jump
 		self.suspended = False
 		for entity in self.cell_manager.entities_in_game:
 			entity.unfreeze()
@@ -124,36 +120,34 @@ class World:
 
 		#print(self.world_time
 	def lerp(self, n1, n2, n3):
-		return ((n2 - n1)*n2)+n1
-
+		return ((n2 - n1) * n2) + n1
 
 	def handle_weather(self):
-
 		clear = {
-			"Lerp":0.0,
-			"Time":0.0,
-			"Scale":0.015,
-			"Amount":-0.500,
-			"Sharpness":0.450,
-			"Precipitation":"Rain",
+			"Lerp": 0.0,
+			"Time": 0.0,
+			"Scale": 0.015,
+			"Amount": -0.500,
+			"Sharpness": 0.450,
+			"Precipitation": "Rain",
 			}
 
 		cloudy = {
-			"Lerp":0.0,
-			"Time":0.0,
-			"Scale":0.01,
-			"Amount":-0.300,
-			"Sharpness":0.750,
-			"Precipitation":"None",
+			"Lerp": 0.0,
+			"Time": 0.0,
+			"Scale": 0.01,
+			"Amount": -0.300,
+			"Sharpness": 0.750,
+			"Precipitation": "None",
 			}
 
 		stormy = {
-			"Lerp":0.0,
-			"Time":0.0,
-			"Scale":0.01,
-			"Amount":-0.100,
-			"Sharpness":0.850,
-			"Precipitation":"None",
+			"Lerp": 0.0,
+			"Time": 0.0,
+			"Scale": 0.01,
+			"Amount": -0.100,
+			"Sharpness": 0.850,
+			"Precipitation": "None",
 			}
 
 		### INIT Weather
@@ -170,20 +164,20 @@ class World:
 			amount = self.current_weather["Lerp"]
 
 			clouds = bge.logic.getCurrentScene().objects['Clouds']
-			
-			clouds['Amount'] = self.lerp(self.current_weather["Amount"],self.last_weather["Amount"], amount)
-			clouds['Sharpness'] = self.lerp(self.current_weather["Sharpness"],self.last_weather["Sharpness"], amount)
-			clouds['Scale'] = self.lerp(self.current_weather["Scale"],self.last_weather["Scale"], amount)
+
+			clouds['Amount'] = self.lerp(self.current_weather["Amount"], self.last_weather["Amount"], amount)
+			clouds['Sharpness'] = self.lerp(self.current_weather["Sharpness"], self.last_weather["Sharpness"], amount)
+			clouds['Scale'] = self.lerp(self.current_weather["Scale"], self.last_weather["Scale"], amount)
 
 		### Precipitation
 		if self.current_weather['Precipitation'] == "Rain":
 			weather_pos = bge.logic.getCurrentScene().objects['weather_pos']
 
 			for child in weather_pos.children:
-				if random.randrange(-1,1) == 1:
+				if random.randrange(-1, 1) == 1:
 					new = bge.logic.getCurrentScene().addObject('rain', child)
-					new.position = child.position # Need to add randomized position
-		
+					new.position = child.position  # Need to add randomized position
+
 		elif self.current_weather['Precipitation'] == "Dust":
 			pass
 		else:
@@ -191,18 +185,16 @@ class World:
 
 		### Switch to new Weather Type
 		if (self.current_weather["Time"] - self.world_time) > 100.0:
-			random_number = random.randRange(0,10)
+			random_number = random.randRange(0, 10)
 
 			self.last_weather = self.current_weather
 
 			if random_number > 5:
 				self.current_weather = clear
 			elif random_number > 7:
-				self.current_weather = stormy			
+				self.current_weather = stormy
 			else:
 				self.current_weather = cloudy
-
-
 
 	def main(self):
 
@@ -213,7 +205,7 @@ class World:
 			self.suspend()
 		elif bge.logic.keyboard.events[bge.events.JKEY] == bge.logic.KX_INPUT_JUST_ACTIVATED:
 			self.resume()
-		
+
 		if self.player._data and self.cell_manager.load_state:
 			self.player.main()
 		self.dialogue_manager.main()

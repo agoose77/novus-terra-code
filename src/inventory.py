@@ -2,6 +2,7 @@ from item import Item
 import sudo
 import weapons
 
+
 class Inventory:
 	""" Implements a grid based inventory such as in stalker or diablo. The items are stored in
 	two differet places in the code. Firstly, in the ._items attribute which is a dictionary
