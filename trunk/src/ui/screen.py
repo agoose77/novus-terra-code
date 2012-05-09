@@ -1,11 +1,12 @@
 import bgui
 import game
 
+
 class Screen(bgui.Widget):
 	""" Generic class for display UI screens, extend this for menus, dialogues, ect """
 
 	def __init__(self, parent, name, blocking=False, fade=False):
-		super().__init__(parent, name, size=[1,1], pos=[0,0], options=bgui.BGUI_DEFAULT)
+		super().__init__(parent, name, size=[1, 1], pos=[0, 0], options=bgui.BGUI_DEFAULT)
 
 		self.blocking = blocking
 
@@ -15,7 +16,7 @@ class Screen(bgui.Widget):
 		fade : fade the screen in
 		args : a list of arguments for the extending class"""
 		self.visible = True
-		
+
 		if self.blocking:
 			game.Game.singleton.world.suspend()
 

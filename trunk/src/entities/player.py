@@ -10,7 +10,7 @@ import mathutils
 import entities
 import game
 import sudo
-from inventory2 import Inventory
+from inventory import Inventory
 from finite_state_machine import FiniteStateMachine
 
 

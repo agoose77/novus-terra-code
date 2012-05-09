@@ -25,7 +25,7 @@ from bpy_extras.io_utils import ImportHelper, ExportHelper
 
 sys.path.append('./src/')
 from cell import Prop, Lamp, Cell, Entity, Destination
-from inventory2 import Inventory
+from inventory import Inventory
 from item import Item, load_items
 
 CELL_NONE = ""
