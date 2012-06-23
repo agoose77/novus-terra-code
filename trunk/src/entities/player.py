@@ -121,8 +121,8 @@ class Player(entities.EntityBase):
 		self.lev = None
 
 		# WEAPON STARTING
-		self.inventory.replace_weapon("F2000")
-		self.inventory.primary_weapon.equip(self)
+		#self.inventory.replace_weapon("F2000")
+		#self.inventory.primary_weapon.equip(self)
 
 	def _unwrap(self):
 		entities.EntityBase._unwrap(self)
@@ -209,16 +209,16 @@ class Player(entities.EntityBase):
 			self.stop_animation(3)
 
 		elif self.animations['walk'] == 1:
-			self.armature.playAction(str(weapon.name) + "_walk", 1, 32, layer=2, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.playAction(str(weapon.name) + "_walk", 1, 21, layer=2, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 			self.stop_animation(2)
 
 		elif self.animations['run'] == 1:
-			self.armature.playAction(str(weapon.name) + "_run", 1, 20, layer=1, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.playAction(str(weapon.name) + "_run", 1, 17, layer=1, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 			self.stop_animation(1)
 
 		else:
 			self.stop_animation(0)
-			self.armature.playAction(str(weapon.name) + "_idle", 1, 64, layer=0, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.playAction(str(weapon.name) + "_idle", 1, 101, layer=0, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 		for name in self.animations:
 			self.animations[name] = 0
@@ -319,7 +319,8 @@ class Player(entities.EntityBase):
 				if keyboard.events[bge.events.EKEY] == 1:
 					hit['entity_base'].on_interact(self)
 		else:
-			sudo.ui_manager.screens['hud'].set_interact_text('')
+			#sudo.ui_manager.screens['hud'].set_interact_text('')
+			pass
 
 	def fast_travel(self, location):
 		self.position = location_id.position

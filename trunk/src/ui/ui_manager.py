@@ -14,7 +14,7 @@ class UIManager(bgui.System):
 
 	def __init__(self):
 		# Initiate the system
-		bgui.System.__init__(self, safepath('./data/themes/default'))
+		bgui.System.__init__(self)#bgui.System.__init__(self, safepath('./data/themes/default'))
 
 		self.focused_widget = self
 
@@ -42,7 +42,9 @@ class UIManager(bgui.System):
 		args : (optional) A list of arguments to pass to the screen's show method."""
 		if not self.screens[screen].visible:
 			self.current.append(self.screens[screen])
-			self.screens[screen].show(args=args)
+			try:
+				self.screens[screen].show(args=args)
+			except: pass
 			self._update_order()
 
 	def hide(self, screen):

@@ -108,7 +108,7 @@ class Game:
 		self.fx_object = bge.logic.getCurrentScene().objects['FX']
 		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
 
-		self.ui_manager.show('hud')
+		#self.ui_manager.show('hud')
 		self.ui_manager.show('pause')
 
 		# SUDO setup
@@ -145,15 +145,16 @@ class Game:
 
 	def update_filters(self):
 		print("Updating Filters v2")
+		"""
 		self.profiler.start_timer('fx.update')
 
 		for prop in self.graphics_options:
-			"""
+			""
 			if prop != 'camera_clip':
 				pass
 			elif prop != 'SSAO_sample':
 				pass
-			"""
+			""
 			if prop != 'Motion Blur':
 				self.fx_object[prop] = self.graphics_options[prop]
 			else:
@@ -161,6 +162,7 @@ class Game:
 
 		self.profiler.stop_timer('fx.update')
 		print("Updating Filters v2 DONE")
+		"""
 
 	def update(self):
 		self.delta_time = (time.time() - self.game_started) - self.game_time

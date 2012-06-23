@@ -3,12 +3,20 @@ import sudo
 import bge, random
 import tweener
 import time
+
 """ editor properties:
  - dialogue - a string of the dialogue file, minus the path and file extension
  """
 class Morgoar(entities.EntityBase):
 	""" A simple entity for talking to """
 	def __init__(self, packet=None):
+		
+		# Create a packet for EntityBase
+		if packet == None:
+			from cell import Entity
+			packet = Entity("Morgoar", [0,0,0], [0,0,0], [1.0,1.0,1.0], [0,0,0,0], [], self)
+
+		# Register
 		super().__init__(packet)
 
 		self.interact_label = 'Talk'
@@ -22,10 +30,10 @@ class Morgoar(entities.EntityBase):
 		print ('ghost init')
 
 	def on_interact(self, player):
+		print (self['dialogue'])
 		sudo.world.dialogue_manager.display_dialogue('./data/dialogue/' + self['dialogue'] + '.xml')
 
 	def update(self):
-		
 		if time.time()-self.update_time > self.ticker:
 			self.update_time = time.time()
 

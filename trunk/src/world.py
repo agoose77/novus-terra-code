@@ -5,12 +5,15 @@ import datetime
 import bge
 from mathutils import Vector
 
-import cell
-import dialogue
+import sudo
+import cell, entity
+
+#import dialogue
 import entities
 import entity
 import events
 from ai_manager import AI_Manager
+from paths import PATH_SOUNDS, PATH_MUSIC
 
 
 class World:
@@ -30,7 +33,7 @@ class World:
 		self.cell_manager = cell.CellManager()
 		self.entity_manager = entity.EntityManager()
 		self.event_manager = events.EventManager()
-		self.dialogue_manager = dialogue.DialogueManager()
+		#self.dialogue_manager = dialogue.DialogueManager()
 
 		### Time and date
 		self.world_time = 0.0
@@ -196,6 +199,44 @@ class World:
 			else:
 				self.current_weather = cloudy
 
+	def spawn(self, name):
+		scene = bge.logic.getCurrentScene()
+
+		if not name+'blend' in bge.logic.LibList():
+			sudo.cell_manager.load_model(name)
+
+		entity = scene.addObject(name, "CELL_MANAGER_HOOK")
+
+		new_entity = getattr(entities, name)(None)
+		new_entity._wrap(entity)
+
+		#new_entity.position = [sudo.player.position[0],sudo.player.position[1],1500]
+
+		### Random Position around player
+		ran_x = random.randrange(0,50)
+		ran_y = random.randrange(0,50)
+
+		### Find Ground
+		pos_higher = [sudo.player.position[0]+ran_x,sudo.player.position[1]+ran_y,500]
+		pos_lower = [sudo.player.position[0]+ran_x,sudo.player.position[1]+ran_y,-500]
+
+		ray = new_entity.rayCast(pos_lower, pos_higher, 0.0, "", 0, 0, 0)
+
+
+		if "Chunk" in ray[0].name:
+			new_entity.positon = ray[1]
+		else:
+			new_entity.positon = ray[1]
+			new_entity.position[2] = 1500
+
+
+
+	def handle_spawns(self):
+		random_num = random.randrange(0,5)
+
+		if random_num == 2:
+			self.spawn("Morgoar")
+
 	def main(self):
 
 		self.handle_time()
@@ -208,7 +249,10 @@ class World:
 
 		if self.player._data and self.cell_manager.load_state:
 			self.player.main()
-		self.dialogue_manager.main()
+			#self.handle_spawns()
+		
+		###
+		#self.dialogue_manager.main()
 
 		self.cell_manager.update()
 		if len(self.entity_list) != 0:

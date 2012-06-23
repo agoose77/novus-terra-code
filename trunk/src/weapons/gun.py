@@ -3,17 +3,19 @@ try:
 	import game
 except ImportError:
 	print('Unable to import bge, normal if running editor')
+
 import mathutils
 
 import sudo
 import weapons
 
 
+
 class Gun(weapons.WeaponBase):
 	""" Base class for conventional guns """
 	def __init__(self, grid_id, name, gun_name, attack_sound, damage=1.0, 
 				rate_of_fire=10.0,range=200, clip_size=10, reload_time=2.0, 
-				burst=0, ammo_id=''):
+				burst=0, ammo_id='', animations={}):
 		super().__init__(grid_id)
 
 		self.name = name  # The name (label) of the gun
@@ -40,6 +42,8 @@ class Gun(weapons.WeaponBase):
 		self.components = {} # Weapon customizations
 		self.attack_sound = attack_sound
 		self.reloading = False
+
+		self.animations = animations
 
 	def check_fire(self):
 		""" Check all conditions for firing the gun are met """
@@ -70,6 +74,7 @@ class Gun(weapons.WeaponBase):
 		""" Fire the weapon,
 
 		point1 and point2 are points that the bullet passes through """
+		print ("FIre!")
 		self.last_fire = sudo.game.game_time
 		self.fired_in_burst += 1
 		self.in_clip -= 1
