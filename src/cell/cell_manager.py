@@ -103,6 +103,13 @@ class CellManager:
 			print("Unable to build cell, the cell might be outdated\nTry baking with the latest cell editor")
 			return("Unable to build cell, the cell might be outdated")
 
+		# FX
+		self.fx = self.cell.fx
+
+		for item in self.fx:
+			bge.logic.getCurrentScene().objects['FX'][item] = self.fx[item]
+			print (item, self.fx[item], bge.logic.getCurrentScene().objects['FX'][item])
+
 		# Setup prop kdtrees
 		self.prop_kdtrees = []
 		for prop_group in self.cell.props:
@@ -308,18 +315,32 @@ class CellManager:
 		tweener.singleton.add(lamp, "color", str(list(data.color)), 2.0)
 		return lamp
 
-	def update(self):
+	def load_model(self, model):
 
+		if model in self.blend_dict:
+			blend = self.blend_dict[model]
+
+			if str(self.convert_lib_name(blend)) not in bge.logic.LibList():
+				print("[loading] ", blend, "...")
+				bge.logic.LibLoad(blend, "Scene", load_actions=1)
+
+				
+			else:
+				print ("[loaded] Error: Blend already loaded")
+		else:
+			print ("[loaded] Error: Model not found in blend_dict")
+
+	def update(self):
 		if self.load_state == 0:
 			# don't do anything while the cell is changing
 			return
-
-		scene = bge.logic.getCurrentScene()
 
 		# get a point to update everything by
 		KX_player = sudo.world.KX_player
 		#if self.next_destination is not None:
 		#	position = mathutils.Vector(self.cell.destinations[self.next_destination].co)
+
+		scene = bge.logic.getCurrentScene()
 
 		if KX_player:
 			position = KX_player.worldPosition

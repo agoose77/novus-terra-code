@@ -70,7 +70,7 @@ class MessageBox(bgui.Widget):
 		self.top = 0  # the line of text that is displayed at the top of the window
 
 		# Calculate line height
-		line = bgui.Label(self, "tmp", "Mj|", sub_theme='message_box')
+		line = bgui.Label(self, "tmp", "Mj|")
 		self._remove_widget(line)
 		char_height = line.size[1]  # TODO replace this block with constant value
 		self.char_height = char_height
@@ -83,7 +83,7 @@ class MessageBox(bgui.Widget):
 
 		# highlights the selected option
 		self.option_box = bgui.Frame(self, 'option_box', size=[w - MessageBox.PADDING * 2 - 8, self.char_height],
-			pos=[MessageBox.PADDING - 4, 100], sub_theme='option_box', options=bgui.BGUI_THEMED)
+			pos=[MessageBox.PADDING - 4, 100], options=bgui.BGUI_THEMED)
 		self.option_box.visible = False
 		self.option_lines = {}  # a map for how many lines of text each option contains
 		self.option_start = {}  # a map for which line index each option starts at
