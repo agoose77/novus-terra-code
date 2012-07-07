@@ -1,3 +1,5 @@
+from mathutils import *
+from bge import render as R
 import math
 import sys
 sys.path.append('./src/')
@@ -33,10 +35,12 @@ class Player(entities.EntityBase):
 		self.last_shot = 0.0
 		self.reloading = False
 		self.reload_start_time = 0.0
+		self.roll = 0.0
 
 		self.walk_speed = 5.0
 		self.run_speed = 45.0
 		self.walk_temp = 0.0
+		self.last_move = 0.0
 		self.jump_speed = 10.0
 
 		# Stops mouse events from triggering for a frame
@@ -56,6 +60,9 @@ class Player(entities.EntityBase):
 		self.bullets_auto = 10
 		self.bullets_shotgun = 10
 		self.bullets_pistol = 10
+
+		# Smooth Camera
+		self.oldX = None
 
 		#
 		self.impants = []
@@ -100,9 +107,16 @@ class Player(entities.EntityBase):
 		self.in_vehicle = False
 
 		self.camera = [child for child in self.children if 'camera_temp' in child][0]
+		self.lens = self.camera.lens
+
 		self.armature = [child for child in self.childrenRecursive if 'Armature' in child][0]
 		self.bullet_spread = [child for child in self.childrenRecursive if 'spread' in child][0]
 		self.weapon_pos = [child for child in self.childrenRecursive if 'weapon_pos' in child][0]
+		self.climb_ray =[child for child in self.childrenRecursive if 'climb_ray' in child][0] 
+		self.c_r_t = [child for child in self.childrenRecursive if 'c_r_t' in child][0] 
+		self.c_r_b = [child for child in self.childrenRecursive if 'c_r_b' in child][0] 
+
+		self.c_r_top = [child for child in self.childrenRecursive if 'c_r_top' in child][0] 
 
 		# FSM States
 		self.movement_state_machine = FiniteStateMachine(self)
@@ -121,8 +135,8 @@ class Player(entities.EntityBase):
 		self.lev = None
 
 		# WEAPON STARTING
-		#self.inventory.replace_weapon("F2000")
-		#self.inventory.primary_weapon.equip(self)
+		self.inventory.replace_weapon("F2000")
+		self.inventory.primary_weapon.equip(self)
 
 	def _unwrap(self):
 		entities.EntityBase._unwrap(self)
@@ -138,6 +152,23 @@ class Player(entities.EntityBase):
 		keyboard = bge.logic.keyboard.events
 		vel = self.getLinearVelocity()
 		move = [0, 0, 0]
+
+		#bottom_ray = self._data.rayCast(self.c_r_top, self.c_r_b)
+		#top_ray = self._data.rayCast(self.climb_ray, self.c_r_t)
+
+		#if (bottom_ray[0] != None) and (top_ray[0] == None):
+			#self.localLinearVelocity = Vector([0.0,2.5,0.0])
+			#self.localLinearVelocity[2] += (2.0-self.getDistanceTo(bottom_ray[1])) * 0.75
+		#	self.last_move = (2.0-self.getDistanceTo(bottom_ray[1])) * 2.0
+		#else:
+			#self.localLinearVelocity = Vector([0.0,0.0,0.0])
+			#self.localLinearVelocity[2] = self.last_move*0.2
+		#	self.last_move = self.last_move*0.75
+
+		
+		#print ("--", top_ray)
+		#print ("Bottom",bottom_ray)
+		#print ("==", move[2])
 
 		### Keys
 		if keyboard[bge.events.LEFTSHIFTKEY]:  # and self.fatigue < 10:
@@ -168,20 +199,27 @@ class Player(entities.EntityBase):
 
 		###
 		com = vel[2] + move[2]
-		self.localLinearVelocity = [move[1], move[0], com]
+		self.localLinearVelocity = Vector([move[1], move[0], com])
 
 		###
 		if move[0] != 0 or move[1] != 0:
+
 			if speed == self.walk_speed:
+				self.roll += 0.5
+				self.camera.applyRotation([0, math.sin(self.roll*0.5)*0.002, math.sin(self.roll*0.5)*0.003], 1)  # Y
+				self.camera.localPosition[2] += math.sin(self.roll)*0.03
 				self.play_animation('walk')
 				self.walk_temp += 1
 
 			elif speed == self.run_speed:
+				self.roll += 0.75
+				self.camera.applyRotation([math.sin(self.roll)*0.004, 0, 0], 1)  # Y
 				self.play_animation('run')
 				self.walk_temp += 2
 		else:
 			self.play_animation('idle')
 			#pass
+
 
 		if self.walk_temp > 20:
 			self.walk_temp = 0
@@ -201,7 +239,7 @@ class Player(entities.EntityBase):
 		weapon = self.inventory.primary_weapon
 
 		if self.animations['reload'] == 1:
-			self.armature.playAction(str(weapon.name) + "_reload", 1, 64, layer=4, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
+			self.armature.playAction(str(weapon.name) + "_reload", 1, 200, layer=4, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
 			self.stop_animation(4)
 
 		elif self.animations['shoot'] == 1:
@@ -269,20 +307,21 @@ class Player(entities.EntityBase):
 	def handle_none_state(self, FSM):
 		pass
 
-	def reload(self):
+	"""def reload(self):
 		print("Reloading...")
+
+
 		if self.inventory.ammo['Assault'] > 0:
 			if self.reload_start_time == 0.0:
-				self.reload_start_time = game.Game.singleton.game_time
+				self.reload_start_time = sudo.game.game_time
+				self.entity.play_animation('reload')
+				self.reloading = True
 
-			print (game.Game.singleton.game_time - self.reload_start_time)
-			self.play_animation('reload')
-
-			if (game.Game.singleton.game_time - self.reload_start_time) > self.inventory.weapon_slot_1.reload_time:
-				print ("DONE RELOADING")
+			elif self.reload_start_time + self.reload_time < sudo.game.game_time:
+				self.reload_start_time = 0.0
+				self.in_clip = self.clip_size
 				self.reloading = False
 
-			if self.reloading == False:
 				if self.inventory.ammo['Assault'] < self.inventory.weapon_slot_1.clip_size:
 					self.inventory.weapon_slot_1.clip = self.inventory.ammo['Assault']
 					self.inventory.ammo['Assault'] = 0
@@ -291,8 +330,12 @@ class Player(entities.EntityBase):
 					self.inventory.ammo['Assault'] += -self.inventory.weapon_slot_1.clip_size
 
 				self.reload_start_time = 0.0
+
+			else:
+				self.play_animation('reload')
 		else:
 			print("Out Of Ammo!!")
+			"""
 
 	def handle_weapon(self):
 		if self.hold_mouse_update != 0:
@@ -329,11 +372,66 @@ class Player(entities.EntityBase):
 	def handle_camera(self):
 		bge.logic.getCurrentScene().active_camera = self.camera  # set active_camera
 
+		"""
+		w = R.getWindowWidth()//2
+		h = R.getWindowHeight()//2
+		screen_center = (w, h)
+
+		Mouse = bge.logic.mouse
+		speed = 0.08				# walk speed
+		sensitivity = 0.002		# mouse sensitivity
+		smooth = 0.7			# mouse smoothing (0.0 - 0.99)
+
+		if self.oldX == None:
+
+			R.setMousePosition(w + 1, h + 1)
+			
+			self.oldX = 0.0
+			self.oldY = 0.0
+
+		else:
+			
+			scrc = Vector(screen_center)
+			mpos = Vector(Mouse.position)
+			
+			x = scrc.x-mpos.x
+			y = scrc.y-mpos.y
+
+			# Smooth movement
+			self.oldX = (self.oldX*smooth + x*(1.0-smooth))
+			self.oldY = (self.oldY*smooth + y*(1.0-smooth))
+			
+			x = self.oldX* sensitivity
+			y = self.oldY* sensitivity
+			 
+			# set the values
+			self.applyRotation([0, 0, x], False)
+			self.applyRotation([y, 0, 0], False)
+			
+			# Center mouse in game window
+			R.setMousePosition(*screen_center)
+			
+
+		"""
+		smooth = 0.5
+		sensitivity = 1.5
 		mpos = bge.logic.mouse.position[:]
+		mouse = bge.logic.mouse
+
+		if self.oldX == None:
+			self.oldX = [0.0,0.0]
 
 		if self.hold_mouse_update != 0:
 			self.hold_mouse_update -= 1
 			mpos = [0.5, 0.5]
+
+		if mouse.events[bge.events.RIGHTMOUSE]:
+			#self.camera.lens = self.inventory.primary_weapon.zoom_lens
+			self.camera.lens += (self.inventory.primary_weapon.zoom_lens - self.camera.lens)*0.1
+			bge.logic.getCurrentScene().objects['FX']['autofocus'] = True
+		else:
+			bge.logic.getCurrentScene().objects['FX']['autofocus'] = False
+			self.camera.lens = self.lens
 
 		bge.render.setMousePosition(self.window_middle[0], self.window_middle[1])
 
@@ -341,8 +439,13 @@ class Player(entities.EntityBase):
 			self.camera['ml_rotx'] = -(self.camera.localOrientation.to_euler().x - (math.pi * 0.5))
 
 		else:
-			mouse_mx = (mpos[0] - 0.5) * 3#bge.logic.globalDict['game'].control_options[1]#MOUSE_SENSITIVITY # bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]
-			mouse_my = (mpos[1] - 0.5) * 3#bge.logic.globalDict['game'].control_options[1]#MOUSE_SENSITIVITY
+			#mouse_mx = (self.oldX[0]*smooth)+((mpos[0] - 0.5) * 3)*(1.0-smooth)#bge.logic.globalDict['game'].control_options[1]#MOUSE_SENSITIVITY # bge.logic.globalDict['game'].control_options[Game.MOUSE_SENSITIVITY]
+			#mouse_my = (self.oldX[1]*smooth)+((mpos[1] - 0.5) * 3)*(1.0-smooth)#bge.logic.globalDict['game'].control_options[1]#MOUSE_SENSITIVITY
+			self.oldX[0] = (self.oldX[0]*smooth)+((mpos[0] - 0.5) * 3)*(1.0-smooth)
+			self.oldX[1] = (self.oldX[1]*smooth)+((mpos[1] - 0.5) * 3)*(1.0-smooth)
+
+			mouse_mx = self.oldX[0]* sensitivity
+			mouse_my = self.oldX[1]* sensitivity
 
 			cap = 1.5
 
@@ -351,6 +454,7 @@ class Player(entities.EntityBase):
 					self.camera.parent.applyRotation([0, 0, -mouse_mx], 0)  # X
 					self.camera.applyRotation([-mouse_my, 0, 0], 1)  # Y
 					self.camera['ml_rotx'] += mouse_my
+
 
 	def remove_controls(self):
 		self.stored_state = self.movement_state_machine.current_state

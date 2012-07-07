@@ -1,5 +1,6 @@
 import inspect
 
+import mathutils
 import sudo
 import sys
 import tweener
@@ -8,12 +9,11 @@ try:
 	import bge
 	import cell
 	import game
+	import session
 except:
 	print('bge import failed, normal if you are running an editor')
 
-
 def to_entity_base(val):
-	""" Converts a value from KX_GameObject to EntityBase """
 	if isinstance(val, list):
 		for n in range(len(val)):
 			if isinstance(val[n], bge.types.KX_GameObject):
@@ -24,9 +24,7 @@ def to_entity_base(val):
 			val = val['entity_base']
 	return val
 
-
 def from_entity_base(val):
-	""" Converts a value from EntityBase to KX_GameObject """
 	if isinstance(val, list):
 		for n in range(len(val)):
 			if isinstance(val[n], EntityBase):
@@ -35,6 +33,12 @@ def from_entity_base(val):
 		val = val._data
 	return val
 
+class method_wrapper:
+	def __init__(self, f):
+		self.f = f
+
+	def __call__(self, *args, **kwargs):
+		return to_entity_base(self.f(*args, **kwargs))
 
 class EntityBase:
 	""" Base object for classes representing game objects.
@@ -51,19 +55,21 @@ class EntityBase:
 
 		# is method
 		elif inspect.isroutine(value_) and not name_.startswith('__'):
-			_kx_game_object_methods.append(name_)
+		   _kx_game_object_methods.append(name_)
 
 	def __init__(self, packet=0):
 		#packet is the Entity instance from the cell
 		self.packet = packet
 		self._data = None
 
-		self.id = None
-
+		self.stored_linear_velocity = [0,0,0]
+		self.stored_angular_velocity = [0,0,0]
+		self.stored_position = [0,0,0]
+		self.stored_rotation = [[1,0,0], [0,1,0], [0,0,1]]
 		self.frozen = False
 
-		self.interact_icon = None
-		self.interact_label = None
+		self.iteract_icon = None
+		self.iteract_label = None
 
 		self.in_hash = False
 		self.old_location = False
@@ -79,11 +85,11 @@ class EntityBase:
 			print(sys.exc_info()[0])
 
 	def update(self):
-		""" meant to be overidden """
+		''' meant to be overidden '''
 		pass
 
 	def damage(self, damage_amount=1, object=None):
-		""" meant to be overidden """
+		''' meant to be overidden '''
 		pass
 
 	def main(self):
@@ -92,6 +98,7 @@ class EntityBase:
 				self.applyForce(self.mass * game.Game.singleton.world.gravity)
 				self.update()
 
+
 				#this rebalances a sparse hash
 				#print(type(self), self.location, self.in_hash)
 				if self.location and self.in_hash:
@@ -99,9 +106,11 @@ class EntityBase:
 						sudo.entity_manager.check_move(self, self._data.position)
 					self.location = list(self._data.position)
 
+			else:
+				self.worldPosition = self.stored_position
+				self.worldOrientation = self.stored_rotation
+
 	def on_interact(self, instance):
-		""" meant to be overidden """
-		# TODO - this is just for testing/fun - replace with pass
 		if self.frozen:
 			self.unfreeze()
 		else:
@@ -109,18 +118,33 @@ class EntityBase:
 
 	def freeze(self):
 		if not self.frozen and self._data:
-			self.suspendDynamics()
+			self.stored_linear_velocity = self.worldLinearVelocity[:]
+			self.stored_angular_velocity = self.worldAngularVelocity[:]
+			self.stored_position = self.worldPosition[:]
+			self.stored_rotation = self.worldOrientation.copy()
+
+			self.worldLinearVelocity = [0,0,0]
+			self.worldAngularVelocity = [0.0001,0.0001,0.0001]
 
 			self.frozen = True
 
 	def unfreeze(self):
 		if self.frozen:
-			self.restoreDynamics()
+			self.worldLinearVelocity = self.stored_linear_velocity
+			self.worldAngularVelocity = self.stored_angular_velocity
+			self.worldPosition = self.stored_position
+			self.worldOrientation = self.stored_rotation
+
+			self.stored_linear_velocity = [0,0,0]
+			self.stored_angular_velocity = [0,0,0]
+			self.stored_position = [0,0,0]
+			self.stored_rotation = [[1,0,0], [0,1,0], [0,0,1]]
 
 			self.frozen = False
 
 	def remove(self):
 		""" Removes any references of the entity in the cell and removes the object """
+		
 		cell.CellManager.singleton.entities_in_game.remove(self)
 		cell.CellManager.singleton.cell.entities.remove(self.packet)
 		cell.CellManager.singleton.cell.modified = True
@@ -152,24 +176,19 @@ class EntityBase:
 	def _wrap(self, obj):
 		self._data = obj
 		c = self._data.color
-		self._data.color = [c[0], c[1], c[2], 0.0]
+		self._data.color = [c[0],c[1],c[2],0.0]
 		tweener.singleton.add(self._data, "color", "[*,*,*,1.0]", 1.0)
 		if self.location:
 			self._data.position = self.location
 		self._data['entity_base'] = self
 
-		self.id = obj.get('id')
-		if self.id is not None:
-			sudo.cell_manager.cell.id_entity[self.id] = self
+
 
 	def _unwrap(self):
 		if self._data is not None:
 			if not self._data.invalid:
 				tweener.singleton.add(self._data, "color", "[*,*,*,0.0]", 1.0, callback=self._data.endObject)
 			self._data = None
-
-			if self.id is not None:
-				sudo.cell_manager.cell.id_entity.pop(self.id)
 
 	def __getattr__(self, name):
 		if name in EntityBase._kx_game_object_descriptors or name in EntityBase._kx_game_object_methods:

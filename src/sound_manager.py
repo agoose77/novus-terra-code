@@ -17,13 +17,16 @@ class SoundManager:
 		self.device = aud.device()
 		
 		# MUSIC
-		self.current_song = {"sound":None,"handle":None}
-		self.last_song = {"sound":None,"handle":None}
-		self.music = {}
+		self.current_song = {"sound":None,"handle":None, "time":0.0}
+		self.last_song = {"sound":None,"handle":None, "time":0.0}
+		self.music = []
 
 		# SOUNDS
 		self.factories = {}
 		self.animation_sounds = {}
+
+		# SETTINGS
+		self.wait = 300.0
 	
 		###
 		for sound in os.listdir(PATH_SOUNDS):
@@ -31,9 +34,8 @@ class SoundManager:
 				self.factories[sound] = aud.Factory.file(PATH_SOUNDS+sound).buffer()
 
 		for sound in os.listdir(PATH_MUSIC):
-			print (sound)
 			if sound.endswith('.wav') or sound.endswith('.ogg'):
-				self.music[sound] = aud.Factory.file(PATH_MUSIC+sound)
+				self.music.append([aud.Factory.file(PATH_MUSIC+sound),sound])
 
 
 
@@ -49,7 +51,6 @@ class SoundManager:
 						break;
 				else:
 					break;
-
 		else:
 			song = self.music[song_name]
 		
@@ -100,11 +101,8 @@ class SoundManager:
 			self.playing_sound_effect_handles.remove(handle)
 			handle.stop()
 
-	def main(self):
+	def handle_sounds(self):
 		device = self.device
-
-		device.listener_location = bge.logic.getCurrentScene().active_camera.position
-		device.listener_orientation = bge.logic.getCurrentScene().active_camera.orientation.to_quaternion()
 
 		for sound in self.sounds:
 			s = self.factories[sound['Name']] # Get factory
@@ -130,7 +128,6 @@ class SoundManager:
 			else:
 				h = device.play(s)
 
-
 			###
 			if sound['3d'] == True:
 				if sound['Own'] != None:
@@ -140,30 +137,57 @@ class SoundManager:
 
 
 			# Alert Entities
-			#if sound['alert'] == True:
-			#	entities = sudo.entity_manager.get_within(sound['Own'].position, 100)
+			if sound['alert'] == True:
+				if sound['Own']:						
+					entities = sudo.entity_manager.get_within(sound['Own'].position, 10)
 
-				#for ent in entities:
-					#ent.alert_entity(sound['Own'])
+					#for ent in entities:
+						#ent.alert_entity(sound['Own'])
 
 
 			###
+			pos = None
+
 			if sound["Own"] != None:
 				pos = sound['Own'].position
-			else:
-				pos = None
 
 			h.volume = sound['volume']
 			self.handles.append([h, sound])
 			self.sounds.remove(sound)
 
-
 		for handle in self.handles:
 			status = handle[0].status
 			h = handle[0]
-			#h.location = handle[2]
-			
 
-			#if status == False:
-				#self.sounds.remove(handle[1])
-				#self.handles.remove(handle)
+
+	def handle_music(self):
+		device = self.device
+
+		# New song
+		if (sudo.world.world_time - self.last_song['time'] > self.wait) or (self.current_song["sound"] == None):
+			self.last_song = self.current_song
+
+			rand = random.randrange(0, len(self.music))
+			rand = self.music[rand]
+
+			s = rand[0]
+			h = device.play(s)
+
+			self.current_song['sound'] = rand[1]
+			self.current_song['handle'] = h
+			self.current_song['time'] = sudo.world.world_time
+
+
+		
+
+
+	def main(self):
+		device = self.device
+
+		device.listener_location = bge.logic.getCurrentScene().active_camera.position
+		device.listener_orientation = bge.logic.getCurrentScene().active_camera.orientation.to_quaternion()
+
+		self.handle_sounds()
+		self.handle_music()
+
+		
