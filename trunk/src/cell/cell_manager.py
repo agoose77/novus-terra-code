@@ -175,7 +175,7 @@ class CellManager:
 		print("cell_manager.load_terrain()")
 		#bge.logic.addScene("background", 0)
 		scene = bge.logic.getCurrentScene()
-		new = scene.addObject('outdoor_sun_shadow', "CELL_MANAGER_HOOK")  # TODO - variable never used - remove?
+		sudo.sun = scene.addObject('outdoor_sun_shadow', "CELL_MANAGER_HOOK")
 		#atmosphere = scene.addObject('Atmosphere2', "CELL_MANAGER_HOOK")
 		terrain.tr_singleton = terrain.Map_Manager()  # should do this in cell manager init
 		if len(filename.split('\\')) > 1:

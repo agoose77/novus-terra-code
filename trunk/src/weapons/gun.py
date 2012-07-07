@@ -5,6 +5,7 @@ except ImportError:
 	print('Unable to import bge, normal if running editor')
 
 import mathutils
+import random
 
 import sudo
 import weapons
@@ -14,13 +15,14 @@ import weapons
 class Gun(weapons.WeaponBase):
 	""" Base class for conventional guns """
 	def __init__(self, grid_id, name, gun_name, attack_sound, damage=1.0, 
-				rate_of_fire=10.0,range=200, clip_size=10, reload_time=2.0, 
+				rate_of_fire=10.0,range=200, zoom_lens=16.0, clip_size=10, reload_time=2.0, 
 				burst=0, ammo_id='', animations={}):
 		super().__init__(grid_id)
 
 		self.name = name  # The name (label) of the gun
 		self.gun_name = gun_name  # The name of the bge object to add
 		self.damage = damage
+		self.zoom_lens = zoom_lens
 		self.rate_of_fire = rate_of_fire  # Bullets per second
 		self.clip_size = clip_size
 		self.range = range  # Distance that bullets do damage within
@@ -60,7 +62,7 @@ class Gun(weapons.WeaponBase):
 		if self.reload_start_time == 0.0:
 			self.reload_start_time = sudo.game.game_time
 			self.entity.play_animation('reload')
-			self.gun_arm.playAction(self.name + "_reload", 1, 24, layer=2, priority=1, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.gun_arm.playAction(self.name + "_reload", 1, 60, layer=2, priority=1, blendin=1, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 			self.reloading = True
 
 		elif self.reload_start_time + self.reload_time < sudo.game.game_time:
@@ -80,18 +82,23 @@ class Gun(weapons.WeaponBase):
 		self.in_clip -= 1
 
 		# Flash
-		fp = bge.logic.getCurrentScene().objects['flashpoint']
-		fp.position = game.Game.singleton.world.player._data.position
-		fp['prop'] = 4.0
+		#fp = bge.logic.getCurrentScene().objects['flashpoint']
+		#fp.position = game.Game.singleton.world.player._data.position
+		#fp['prop'] = 4.0
 
 		# Cast the ray
 		hit_ob, hit_pos, hit_norm = self.gun_muzzle.rayCast(point2, point1, self.range)
 
 		scn = bge.logic.getCurrentScene()
 
+		# Play Sound
 		# Add muzzle flash
 		flash = scn.addObject('muzzle_flash', self.gun_muzzle, 5)
+		flash.position = self.gun_muzzle.position
 		flash.setParent(self.gun_muzzle)
+
+		# Play Sound
+		sudo.sound_manager.play_sound(self.attack_sound, self.gun_ob)
 
 		# Add the bullet trail
 		trail = scn.addObject('bullet_line', 'CELL_MANAGER_HOOK', 150)
@@ -99,13 +106,31 @@ class Gun(weapons.WeaponBase):
 		trail.alignAxisToVect(point2 - point1, 1, 1)
 
 		# Add the bullet hole
-		hole = bge.logic.getCurrentScene().addObject('B_Hole', 'CELL_MANAGER_HOOK', 100)
+		if hit_ob:
+			for material in hit_ob.meshes[0].materials:
+				material = str(material)
+
+				print (material)
+
+				if "dust" in material:
+					hole = bge.logic.getCurrentScene().addObject('B_Hole', 'CELL_MANAGER_HOOK', 750)
+				if "flesh" in material:
+					print ("YO!")
+					hole = bge.logic.getCurrentScene().addObject('B_Hole', 'CELL_MANAGER_HOOK', 750)
+				else:
+					hole = bge.logic.getCurrentScene().addObject('B_Hole', 'CELL_MANAGER_HOOK', 750)
+
+		else:
+			hole = bge.logic.getCurrentScene().addObject('B_Hole', 'CELL_MANAGER_HOOK', 750)
+
+		
 		hole.position = hit_pos
 		hole.alignAxisToVect(hit_norm, 2, 1.0)
-		hole.setParent(hit_ob)
 
-		# Play Sound
-		sudo.sound_manager.play_sound(self.attack_sound, self.gun_ob)
+		ran_size = random.randrange(10,30)
+		ran_size = ran_size/10
+		hole.localScale = [ran_size,ran_size,ran_size]
+
 
 		# Deal damanage to hit object
 		if hit_ob:

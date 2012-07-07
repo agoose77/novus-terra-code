@@ -10,3 +10,4 @@ from .ai_idle import *
 from .npc_base import *
 from .npc import *
 from .trigger import *
+from .vehicle_base import *

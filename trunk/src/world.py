@@ -49,7 +49,7 @@ class World:
 		self.light_sources = None
 		self.outside_lighting_ctrl = 'outdoor_sun_shadow'
 		self.sky_dome = 'sky_dome'
-		self.atmosphere_ctrl = 'atmosphere_time'
+		self.atmosphere_ctrl = 'skybox'#'atmosphere_time'
 
 		###
 		self.gravity = Vector([0, 0, -9.8])
@@ -199,7 +199,7 @@ class World:
 			else:
 				self.current_weather = cloudy
 
-	def spawn(self, name):
+	def spawn(self, name, distance_away=50):
 		scene = bge.logic.getCurrentScene()
 
 		if not name+'blend' in bge.logic.LibList():
@@ -213,15 +213,14 @@ class World:
 		#new_entity.position = [sudo.player.position[0],sudo.player.position[1],1500]
 
 		### Random Position around player
-		ran_x = random.randrange(0,50)
-		ran_y = random.randrange(0,50)
+		ran_x = random.randrange(-distance_away,distance_away)
+		ran_y = random.randrange(-distance_away,distance_away)
 
 		### Find Ground
 		pos_higher = [sudo.player.position[0]+ran_x,sudo.player.position[1]+ran_y,500]
 		pos_lower = [sudo.player.position[0]+ran_x,sudo.player.position[1]+ran_y,-500]
 
 		ray = new_entity.rayCast(pos_lower, pos_higher, 0.0, "", 0, 0, 0)
-
 
 		if "Chunk" in ray[0].name:
 			new_entity.positon = ray[1]
@@ -230,12 +229,11 @@ class World:
 			new_entity.position[2] = 1500
 
 
-
-	def handle_spawns(self):
-		random_num = random.randrange(0,5)
+	def exterior_roaming_spawns(self):
+		random_num = random.randrange(0,10)
 
 		if random_num == 2:
-			self.spawn("Morgoar")
+			self.spawn("Morgoar",50)
 
 	def main(self):
 
@@ -249,6 +247,7 @@ class World:
 
 		if self.player._data and self.cell_manager.load_state:
 			self.player.main()
+			#self.exterior_roaming_spawns()
 			#self.handle_spawns()
 		
 		###

@@ -28,7 +28,7 @@ class AIBase(entities.EntityBase):
 		# Stats
 		self.health = 100
 		self.speed = 400
-		self.faction = -1
+		self.faction = 1
 
 		# AI INFO
 		self.reloading = False
@@ -36,14 +36,12 @@ class AIBase(entities.EntityBase):
 		self.cover_timer = 101
 		self.in_cover = False
 
-
 		# Entity Info
 		self.allies = []
 		self.enemies = []
 		self.target = None
 		self.target_last_pos = None
 		self.target_in_sight = False
-
 
 		### Alert Info ###
 		self.alert_position = None
@@ -93,8 +91,11 @@ class AIBase(entities.EntityBase):
 
 		### FSM ###
 		self.ai_state_machine = FiniteStateMachine(self)
+
+		self.ai_state_machine.add_state('handle_idle')
 		self.ai_state_machine.add_state('handle_cover', self.handle_cover)
 		self.ai_state_machine.add_state('handle_no_cover', self.handle_no_cover)
+
 		self.ai_state_machine.add_state('dead', self.handle_dead)
 		self.ai_state_machine.add_transition('handle_no_cover', 'handle_cover', self.is_in_cover)
 
@@ -102,9 +103,8 @@ class AIBase(entities.EntityBase):
 		self.ai_state_machine.current_state = 'handle_no_cover'
 
 		# Weapon
-		temp_weap = __import__("weapon_pickup")
-		temp_weap = temp_weap.WeaponPickup(None, 'INFO:NONE', "P90")
-		temp_weap.on_interact(self)
+		#self.inventory.replace_weapon("F2000")
+		#self.inventory.primary_weapon.equip(self)
 
 	def _unwrap(self):
 		EntityBase._unwrap(self)
@@ -220,6 +220,7 @@ class AIBase(entities.EntityBase):
 		#covers = self.find_covers()
 
 		###
+		"""
 		scene = bge.logic.getCurrentScene()
 		temp = []
 
@@ -257,7 +258,8 @@ class AIBase(entities.EntityBase):
 						best = cov
 			
 			cover = best['object']
-
+			"""
+		cover = None
 		return cover
 
 
@@ -500,6 +502,7 @@ class AIBase(entities.EntityBase):
 	""" 'Main' """
 	#def main(self):
 	def update(self):
+		"""
 		if self._data:
 			#EntityBase.main(self)
 
@@ -512,7 +515,7 @@ class AIBase(entities.EntityBase):
 
 
 		else:
-			print("NO DATA")
+			print("NO DATA")"""
 
 
 
