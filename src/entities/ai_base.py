@@ -12,6 +12,7 @@ import entities
 
 import game
 import ui
+import sudo
 from entities import EntityBase
 from finite_state_machine import FiniteStateMachine
 from inventory import Inventory
@@ -88,42 +89,58 @@ class AIBase(entities.EntityBase):
 		self.aimer = [child for child in self.childrenRecursive if 'aimer' in child][0]
 		self.bullet_spread = [child for child in self.childrenRecursive if 'spread' in child][0]
 		self.weapon_pos = [child for child in self.childrenRecursive if 'weapon_pos' in child][0]
+		self.head_track = [child for child in self.childrenRecursive if 'head_track' in child][0]
 
 		### FSM ###
 		self.ai_state_machine = FiniteStateMachine(self)
 
 		self.ai_state_machine.add_state('handle_idle')
-		self.ai_state_machine.add_state('handle_cover', self.handle_cover)
-		self.ai_state_machine.add_state('handle_no_cover', self.handle_no_cover)
+		#self.ai_state_machine.add_state('handle_cover', self.handle_cover)
+		#self.ai_state_machine.add_state('handle_no_cover', self.handle_no_cover)
 
 		self.ai_state_machine.add_state('dead', self.handle_dead)
-		self.ai_state_machine.add_transition('handle_no_cover', 'handle_cover', self.is_in_cover)
+		self.ai_state_machine.add_state('attack', self.handle_attack)
+		self.ai_state_machine.add_state('talk', self.handle_talk)
+		#self.ai_state_machine.add_transition('handle_no_cover', 'handle_cover', self.is_in_cover)
 
 		# Hacks...
-		self.ai_state_machine.current_state = 'handle_no_cover'
+		self.ai_state_machine.current_state = "handle_idle"#'handle_no_cover'
 
 		# Weapon
-		#self.inventory.replace_weapon("F2000")
-		#self.inventory.primary_weapon.equip(self)
+		self.inventory.replace_weapon("F2000")
+		#self.inventory.primary_weapon.equip(self,'3rd')
+
+		#
+		self.interact_label = "NPC"
+		self.interact_icon = None
+
+		#
+		self._data['entity_base'] = self
+
 
 	def _unwrap(self):
 		EntityBase._unwrap(self)
 
+	def on_interact(self, player):
+		print ("Interacted!!!")
+		#self.ai_state_machine.current_state = "talk"
+		#sudo.world.dialogue_manager.display_dialogue('./data/dialogue/' + self['dialogue'] + '.xml')
+		sudo.world.dialogue_manager.display_dialogue('./data/dialogue/' + 'test' + '.xml')
 
-	### DONT NEED!!!
+
+	### Nonagressive behaviour:
 	def handle_idle(self, FSM):
 		self['Steer'] = 0
 		self.play_animation("idle")
-		#self.armature.playAction("pistol_idle", 1, 32, layer=1, priority=0, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 	def handle_talk(self, FSM):
 		self['Steer'] = 0
 		self.play_animation("idle")
-		#self.armature.playAction("pistol_idle", 1, 32, layer=1, priority=0, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+		sudo.world.dialogue_manager.display_dialogue('./data/dialogue/' + 'test' + '.xml')
+		print ("Boom!")
 
 	def handle_flee(self, FSM):
 		self.move_to(behavior=1)
-		#self.armature.playAction("pistol_run", 1, 32, layer=1, priority=0, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 
 	""" 'Misc Functions' """
@@ -312,10 +329,14 @@ class AIBase(entities.EntityBase):
 			temp.alerted = 1
 			temp.alert_position = self.position.copy()
 
-	def track(self, target):
-		vec = self.getVectTo(target)
-		self.alignAxisToVect(-vec[1], 1, 0.1)
-		self.alignAxisToVect([0,0,1], 2, 0.1)
+	def track(self, target, tracker=None,speed=0.1):
+		
+		if tracker == None:
+			tracker = self
+
+		vec = tracker.getVectTo(target)
+		tracker.alignAxisToVect(-vec[1], 1, 0.1)
+		tracker.alignAxisToVect([0,0,1], 2, 0.1)
 
 	def damage(self, damage_amount=1, object=None):
 		print("HIT")
@@ -402,7 +423,7 @@ class AIBase(entities.EntityBase):
 
 		else:
 			self.stop_animation(0)
-			self.armature.playAction(str(self.inventory.current_weapon.name) + "_idle", 1, 64, layer=0, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			self.armature.playAction("3rd_idle", 1, 64, layer=0, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 		for name in self.animations:
 			self.animations[name] = 0
@@ -411,15 +432,15 @@ class AIBase(entities.EntityBase):
 	"""' FSM States'	"""
 
 	### NO COVER ###
-	def handle_no_cover(self, FSM):
+	def handle_attack(self, FSM):
 		#print("Out of Cover")
-		ran = random.randrange(1,10)
+		#ran = random.randrange(1,10)
 
 
 		# Take Cover!!!
-		if self.cover_timer > 100:
-			self.cover = self.find_best_cover()
-			self.cover_timer = 0
+		#if self.cover_timer > 100:
+		#	self.cover = self.find_best_cover()
+		#	self.cover_timer = 0
 
 		# If Target Found
 		if self.target != None:
@@ -502,7 +523,7 @@ class AIBase(entities.EntityBase):
 	""" 'Main' """
 	#def main(self):
 	def update(self):
-		"""
+
 		if self._data:
 			#EntityBase.main(self)
 
@@ -511,11 +532,12 @@ class AIBase(entities.EntityBase):
 				self.update_enitity_list() # Update Enemy/Ally list
 				self.find_target() # Update Target with the enemy with the highest threat level
 
-			self.ai_state_machine.main() # Please turn back on
+			self.ai_state_machine.main()
+			self.track(sudo.player.position, tracker=self.head_track, speed=0.8)
 
 
 		else:
-			print("NO DATA")"""
+			print("NO DATA")
 
 
 
