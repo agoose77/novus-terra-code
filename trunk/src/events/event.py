@@ -18,9 +18,11 @@ class Event:
 	RUNNING = 1
 	FAILED = 2
 
-	def __init__(self):
+	def __init__(self, filename=''):
 		Event._current_event = self
 		self.action_stack = []
+
+		self.filename = filename
 
 	def register_action(self, action):
 		self.action_stack.append(action)
@@ -33,7 +35,10 @@ class Event:
 			if code == actions.Action.FINISHED:
 				self.action_stack.pop(0)
 			elif code == actions.Action.FAILED:
-				print('failed')
+				print('[Error] ' + self.filename,)
+				if self.action_stack[0].error_msg:
+					print(':\n\t' + self.action_stack[0].error_msg)
+					
 				return Event.FAILED
 			return Event.RUNNING
 

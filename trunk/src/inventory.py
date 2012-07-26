@@ -52,6 +52,8 @@ class Inventory:
 	def add_item(self, item_id, item_amount=1, pos=None):
 		""" add an item into the grid.
 		*** Check that the grid spaces are free before you add ***
+		returns the amount of items that couldn't be added or True
+		if they were all added
 
 		item_id : the id of the item to add
 		item_amount : the amount to add

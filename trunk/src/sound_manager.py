@@ -41,6 +41,10 @@ class SoundManager:
 
 	### MUSIC
 	def play_song(self,song_name, fade_time=5.0,volume=1.0):
+		if not len(self.music):
+			# Return if no music has been loaded
+			return
+
 		if song_name == "Random":
 			while True:
 				random_number = random.randrange(0,len(self.music))
@@ -161,6 +165,9 @@ class SoundManager:
 
 
 	def handle_music(self):
+		if not self.music:
+			return
+			
 		device = self.device
 
 		# New song

@@ -108,7 +108,7 @@ class Game:
 		self.fx_object = bge.logic.getCurrentScene().objects['FX']
 		self.fx_object_blur = bge.logic.getCurrentScene().objects['FX BLUR']
 
-		#self.ui_manager.show('hud')
+		self.ui_manager.show('hud')
 		self.ui_manager.show('pause')
 
 		# SUDO setup

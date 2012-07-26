@@ -8,15 +8,15 @@ import terrain
 import sudo
 
 
-try:
-	import bge
-	import mathutils
-	import entities
-	from game import Game
-	from paths import *
-	import savefile  # TODO - won't need this import when saving/loading is properly implimented
-except:
-	print("BGE imports failed, normal if you are running the cell editor")
+#try:
+import bge
+import mathutils
+import entities
+from game import Game
+from paths import *
+import savefile  # TODO - won't need this import when saving/loading is properly implimented
+#except:
+	#print("BGE imports failed, normal if you are running the cell editor")
 
 
 class CellManager:
@@ -84,7 +84,6 @@ class CellManager:
 		print("---------")
 		print("Loading " + filepath + "...")
 		print("---------")
-		scene = bge.logic.getCurrentScene()  # TODO - variable never used - remove?
 
 		#hook for world to handle player stuff
 		Game.singleton.world.cell_loading()
@@ -137,13 +136,15 @@ class CellManager:
 			self.__dict__.pop('entity_hack')
 
 		# Update the entities setup packet, and unwrap from their objects
-		if self.cell and self.cell.name in Game.singleton.savefile.entities:
-			for entity in Game.singleton.savefile.entities[self.cell.name]:
-				if entity._data:
-					entity.packet.co = entity._data.position[:]
-					entity.packet.rotation = entity._data.orientation.to_euler()[:]
-					entity._data.endObject()
-					entity._unwrap()
+		if self.cell:
+			self.cell.id_entity = {}
+			if self.cell.name in Game.singleton.savefile.entities:
+				for entity in Game.singleton.savefile.entities[self.cell.name]:
+					if entity._data:
+						entity.packet.co = entity._data.position[:]
+						entity.packet.rotation = entity._data.orientation.to_euler()[:]
+						entity._data.endObject()
+						entity._unwrap()
 
 		# Remove props
 		for prop_group in self.props_in_game:
@@ -204,7 +205,6 @@ class CellManager:
 		print("cell_manager.load_libs()")
 		print("=========")
 
-		scene = bge.logic.getCurrentScene()  # TODO - variable never used - remove?
 		liblist = bge.logic.LibList()
 		libs_to_load = []
 
@@ -240,6 +240,8 @@ class CellManager:
 		""" Load all the entities in the current cell """
 		#hook for world to handle player stuff
 		Game.singleton.world.cell_loaded()
+
+		self.cell.id_entity['player'] = sudo.player
 
 		if self.cell.name in Game.singleton.savefile.entities:
 			# This cell has been visited before
@@ -324,7 +326,6 @@ class CellManager:
 				print("[loading] ", blend, "...")
 				bge.logic.LibLoad(blend, "Scene", load_actions=1)
 
-				
 			else:
 				print ("[loaded] Error: Blend already loaded")
 		else:

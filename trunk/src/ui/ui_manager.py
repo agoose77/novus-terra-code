@@ -14,7 +14,7 @@ class UIManager(bgui.System):
 
 	def __init__(self):
 		# Initiate the system
-		bgui.System.__init__(self)#bgui.System.__init__(self, safepath('./data/themes/default'))
+		super().__init__(safepath('./data/themes/default'))
 
 		self.focused_widget = self
 
@@ -34,7 +34,7 @@ class UIManager(bgui.System):
 		# Initially disable the visibility of each screen
 		for screen in self.screens:
 			self.screens[screen].visible = False
-	
+
 	def show(self, screen, args=[]):
 		""" Display a screen.
 

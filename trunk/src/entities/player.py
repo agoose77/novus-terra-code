@@ -17,12 +17,12 @@ from finite_state_machine import FiniteStateMachine
 
 
 ###
-class Player(entities.EntityBase):
+class Player(entities.Actor):
 
 	def __init__(self):
 		print("player.__init__()")
 
-		entities.EntityBase.__init__(self)
+		super().__init__()
 
 		# Player Stats
 		self.health = 100
@@ -226,6 +226,11 @@ class Player(entities.EntityBase):
 			print("Play Sound")
 			#session.game.sound_manager.play_sound('walk_grass_1.ogg', self)
 
+	def update_path_follow(self):
+		""" """
+		super().update_path_follow()
+		self.play_animation('walk')
+
 	### ANIMATIONS ###
 	def play_animation(self, name):
 		self.animations[name] = 1
@@ -362,7 +367,7 @@ class Player(entities.EntityBase):
 				if keyboard.events[bge.events.EKEY] == 1:
 					hit['entity_base'].on_interact(self)
 		else:
-			#sudo.ui_manager.screens['hud'].set_interact_text('')
+			sudo.ui_manager.screens['hud'].set_interact_text('')
 			pass
 
 	def fast_travel(self, location):
@@ -463,10 +468,8 @@ class Player(entities.EntityBase):
 		self.movement_state_machine.current_state = self.stored_state
 
 	###
-	def main(self):
+	def update(self):
 		if bge.logic.globalDict['pause'] == 0 and self._data:
-
-			entities.EntityBase.main(self)
 			if not self.frozen:
 				self.movement_state_machine.main()
 			#self.handle_animations()

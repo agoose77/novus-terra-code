@@ -11,6 +11,8 @@ class Action:
 	def __init__(self):
 		events.Event._current_event.register_action(self)
 
+		self.error_msg = ''
+
 	def run(self):
 		""" Called every tick while the action is running.
 		Must return one of Action.RUNNING, Action.FINISHED or

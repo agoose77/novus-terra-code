@@ -8,7 +8,7 @@ from mathutils import Vector
 import sudo
 import cell, entity
 
-#import dialogue
+import dialogue
 import entities
 import entity
 import events
@@ -33,7 +33,7 @@ class World:
 		self.cell_manager = cell.CellManager()
 		self.entity_manager = entity.EntityManager()
 		self.event_manager = events.EventManager()
-		#self.dialogue_manager = dialogue.DialogueManager()
+		self.dialogue_manager = dialogue.DialogueManager()
 
 		### Time and date
 		self.world_time = 0.0
@@ -249,9 +249,9 @@ class World:
 			self.player.main()
 			#self.exterior_roaming_spawns()
 			#self.handle_spawns()
-		
+
 		###
-		#self.dialogue_manager.main()
+		self.dialogue_manager.main()
 
 		self.cell_manager.update()
 		if len(self.entity_list) != 0:
