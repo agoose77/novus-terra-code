@@ -97,6 +97,8 @@ class InventoryWindow(bgui.Widget):
 		self.remove_context_menu()
 
 		item = Item.items[self.inventory._items[self.context_item][0]]
+		if self.inventory.primary_weapon:
+			self.inventory.primary_weapon.unequip(sudo.player)
 		self.inventory.primary_weapon = getattr(weapons, item.properties['weapon'])(self.context_item)
 		self.inventory.primary_weapon.equip(sudo.player)
 

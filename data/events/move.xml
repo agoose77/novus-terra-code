@@ -1,0 +1,4 @@
+<event>
+	<move_to entity='player' point='[-15, -15, 0]' />
+	<look_at entity='player' point='[0, 0, 0]' />
+</event>

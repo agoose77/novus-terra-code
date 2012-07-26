@@ -5,7 +5,7 @@ import entities
 class Door(entities.EntityBase):
 	""" An entity that teleports the player from one cell to another.
 
-	properties: (set on the KX_GameObject):
+	properties (set on the KX_GameObject):
 		- entity: Set to 'Door'
 		- cell: the name of the cell to teleport to
 		- destination: the name of the object in the destination cell to teleport to
@@ -13,7 +13,7 @@ class Door(entities.EntityBase):
 	def __init__(self, packet=None):
 		entities.EntityBase.__init__(self, packet)
 
-		self.interact_label = 'Enter '
+		self.interact_label = 'Enter'
 
 	def on_interact(self, player):
 		# TODO play sound - door open
