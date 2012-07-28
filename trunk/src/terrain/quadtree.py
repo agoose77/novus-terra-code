@@ -54,7 +54,7 @@ class Chunk_Que:
 
 class Quadtree(object):
 
-	def __init__(self, size=2048, pos=[0,0], debug=1, max_depth=7, scale=1.0):
+	def __init__(self, size=2048, pos=[0,0], debug=1, max_depth=7, scale=2.0):
 		print("MY SCALE: ", scale)
 		self.root = Node(pos, size, debug, max_depth=max_depth, scale=scale)
 		
@@ -67,8 +67,7 @@ class Quadtree(object):
 		solution = 0
 		while solution == 0:
 			if max_size > size*2:
-				size = int(size/2)
-				max_depth -= 1
+*-*-*-*-				max_depth -= 1
 		"""
 	def add(self, object):
 		self.root.add(object)
@@ -85,7 +84,7 @@ class Quadtree(object):
 
 
 class Node(object):
-	def __init__(self, pos, size, debug, depth=0, max_depth=7, scale=1.0, nochunk = 0):
+	def __init__(self, pos, size, debug, depth=0, max_depth=7, scale=2.0, nochunk = 0):
 		self.scale = scale
 		self.pos = pos
 		self.size = size

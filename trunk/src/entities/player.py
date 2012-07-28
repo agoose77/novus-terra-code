@@ -1,5 +1,7 @@
 from mathutils import *
 from bge import render as R
+import random
+
 import math
 import sys
 sys.path.append('./src/')
@@ -38,10 +40,10 @@ class Player(entities.Actor):
 		self.roll = 0.0
 
 		self.walk_speed = 5.0
-		self.run_speed = 45.0
+		self.run_speed = 25.0
 		self.walk_temp = 0.0
 		self.last_move = 0.0
-		self.jump_speed = 10.0
+		self.jump_speed = 50.0
 
 		# Stops mouse events from triggering for a frame
 		# Used for when a UI screen is exited
@@ -56,6 +58,9 @@ class Player(entities.Actor):
 			'idle': 1,
 			'cround': 0
 			}
+
+		self.recoil_time = None
+		self.recoiled = False
 
 		self.bullets_auto = 10
 		self.bullets_shotgun = 10
@@ -133,6 +138,7 @@ class Player(entities.Actor):
 		self.temp_pos = 1
 		self.set_loc = [child for child in self.childrenRecursive if 'set_loc' in child][0]
 		self.lev = None
+		self.saved_armature_localPosition = self.armature.localPosition.copy()
 
 		# WEAPON STARTING
 		self.inventory.replace_weapon("F2000")
@@ -248,8 +254,33 @@ class Player(entities.Actor):
 			self.stop_animation(4)
 
 		elif self.animations['shoot'] == 1:
-			self.armature.playAction(str(weapon.name) + "_shoot", 1, 5, layer=3, priority=3, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
-			self.stop_animation(3)
+			if self.recoiled == False:
+				x = random.uniform(self.inventory.primary_weapon.recoil_min_x,self.inventory.primary_weapon.recoil_max_x)#random.randrange(self.inventory.primary_weapon.recoil_min_x,self.inventory.primary_weapon.recoil_max_x)
+				y = random.uniform(self.inventory.primary_weapon.recoil_min_y,self.inventory.primary_weapon.recoil_max_y)#random.randrange(self.inventory.primary_weapon.recoil_min_y,self.inventory.primary_weapon.recoil_max_y)
+				z = 0
+
+				self.armature.localPosition = self.armature.localPosition+Vector([y,x,z])
+				#self.camera.applyRotation([abs(y*3.0), 0, 0], 1)
+				self.recoiled = True
+
+			elif sudo.world.world_time-self.recoil_time < 5.0:
+				print ("Here!----------")
+				self.armature.localPosition = self.armature.localPosition.lerp(self.saved_armature_localPosition,0.25)
+
+			else:
+				print ("Now here!!!!")
+				self.armature.localPosition = self.saved_armature_localPosition
+				self.animations['shoot'] = 0
+
+
+			#self.armature.localPosition[1] += math.sin(sudo.world.world_time)*0.03
+			#self.armature.playAction("F2000_shoot", 4, 10, layer=3, priority=2, blendin=2, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
+			#self.stop_animation(3)
+			#print("OH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+			#frame = self.armature.getActionFrame(3)
+
+			#if frame > 5:
+			#	self.animations['shoot'] = 0
 
 		elif self.animations['walk'] == 1:
 			self.armature.playAction(str(weapon.name) + "_walk", 1, 21, layer=2, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
@@ -264,7 +295,8 @@ class Player(entities.Actor):
 			self.armature.playAction(str(weapon.name) + "_idle", 1, 101, layer=0, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 		for name in self.animations:
-			self.animations[name] = 0
+			if name != "shoot":
+				self.animations[name] = 0
 
 	def handle_fall_state(self, FSM):
 		pass
@@ -452,6 +484,8 @@ class Player(entities.Actor):
 			mouse_mx = self.oldX[0]* sensitivity
 			mouse_my = self.oldX[1]* sensitivity
 
+			self.armature.localPosition = self.armature.localPosition + Vector([mouse_mx*0.1,mouse_my*0.1,0.0])
+
 			cap = 1.5
 
 			if -(self.camera['ml_rotx'] + mouse_my) < cap and -(self.camera['ml_rotx'] + mouse_my) > -cap:
@@ -459,6 +493,8 @@ class Player(entities.Actor):
 					self.camera.parent.applyRotation([0, 0, -mouse_mx], 0)  # X
 					self.camera.applyRotation([-mouse_my, 0, 0], 1)  # Y
 					self.camera['ml_rotx'] += mouse_my
+
+		self.armature.localPosition = self.armature.localPosition.lerp(self.saved_armature_localPosition,0.25)
 
 
 	def remove_controls(self):

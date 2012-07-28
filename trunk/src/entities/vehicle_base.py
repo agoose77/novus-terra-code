@@ -210,7 +210,7 @@ class VehicleBase(entities.EntityBase):
 			
 		else:
 			if self.engine_sound > 0.0:
-				self.engine_sound =  -0.005
+				self.engine_sound +=  -0.005
 
 			if self.acceleration > 0.0:
 				self.acceleration += -0.01
@@ -299,7 +299,7 @@ class VehicleBase(entities.EntityBase):
 		self.last_rotation = self.rotation_speed
 		self.rotation_speed = (vehicle_wrapper.getWheelRotation(0)+vehicle_wrapper.getWheelRotation(1))/2
 		
-		self.rotation_difference = self.last_rotation-self.rotation_speed
+		self.rotation_difference += -(self.last_rotation-self.rotation_speed)
 		
 		### Gears
 		if self.rotation_difference > 1.0:

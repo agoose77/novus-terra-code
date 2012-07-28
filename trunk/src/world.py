@@ -52,7 +52,7 @@ class World:
 		self.atmosphere_ctrl = 'skybox'#'atmosphere_time'
 
 		###
-		self.gravity = Vector([0, 0, -9.8])
+		self.gravity = Vector([0, 0, -15.0])
 		bge.logic.setGravity([0, 0, 0])
 		self.world_effects = {'mist color': [0.0, 0.0, 0.0], 'tint': [0.0, 0.0, 0.0]}
 
@@ -236,6 +236,8 @@ class World:
 			self.spawn("Morgoar",50)
 
 	def main(self):
+
+		#if self.cell_manager.cell.cinimatic == False:
 
 		self.handle_time()
 		self.handle_weather()
