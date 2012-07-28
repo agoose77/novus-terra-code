@@ -5,6 +5,7 @@ except ImportError:
 	print('Unable to import bge, normal if running editor')
 
 import mathutils
+from mathutils import *
 import random
 
 import sudo
@@ -22,13 +23,17 @@ class Gun(weapons.WeaponBase):
 		self.name = name  # The name (label) of the gun
 		self.gun_name = gun_name  # The name of the bge object to add
 		self.damage = damage
-		self.zoom_lens = zoom_lens
+		self.zoom_lens = zoom_lens # The camera lens value when zooming
 		self.rate_of_fire = rate_of_fire  # Bullets per second
-		self.clip_size = clip_size
+		self.clip_size = clip_size # Weapon clip size
 		self.range = range  # Distance that bullets do damage within
 		self.reload_time = reload_time
 		self.burst = burst  # number of bullets to fire in each burst
 		self.ammo_id = ammo_id  # the id of the item to use for ammo
+		self.recoil_min_x = -0.05
+		self.recoil_max_x = -0.01
+		self.recoil_min_y = -0.005
+		self.recoil_max_y = 0.005
 
 		self.fired_in_burst = 0  # number of bullets fired in current burst sofar
 		self.reload_start_time = 0.0  # the time that the reload was started
@@ -81,24 +86,20 @@ class Gun(weapons.WeaponBase):
 		self.fired_in_burst += 1
 		self.in_clip -= 1
 
-		# Flash
-		#fp = bge.logic.getCurrentScene().objects['flashpoint']
-		#fp.position = game.Game.singleton.world.player._data.position
-		#fp['prop'] = 4.0
+		# Light Flash
+		fp = bge.logic.getCurrentScene().objects['flashpoint']
+		fp.position = self.gun_muzzle.position + (Vector([10.0,0.0,0.0])*self.gun_muzzle.worldOrientation)
+		fp['prop'] = 3.4
 
 		# Cast the ray
 		hit_ob, hit_pos, hit_norm = self.gun_muzzle.rayCast(point2, point1, self.range)
 
 		scn = bge.logic.getCurrentScene()
 
-		# Play Sound
 		# Add muzzle flash
 		flash = scn.addObject('muzzle_flash', self.gun_muzzle, 5)
 		flash.position = self.gun_muzzle.position
 		flash.setParent(self.gun_muzzle)
-
-		# Play Sound
-		sudo.sound_manager.play_sound(self.attack_sound, self.gun_ob)
 
 		# Add the bullet trail
 		trail = scn.addObject('bullet_line', 'CELL_MANAGER_HOOK', 150)
@@ -110,12 +111,9 @@ class Gun(weapons.WeaponBase):
 			for material in hit_ob.meshes[0].materials:
 				material = str(material)
 
-				print (material)
-
 				if "dust" in material:
 					hole = bge.logic.getCurrentScene().addObject('B_Hole', 'CELL_MANAGER_HOOK', 750)
 				if "flesh" in material:
-					print ("YO!")
 					hole = bge.logic.getCurrentScene().addObject('B_Hole', 'CELL_MANAGER_HOOK', 750)
 				else:
 					hole = bge.logic.getCurrentScene().addObject('B_Hole', 'CELL_MANAGER_HOOK', 750)
@@ -139,11 +137,15 @@ class Gun(weapons.WeaponBase):
 			if 'physics' in hit_ob:
 				hit_ob['physics'] = 1
 
-	def equip(self, entity):
+	def equip(self, entity, weapon_type="1st"):
 		self.entity = entity
 
 		# Add the gun model
 		self.gun_ob = bge.logic.getCurrentScene().addObject(self.gun_name, 'CELL_MANAGER_HOOK')
+
+		if weapon_type == "3rd":
+			self.gun_ob.localScale = [1.5,1.5,1.5]
+
 		self.gun_ob.worldPosition = self.entity.weapon_pos.worldPosition
 		self.gun_ob.worldOrientation = self.entity.weapon_pos.worldOrientation
 		self.gun_ob.setParent(self.entity.weapon_pos)
@@ -175,6 +177,10 @@ class Gun(weapons.WeaponBase):
 
 		if (mouse.events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_ACTIVE and
 			self.check_fire()):
+				self.entity.recoil_time = sudo.world.world_time
+				self.entity.play_animation('shoot')
+				self.entity.recoiled = False
+
 				bullet_spread = sudo.player.bullet_spread
 				ray = bullet_spread.controllers[0].sensors['weapon_ray']
 				ray.range = self.range

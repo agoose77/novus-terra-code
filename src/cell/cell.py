@@ -8,6 +8,7 @@ class Cell:
 		self.id = 0
 		self.name = ""
 		self.filename = ""
+		self.cinematic = False
 
 		self.props = []
 		self.entities = []

@@ -38,6 +38,7 @@ class CellManager:
 		self.lamp_kdtree = None
 		self.points = []
 		self.spots = []
+		self.alights = []
 
 		self.ready_to_load = 0
 		self.hook = 0  # used for a tweener callback
@@ -160,6 +161,7 @@ class CellManager:
 		self.spots = []
 		self.points = []
 		for entry in scene.objectsInactive:
+			#self.alights.append(entry)
 			if "SPOT" in entry.name:
 				self.spots.append(entry)
 			if "POINT" in entry.name:
@@ -314,7 +316,9 @@ class CellManager:
 			lamp.type = 0
 			lamp.spotsize = data.spot_size * 180 / 3.14
 			lamp.spotblend = data.spot_blend
+
 		tweener.singleton.add(lamp, "color", str(list(data.color)), 2.0)
+		print ("LAMPSINGINGIN!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		return lamp
 
 	def load_model(self, model):
@@ -392,7 +396,11 @@ class CellManager:
 			to_remove = self.lamps_in_game[:]
 			found_lamps = []
 			self.lamp_kdtree.getVertsInRange(position, 100, found_lamps)
+
+			print (str(found_lamps )+ "blab lbalbalbalbalba")
+
 			for lamp in found_lamps:
+				print ("Found lamps! --------------------------------")
 				if lamp in to_remove:
 					# keep lamp in scene
 					to_remove.remove(lamp)
@@ -401,6 +409,7 @@ class CellManager:
 					if (lamp.type == "POINT" and len(self.points) > 0) or (lamp.type == "SPOT" and len(self.spots) > 0):
 						self.lamps_in_game.append(lamp)
 						lamp.game_object = self.spawn_lamp(lamp)
+						print ("spawned lamp ++++++++++++++++++")
 
 			for lamp in to_remove:
 				# remove the lamp
