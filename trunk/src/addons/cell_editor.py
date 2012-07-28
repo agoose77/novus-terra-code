@@ -26,7 +26,7 @@ from bpy_extras.io_utils import ImportHelper, ExportHelper
 sys.path.append('./src/')
 from cell import Prop, Lamp, Cell, Entity, Destination
 from inventory import Inventory
-from item import Item
+from item import Item, load_items
 
 CELL_NONE = ""
 CELL_INTERIOR = 'Interior'
@@ -40,7 +40,10 @@ MODE_FILTER = 'filter'
 blend_dict = {}
 model_dict = {}
 
-map = None # Terrain file
+map = None  # Terrain file	43	map = None # Terrain file
+		
+folder_list = []  # List of folders that get drawn in the asset manager		
+asset_list = []  # list of assets, used for expanding
 
 def construct_blend_dict(assets):
 	""" Open a list of .blends and find out what objects are within it
@@ -54,9 +57,7 @@ def construct_blend_dict(assets):
 		file = open(blend, 'rb')
 		data = str(file.read())
 		file.close()
-		
-		if "OB" in data:
-			print ("DANGER")
+
 			
 		parts = data.split("OB")
 		for n in range(len(parts)):
@@ -86,10 +87,11 @@ def walk_dir(path):
 	return assets
 	
 def init():
+	load_items()
 	""" Setup all the properties """
 	# Cell editor props
 	bpy.types.Scene.ce_asset_dir = bpy.props.StringProperty(name='Asset Directory', default='./data/models', description='Filepath to asset folder')
-	bpy.types.Scene.ce_assets = bpy.props.CollectionProperty(type=CE_asset_properties)
+	bpy.types.Scene.ce_assets = bpy.props.PointerProperty(type=CE_asset_folder)
 	bpy.types.Scene.ce_name = bpy.props.StringProperty(name='Cell Name', default='')
 	bpy.types.Scene.ce_type = bpy.props.StringProperty(default=CELL_NONE)
 	bpy.types.Scene.ce_mode = bpy.props.EnumProperty(
@@ -150,6 +152,18 @@ class CE_asset_properties(bpy.types.PropertyGroup):
 	label = bpy.props.StringProperty(default='')
 	filepath = bpy.props.StringProperty(default='')
 	loaded = bpy.props.BoolProperty(default=False)
+	expanded = bpy.props.BoolProperty(default=False)		
+		
+			
+class CE_asset_folder(bpy.types.PropertyGroup):		
+	""" A folder, containing a list of .blends """		
+	label = bpy.props.StringProperty(default='')		
+	filepath = bpy.props.StringProperty(default='')		
+		
+	assets = bpy.props.CollectionProperty(type=CE_asset_properties)		
+	expanded = bpy.props.BoolProperty(default=False)		
+		
+CE_asset_folder.folders = bpy.props.CollectionProperty(type=CE_asset_folder)
 	
 class CE_interior(bpy.types.Operator):
 	""" Creates a new interior cell """
@@ -707,6 +721,47 @@ class CE_item_del(bpy.types.Operator):
 		
 		return {'FINISHED'}
 
+class CE_folder_expand(bpy.types.Operator):
+        """ Expand/contract a folder in the manage view """
+        bl_idname = "scene.ce_folder_expand"
+        bl_label = "Expand/Contract folder"
+        folder = bpy.props.IntProperty()
+
+        def execute(self, context):
+                global folder_list
+                folder_list[self.folder].expanded = not folder_list[self.folder].expanded
+
+                return {'FINISHED'}
+
+
+class CE_asset_expand(bpy.types.Operator):
+        """ Expand/contract a folder in the manage view """
+        bl_idname = "scene.ce_asset_expand"
+        bl_label = "Expand/Contract asset"
+        asset = bpy.props.IntProperty()
+
+        def execute(self, context):
+                global asset_list
+                asset_list[self.asset].expanded = not asset_list[self.asset].expanded
+
+                return {'FINISHED'}
+
+
+class CE_load_asset(bpy.types.Operator):
+        """ Expand/contract a folder in the manage view """
+        bl_idname = "scene.ce_load_asset"
+        bl_label = "Load the selected asset"
+        asset = bpy.props.StringProperty()
+
+        def invoke(self, context, event):
+                directory = self.asset.split('|')[0] + "/Object/"
+                filename = self.asset.split('|')[1]
+
+                bpy.ops.wm.link_append(directory=directory, filename=filename, link=False, instance_groups=False, autoselect=True)
+                bpy.ops.object.make_local()
+
+                return {'FINISHED'}
+
 class SCENE_PT_cell_editor(bpy.types.Panel):
 	bl_label = "NT - Cell Editor"
 	bl_space_type = "PROPERTIES"
@@ -714,7 +769,59 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 	bl_context = "scene"
 	
 	def draw(self, context):
-		layout = self.layout
+		global folder_list, asset_list, blend_dict
+        def draw_folder(folder, layout, depth):
+                global folder_list, asset_list, blend_dict
+
+                index = len(folder_list)
+                folder_list.append(folder)
+
+                row = layout.row(align=True)
+                if depth != 0:
+                        split = row.split(percentage=0.05*depth)
+                        col = split.column()
+                        col = split.column()
+                        row = col.row(align=True)
+
+                if folder.expanded:
+                        row.operator("scene.ce_folder_expand", text='', icon="TRIA_DOWN", emboss=False).folder = index
+                        row.label(folder.label)
+                        for new_folder in folder.folders:
+                                draw_folder(new_folder, layout, depth+1)
+                        for asset in folder.assets:
+                                row = layout.row(align=True)
+                                split = row.split(percentage=0.05*(depth+1))
+                                col = split.column()
+                                col = split.column()
+                                row = col.row(align=True)
+
+                                index2 = len(asset_list)
+                                asset_list.append(asset)
+
+                                icon = ['TRIA_RIGHT', 'TRIA_DOWN'][asset.expanded]
+                                row.operator("scene.ce_asset_expand", icon=icon, emboss=False, text='').asset = index2
+                                row.label(asset.label)
+
+                                if asset.expanded:
+                                        for model in blend_dict[asset.filepath]:
+                                                row = layout.row(align=True)
+                                                split = row.split(percentage=0.05*(depth+2))
+                                                col = split.column()
+                                                col = split.column()
+                                                row = col.row(align=True)
+                                                row.operator("scene.ce_load_asset", icon="ZOOMIN", text='', emboss=False).asset = asset.filepath+'|'+model
+                                                row.label(model)
+                                                
+                else:
+
+                        row.operator("scene.ce_folder_expand", text='', icon="TRIA_RIGHT", emboss=False).folder = index
+                        row.label(folder.label)
+
+        layout = self.layout
+        folder_list = []
+        asset_list = []
+
+		#layout = self.layout
 		#row = layout.row(align=True)
 		#row.prop(context.scene, "ce_nt_root")
 		#row.operator('scene.ce_root_select', icon='FILESEL')
@@ -758,20 +865,24 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 					row.prop(context.scene, 'ce_asset_dir')
 					row.operator("scene.ce_index_blends", text='', icon='FILE_REFRESH')
 					
-					row = box.row()
-					split = row.split(percentage=0.5)
-					colA = split.column()
-					colB = split.column()
-					for id, asset in enumerate(context.scene.ce_assets):
-						
-						if asset.loaded:
-							row = colB.row()
-							row.operator("scene.ce_free_lib", text='', icon='LINKED').asset = id
-							row.label(asset.label)
-						else:
-							row = colA.row()
-							row.label(asset.label)
-							row.operator("scene.ce_load_lib", text='', icon='UNLINKED').asset = id
+					draw_folder(context.scene.ce_assets, box, 0)
+
+	                # row = box.row()
+	                # split = row.split(percentage=0.5)
+	                # colA = split.column()
+	                # colB = split.column()
+	                # for id, asset in enumerate(context.scene.ce_assets):
+
+	                #       if asset.loaded:
+	                #               row = colB.row()
+	                #               row.operator("scene.ce_free_lib", text='', icon='LINKED').asset = id
+	                #               row.label(asset.label)
+	                #       else:
+	                #               row = colA.row()
+	                #               row.label(asset.label)
+	                #               row.operator("scene.ce_load_lib", text='', icon='UNLINKED').asset = id
+
+                    
 				
 				elif context.scene.ce_mode == MODE_IE:
 					box = layout.box()
