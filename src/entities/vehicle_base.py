@@ -117,7 +117,7 @@ class VehicleBase(entities.EntityBase):
 		### BUILD VEHICLE
 		self.assembleVehicle(self._data)
 		self._data['build'] = True
-		self.sound_actuator = self._data.controllers[0].actuators['Sound']
+		#self.sound_actuator = self._data.controllers[0].actuators['Sound']
 
 	#def _unwrap(self):
 	#	entities.EntityBase._unwrap(self)	
@@ -310,7 +310,7 @@ class VehicleBase(entities.EntityBase):
 			self.gear = 1
 		
 		#self.engine_sound = self.rotation_difference#*self.gear
-		self.sound_actuator.pitch = 1.0 + (self.engine_sound*2.0)
+		#self.sound_actuator.pitch = 1.0 + (self.engine_sound*2.0)
 
 		#print (self.sound_actuator)
 		
