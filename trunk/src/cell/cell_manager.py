@@ -8,15 +8,15 @@ import terrain
 import sudo
 
 
-#try:
-import bge
-import mathutils
-import entities
-from game import Game
-from paths import *
-import savefile  # TODO - won't need this import when saving/loading is properly implimented
-#except:
-	#print("BGE imports failed, normal if you are running the cell editor")
+try:
+	import bge
+	import mathutils
+	import entities
+	from game import Game
+	from paths import *
+	import savefile  # TODO - won't need this import when saving/loading is properly implimented
+except:
+	print("BGE imports failed, normal if you are running the cell editor")
 
 
 class CellManager:
