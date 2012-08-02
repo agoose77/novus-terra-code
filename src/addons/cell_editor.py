@@ -199,13 +199,9 @@ class CE_exterior(bpy.types.Operator):
 
 
 def select_obj(obj):
-	for ob in bpy.context.selectable_objects:
-		#print (ob.name)
-
-		if ob.name == obj:
-			bpy.context.scene.objects.active = ob
-		#else:
-		#   scn.objects.active = obj
+	bpy.ops.object.select_all(action='DESELECT')
+	obj.select = True  # Make object active
+	bpy.context.scene.objects.active = obj
 
 
 class CE_load(bpy.types.Operator):
@@ -241,34 +237,23 @@ class CE_load(bpy.types.Operator):
 			self.report({'ERROR'}, 'Unable to unpickle .cell file')
 			return {'CANCELLED'}
 
-
 		# load props
-		for prop_group in cell.props: # props are stored in a 2D array
+		for prop_group in cell.props:  # props are stored in a 2D array
 			for prop in prop_group:
 				blend = model_dict[prop.name]
 
-				loaded = False
-				for asset in context.scene.ce_assets:
-					if asset.filepath == blend and asset.loaded:
-						loaded = True
-						break
-
+				loaded = prop.name in context.scene.objects
 				if loaded:
-					select_obj(prop.name)  # bpy.ops.object.select_name(name=prop.name)
-					bpy.ops.object.duplicate()
-					obj = bpy.context.scene.objects[-1]
+					bpy.ops.object.select_all(action='DESELECT')
+					context.scene.objects[prop.name].select = True
+					bpy.ops.object.duplicate(linked=True)
 				else:
-					for asset in context.scene.ce_assets:
-						if asset.filepath == blend:
-							asset.loaded = True
-							break
 					directory = blend + "/Object/"
 					bpy.ops.wm.link_append(directory=directory, filename=prop.name, link=False, instance_groups=False, autoselect=True)
 					bpy.ops.object.make_local()  # Appending doesn't seem to work, this makes linked objects local
 
-					obj = bpy.context.selected_objects[0]
-
-				select_obj(obj.name)  # bpy.ops.object.select_name(name=obj.name) # Make the selected object the active objected
+				obj = bpy.context.selected_objects[0]
+				select_obj(obj)
 				obj.location = prop.co
 				obj.rotation_euler = prop.rotation
 				obj.scale = prop.scale
@@ -297,7 +282,7 @@ class CE_load(bpy.types.Operator):
 			bpy.ops.object.make_local()  # Make object local
 
 			obj = bpy.context.selected_objects[0]
-			select_obj(obj.name)  # bpy.ops.object.select_name(name=obj.name) # Make object active
+			select_obj(obj)
 			obj.location = entity.co
 			obj.rotation_euler = entity.rotation
 			obj.scale = entity.scale
@@ -386,7 +371,6 @@ class CE_close(bpy.types.Operator):
 		context.scene.ce_type = CELL_NONE
 		context.scene.ce_name = 'Untitled Cell'
 		context.scene.ce_terrain = False
-		context.scene.ce_hdr = False
 		context.scene.ce_bloom = False
 		context.scene.ce_tint = False
 		context.scene.ce_terrain_file = ''
@@ -820,44 +804,43 @@ class SCENE_PT_cell_editor(bpy.types.Panel):
 
 				row = layout.row(align=True)
 				if depth != 0:
-						split = row.split(percentage=0.05 * depth)
+					split = row.split(percentage=0.05 * depth)
+					col = split.column()
+					col = split.column()
+					row = col.row(align=True)
+
+				if folder.expanded:
+					row.operator("scene.ce_folder_expand", text='', icon="TRIA_DOWN", emboss=False).folder = index
+					row.label(folder.label)
+					for new_folder in folder.folders:
+							draw_folder(new_folder, layout, depth + 1)
+					for asset in folder.assets:
+						row = layout.row(align=True)
+						split = row.split(percentage=0.05 * (depth + 1))
 						col = split.column()
 						col = split.column()
 						row = col.row(align=True)
 
-				if folder.expanded:
-						row.operator("scene.ce_folder_expand", text='', icon="TRIA_DOWN", emboss=False).folder = index
-						row.label(folder.label)
-						for new_folder in folder.folders:
-								draw_folder(new_folder, layout, depth + 1)
-						for asset in folder.assets:
+						index2 = len(asset_list)
+						asset_list.append(asset)
+
+						icon = ['TRIA_RIGHT', 'TRIA_DOWN'][asset.expanded]
+						row.operator("scene.ce_asset_expand", icon=icon, emboss=False, text='').asset = index2
+						row.label(asset.label)
+
+						if asset.expanded:
+							for model in blend_dict[asset.filepath]:
 								row = layout.row(align=True)
-								split = row.split(percentage=0.05 * (depth + 1))
+								split = row.split(percentage=0.05 * (depth + 2))
 								col = split.column()
 								col = split.column()
 								row = col.row(align=True)
-
-								index2 = len(asset_list)
-								asset_list.append(asset)
-
-								icon = ['TRIA_RIGHT', 'TRIA_DOWN'][asset.expanded]
-								row.operator("scene.ce_asset_expand", icon=icon, emboss=False, text='').asset = index2
-								row.label(asset.label)
-
-								if asset.expanded:
-										for model in blend_dict[asset.filepath]:
-												row = layout.row(align=True)
-												split = row.split(percentage=0.05 * (depth + 2))
-												col = split.column()
-												col = split.column()
-												row = col.row(align=True)
-												row.operator("scene.ce_load_asset", icon="ZOOMIN", text='', emboss=False).asset = asset.filepath + '|' + model
-												row.label(model)
+								row.operator("scene.ce_load_asset", icon="ZOOMIN", text='', emboss=False).asset = asset.filepath + '|' + model
+								row.label(model)
 
 				else:
-
-						row.operator("scene.ce_folder_expand", text='', icon="TRIA_RIGHT", emboss=False).folder = index
-						row.label(folder.label)
+					row.operator("scene.ce_folder_expand", text='', icon="TRIA_RIGHT", emboss=False).folder = index
+					row.label(folder.label)
 
 		layout = self.layout
 		folder_list = []
