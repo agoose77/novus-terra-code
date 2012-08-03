@@ -65,6 +65,7 @@ class Gun(weapons.WeaponBase):
 	def reload(self):
 		""" Reload the gun """
 		if self.reload_start_time == 0.0:
+			sudo.game.sound_manager.play_sound_on_frame([10,30], layer=4, armature=self.entity.armature, sound_name='reload_clip_in.ogg', object=None, alert=False, volume=0.5)
 			self.reload_start_time = sudo.game.game_time
 			self.entity.play_animation('reload')
 			self.gun_arm.playAction(self.name + "_reload", 1, 60, layer=2, priority=1, blendin=1, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
@@ -81,7 +82,8 @@ class Gun(weapons.WeaponBase):
 		""" Fire the weapon,
 
 		point1 and point2 are points that the bullet passes through """
-		print ("FIre!")
+		scn = bge.logic.getCurrentScene()
+
 		self.last_fire = sudo.game.game_time
 		self.fired_in_burst += 1
 		self.in_clip -= 1
@@ -91,10 +93,11 @@ class Gun(weapons.WeaponBase):
 		fp.position = self.gun_muzzle.position + (Vector([10.0,0.0,0.0])*self.gun_muzzle.worldOrientation)
 		fp['prop'] = 3.4
 
+		# Sound
+		sudo.game.sound_manager.play_sound(sound_name='shoot_temp.ogg', sound_object=self.gun_ob, play_type='play', use_3d=True, lowpass=True, obstructed_lowpass=False, alert_entities=True, volume=0.5)
+
 		# Cast the ray
 		hit_ob, hit_pos, hit_norm = self.gun_muzzle.rayCast(point2, point1, self.range)
-
-		scn = bge.logic.getCurrentScene()
 
 		# Add muzzle flash
 		flash = scn.addObject('muzzle_flash', self.gun_muzzle, 5)
@@ -121,14 +124,15 @@ class Gun(weapons.WeaponBase):
 		else:
 			hole = bge.logic.getCurrentScene().addObject('B_Hole', 'CELL_MANAGER_HOOK', 750)
 
-		
-		hole.position = hit_pos
-		hole.alignAxisToVect(hit_norm, 2, 1.0)
+		if hit_pos:				
+			hole.position = hit_pos
+			hole.alignAxisToVect(hit_norm, 2, 1.0)
+		else:
+			hole.position = [0.0,0.0,-1000.0]
 
 		ran_size = random.randrange(10,30)
 		ran_size = ran_size/10
 		hole.localScale = [ran_size,ran_size,ran_size]
-
 
 		# Deal damanage to hit object
 		if hit_ob:
@@ -136,6 +140,7 @@ class Gun(weapons.WeaponBase):
 				hit_ob['entity_base'].damage(self.damage, self.entity)
 			if 'physics' in hit_ob:
 				hit_ob['physics'] = 1
+
 
 	def equip(self, entity, weapon_type="1st"):
 		self.entity = entity
@@ -170,6 +175,23 @@ class Gun(weapons.WeaponBase):
 	def update_(self):
 		pass
 
+	def ai_fire(self, ai):
+
+		if self.check_fire():
+			self.entity.recoil_time = sudo.world.world_time
+			ai.play_animation('attack')
+
+			bullet_spread = ai.bullet_spread
+			ray = bullet_spread.controllers[0].sensors['weapon_ray']
+			ray.range = self.range
+
+			self.fire(bullet_spread.worldPosition,
+					bullet_spread.worldPosition + mathutils.Vector(ray.rayDirection))
+
+		if self.reloading:
+			self.reload()
+
+
 	def main(self):
 		mouse = bge.logic.mouse
 		if mouse.events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_JUST_RELEASED:
@@ -178,7 +200,7 @@ class Gun(weapons.WeaponBase):
 		if (mouse.events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_ACTIVE and
 			self.check_fire()):
 				self.entity.recoil_time = sudo.world.world_time
-				self.entity.play_animation('shoot')
+				self.entity.play_animation('attack')
 				self.entity.recoiled = False
 
 				bullet_spread = sudo.player.bullet_spread

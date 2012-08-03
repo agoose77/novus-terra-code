@@ -14,8 +14,11 @@ class Actor(entities.EntityBase):
 	be able send actors where it needs to.
 	"""
 
-	def __init__(self):
-		super().__init__()
+	def __init__(self, packet=None):
+		if packet:
+			super().__init__(packet)
+		else:
+			super().__init__()
 
 		self.walk_speed = 10
 		self.run_speed = 10

@@ -28,7 +28,7 @@ class Player(entities.Actor):
 
 		# Player Stats
 		self.health = 100
-		self.faction = 1		 # Default Faction = Humans
+		self.faction = 0		 # Default Faction = Player faction
 		#self.name = 'player'
 
 		self.hunger = 0.0
@@ -43,7 +43,7 @@ class Player(entities.Actor):
 		self.run_speed = 25.0
 		self.walk_temp = 0.0
 		self.last_move = 0.0
-		self.jump_speed = 50.0
+		self.jump_speed = 10.0
 
 		# Stops mouse events from triggering for a frame
 		# Used for when a UI screen is exited
@@ -53,7 +53,7 @@ class Player(entities.Actor):
 		self.animations = {
 			'walk': 0,
 			'run': 0,
-			'shoot': 0,
+			'attack': 0,
 			'reload': 0,
 			'idle': 1,
 			'cround': 0
@@ -123,6 +123,11 @@ class Player(entities.Actor):
 
 		self.c_r_top = [child for child in self.childrenRecursive if 'c_r_top' in child][0] 
 
+		self.squad_position_R = [child for child in self.childrenRecursive if 'squad_R' in child][0]
+		self.squad_position_L = [child for child in self.childrenRecursive if 'squad_L' in child][0]
+
+		self.blood_effect = [child for child in self.childrenRecursive if 'blood_effect' in child][0]
+
 		# FSM States
 		self.movement_state_machine = FiniteStateMachine(self)
 		self.movement_state_machine.add_state('walk', self.handle_walk_state)
@@ -144,11 +149,17 @@ class Player(entities.Actor):
 		self.inventory.replace_weapon("F2000")
 		self.inventory.primary_weapon.equip(self)
 
+		#
+		self._data['entity_base'] = self
+
 	def _unwrap(self):
 		entities.EntityBase._unwrap(self)
 
 	def damage(self, amount, object=None):
 		self.health += amount
+		bge.logic.getCurrentScene().objects['FX']['hurt'] = 2.0
+		bge.logic.getCurrentScene().objects['FX']['hurt_s'] += 0.3
+		self.blood_effect['blood_effect'] = 1.0
 		print("HURT")
 
 	def is_in_vehicle(self, FSM):
@@ -158,24 +169,7 @@ class Player(entities.Actor):
 		keyboard = bge.logic.keyboard.events
 		vel = self.getLinearVelocity()
 		move = [0, 0, 0]
-
-		#bottom_ray = self._data.rayCast(self.c_r_top, self.c_r_b)
-		#top_ray = self._data.rayCast(self.climb_ray, self.c_r_t)
-
-		#if (bottom_ray[0] != None) and (top_ray[0] == None):
-			#self.localLinearVelocity = Vector([0.0,2.5,0.0])
-			#self.localLinearVelocity[2] += (2.0-self.getDistanceTo(bottom_ray[1])) * 0.75
-		#	self.last_move = (2.0-self.getDistanceTo(bottom_ray[1])) * 2.0
-		#else:
-			#self.localLinearVelocity = Vector([0.0,0.0,0.0])
-			#self.localLinearVelocity[2] = self.last_move*0.2
-		#	self.last_move = self.last_move*0.75
-
 		
-		#print ("--", top_ray)
-		#print ("Bottom",bottom_ray)
-		#print ("==", move[2])
-
 		### Keys
 		if keyboard[bge.events.LEFTSHIFTKEY]:  # and self.fatigue < 10:
 			self.fatigue += 0.2
@@ -209,8 +203,8 @@ class Player(entities.Actor):
 
 		###
 		if move[0] != 0 or move[1] != 0:
-
 			if speed == self.walk_speed:
+				sudo.game.sound_manager.play_sound_on_frame([5,15], layer=2, armature=self.armature, sound_name=['walk_grass_s_1.ogg','walk_grass_s_2.ogg','walk_grass_s_3.ogg','walk_grass_s_4.ogg'], sound_object=None, play_type='play', use_3d=False, lowpass=False, obstructed_lowpass=True, alert_entities=True, volume=1.0)
 				self.roll += 0.5
 				self.camera.applyRotation([0, math.sin(self.roll*0.5)*0.002, math.sin(self.roll*0.5)*0.003], 1)  # Y
 				self.camera.localPosition[2] += math.sin(self.roll)*0.03
@@ -253,7 +247,7 @@ class Player(entities.Actor):
 			self.armature.playAction(str(weapon.name) + "_reload", 1, 200, layer=4, priority=2, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_PLAY, speed=1.0)
 			self.stop_animation(4)
 
-		elif self.animations['shoot'] == 1:
+		elif self.animations['attack'] == 1:
 			if self.recoiled == False:
 				x = random.uniform(self.inventory.primary_weapon.recoil_min_x,self.inventory.primary_weapon.recoil_max_x)#random.randrange(self.inventory.primary_weapon.recoil_min_x,self.inventory.primary_weapon.recoil_max_x)
 				y = random.uniform(self.inventory.primary_weapon.recoil_min_y,self.inventory.primary_weapon.recoil_max_y)#random.randrange(self.inventory.primary_weapon.recoil_min_y,self.inventory.primary_weapon.recoil_max_y)
@@ -270,7 +264,7 @@ class Player(entities.Actor):
 			else:
 				print ("Now here!!!!")
 				self.armature.localPosition = self.saved_armature_localPosition
-				self.animations['shoot'] = 0
+				self.animations['attack'] = 0
 
 
 			#self.armature.localPosition[1] += math.sin(sudo.world.world_time)*0.03
@@ -295,7 +289,7 @@ class Player(entities.Actor):
 			self.armature.playAction(str(weapon.name) + "_idle", 1, 101, layer=0, priority=5, blendin=5, play_mode=bge.logic.KX_ACTION_MODE_LOOP, speed=1.0)
 
 		for name in self.animations:
-			if name != "shoot":
+			if name != "attack":
 				self.animations[name] = 0
 
 	def handle_fall_state(self, FSM):
@@ -508,15 +502,11 @@ class Player(entities.Actor):
 		if bge.logic.globalDict['pause'] == 0 and self._data:
 			if not self.frozen:
 				self.movement_state_machine.main()
-			#self.handle_animations()
 
 				if self.in_vehicle == False:
 					self.handle_camera()
 					self.handle_interactions()
 
-					if self.inventory.primary_weapon is not None:
+					if self.inventory.primary_weapon:
 						self.handle_animations()
 						self.handle_weapon()
-
-					#if self.reloading == True:
-					#	self.reload()
