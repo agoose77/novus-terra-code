@@ -3,8 +3,6 @@ from .entity_base import *
 from .actor import *
 from .player import *
 from .ai_base import *
-from .ai_idle import *
-from .npc_base import *
 from .npc import *
 from .ghost import *
 from .morgoar import *

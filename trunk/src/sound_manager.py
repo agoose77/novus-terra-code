@@ -1,9 +1,13 @@
+"""
+SoundManager:  The sound class.
+"""
 import os
 import random
 
 import aud
 import bge
 import game
+from sound import Sound
 
 from paths import PATH_SOUNDS, PATH_MUSIC
 import sudo
@@ -11,7 +15,6 @@ import sudo
 class SoundManager:
 	def __init__(self):
 		self.sounds = []
-		self.handles = []
 
 		# AUD
 		self.device = aud.device()
@@ -38,19 +41,17 @@ class SoundManager:
 				self.music.append([aud.Factory.file(PATH_MUSIC+sound),sound])
 
 
-
 	### MUSIC
 	def play_song(self,song_name, fade_time=5.0,volume=1.0):
 		if not len(self.music):
-			# Return if no music has been loaded
-			return
+			return # Return if no music has been loaded
 
 		if song_name == "Random":
 			while True:
 				random_number = random.randrange(0,len(self.music))
 				song = self.music[random_number]
 
-				if len(self.music) > 1:
+				if self.music:
 					if not song == self.last_song:
 						break;
 				else:
@@ -60,108 +61,153 @@ class SoundManager:
 		
 		self.last_song = self.current_song
 
-		s = song#aud.Factory(song)
+		s = song
 		h = self.device.play(s)
-		h.volume = volume
+		h.volume = 0.0
 
 		self.current_song = {"sound":song,"handle":h}
-		print ("--- Song Played: " + song_name + " ---")
+		print ("--- Song Playing: " + song_name + " ---")
 	
 	def stop_music(self):
 		pass
 
 
 	### SOUNDS
-	def play_sound_frame(self, frames, layer, armature, sound_name, object=None, type='play', use_3d=True, use_LP=True, occlude_LP=True, alert=True, volume=1.0):
-		""" Play a sound based on a animation frame """
-		for frame in frames:
-			if not sound_name in self.animation_sounds:
-				self.animation_sounds[sound_name] = 0
+	def play_sound_on_frame(self, frames, layer, armature, sound_name, sound_object=None, play_type='play', use_3d=True, lowpass=True, obstructed_lowpass=True, alert_entities=True, volume=1.0):
+		""" Play a sound tied to an animation frame """
 
-			if armature.getActionFrame(layer) > frame and armature.getActionFrame(layer) < frame+1.0:
-				if self.animation_sounds[sound_name] == frames.index(frame):
-					self.animation_sounds[sound_name] += 1
-					sudo.sound_manager.play_sound(sound_name, object, type, use_3d, use_LP, occlude_LP, alert, volume)
+		### New sound instance
+		sound = Sound()
 
-				if len(frames) <= self.animation_sounds[sound_name]:
-					self.animation_sounds[sound_name] = 0
+		### Choose random sound
+		if isinstance(sound_name, list):
+			sound.name = sound_name[random.randrange(0,len(sound_name))]
+		else: sound.name = sound_name
 
-	def play_sound(self, sound_name, object=None, type='play', use_3d=True, use_LP=True, occlude_LP=True, alert=True, volume=1.0):
-		info = {'Name':sound_name, 'Own':object, 'Type':type, "3d":use_3d, "LP":use_LP, "occlude":occlude_LP, "alert":alert,"volume":volume}
-		self.sounds.append(info)
-		print ('--- Sound Played ---')
+		###
+		sound.play_on_frame = True
+		sound.frames = frames
+		sound.layer = layer
+		sound.armature = armature
+		sound.object = sound_object
+		sound.play_type = play_type
+		sound.use_3d = use_3d
+		sound.lowpass = lowpass
+		sound.obstructed_lowpass = obstructed_lowpass
+		sound.alert_entities = alert_entities
 
-	def play_random_sound(self, sounds, object=None, type='play',use_3d=True, use_LP=True, occlude_LP=True, alert=True, volume=1.0):
-		random_n = random(0, len(sounds))
+		### Check for duplicates
+		passed = True
+		for sound_obj in self.sounds:
+			if sound_obj.play_on_frame:
+				if (sound_obj.armature == armature) and (sound_obj.layer == layer):
+					passed = False
 
-		sound_name = sounds[random_n]
-		info = {'Name':sound_name, 'Own':object, 'Type':type, "3d":use_3d, "LP":use_LP, "occlude":occlude_LP, "alert":alert,"volume":volume}
-		
-		self.sounds.append(info)
-		print ('--- Random Sound Played ---')
+		if passed:
+			self.sounds.append(sound)
+
+	def play_sound(self, sound_name, sound_object=None, play_type='play', use_3d=True, lowpass=True, obstructed_lowpass=True, alert_entities=True, volume=1.0):
+		""" Play a sound """
+
+		### New sound instance
+		sound = Sound()
+
+		### Choose random sound
+		if isinstance(sound_name, list):
+			sound.name = sound_name[random.randrange(0,len(sound_name))]
+		else: sound.name = sound_name
+
+		###
+		sound.object = sound_object
+		sound.play_type = play_type
+		sound.use_3d = use_3d
+		sound.lowpass = lowpass
+		sound.obstructed_lowpass = obstructed_lowpass
+		sound.alert_entities = alert_entities
+
+		self.sounds.append(sound)
 
 	def stop_all_sounds(self):
-		for handle in self.playing_sounds_effect_handles:
-			self.playing_sound_effect_handles.remove(handle)
-			handle.stop()
+		for sound in self.sounds:
+			if sound.handle:
+				sound.handle.stop()
+				self.sounds.remove(sound)
 
+
+	### CHECKS
 	def handle_sounds(self):
 		device = self.device
 
 		for sound in self.sounds:
-			s = self.factories[sound['Name']] # Get factory
 
-			if sound['Own'] != None:
-				dist = sound['Own'].getDistanceTo(bge.logic.getCurrentScene().active_camera.position)
-			else:
+			# If a sound handle hasn't been created
+			if not sound.handle:
+
+				### If the sound is tied to an animation
+				if sound.play_on_frame:
+					frames = sound.frames
+					sound_name = sound.name
+					armature = sound.armature
+					layer = sound.layer
+							
+					for frame in frames:
+						if not sound_name in self.animation_sounds:
+							self.animation_sounds[sound_name] = 0
+
+						if armature.getActionFrame(layer) > frame-1.0 and armature.getActionFrame(layer) < frame+2.0:
+							if self.animation_sounds[sound_name] == frames.index(frame):
+								self.animation_sounds[sound_name] += 1
+
+							if len(frames) <= self.animation_sounds[sound_name]:
+								self.sounds.remove(sound)
+
+
+				###
+				print (sound.name)
+				sound.factory = self.factories[sound.name] # Get factory
+
 				dist = 0.0
+				if sound.object: dist = sound.object.getDistanceTo(bge.logic.getCurrentScene().active_camera.worldPosition)
+					
+				# LP Filter
+				if sound.lowpass:					
+					e = dist/70 # Max distance = Full LP
+					if e > 1.0: e = 1.0 # Clamp to 1.0
 
-			# LP Filter
-			if sound['LP'] == True:					
-				e = 10000-(dist*dist) # Low Pass Filter
+					e = 10000 - (5000*e)
 
-				### Lowpass for sounds blocked by object
-				if sound['occlude'] == True:
-					#ray = sound['Own'].rayCast(sound['Own'].position, bge.logic.getCurrentScene().active_camera.position, 0, '',0,0,0) 
-					pass
+					### Lowpass for sounds blocked by object
+					if sound.obstructed_lowpass == True:
+						pass #ray = sound['object'].rayCast(sound['object'].position, bge.logic.getCurrentScene().active_camera.position, 0, '',0,0,0) 
 
-				f = s.lowpass(e, 0.5)
-				h = device.play(f)
-			
-			# No LP
+					f = sound.factory.lowpass(e, 0.5)
+					sound.handle = device.play(f)
+				
+				# No lowpass
+				else:
+					sound.handle = device.play(sound.factory)
+
+				###
+				if sound.use_3d:
+					if sound.object:
+						sound.handle.relative = False
+						sound.handle.location = sound.object.worldPosition
+
+					sound.handle.distance_maximum = 500.0
+					sound.handle.distance_reference = 5.0
+
+				# Alert Entities
+				""" """
+
+				###
+				sound.handle.volume = sound.volume
+
+
+			# Check and delete finished handles
 			else:
-				h = device.play(s)
-
-			###
-			if sound['3d'] == True:
-				if sound['Own'] != None:
-					h.location = sound['Own'].position
-				h.distance_maximum = 100.0
-				h.distance_reference = 5.0
-
-
-			# Alert Entities
-			if sound['alert'] == True:
-				if sound['Own']:						
-					entities = sudo.entity_manager.get_within(sound['Own'].position, 10)
-
-					#for ent in entities:
-						#ent.alert_entity(sound['Own'])
-
-
-			###
-			pos = None
-
-			if sound["Own"] != None:
-				pos = sound['Own'].position
-
-			h.volume = sound['volume']
-			self.handles.append([h, sound])
-			self.sounds.remove(sound)
-
-		for handle in self.handles:
-			status = handle[0].status
-			h = handle[0]
+				if sound.get_handle_status ()== False:
+					sound.handle.stop()
+					self.sounds.remove(sound)
 
 
 	def handle_music(self):
@@ -182,19 +228,18 @@ class SoundManager:
 
 			self.current_song['sound'] = rand[1]
 			self.current_song['handle'] = h
-			self.current_song['time'] = sudo.world.world_time
-
-
-		
+			self.current_song['time'] = sudo.world.world_time		
 
 
 	def main(self):
 		device = self.device
 
-		device.listener_location = bge.logic.getCurrentScene().active_camera.position
-		device.listener_orientation = bge.logic.getCurrentScene().active_camera.orientation.to_quaternion()
+		device.distance_model = aud.AUD_DISTANCE_MODEL_INVERSE_CLAMPED#AUD_DISTANCE_MODEL_LINEAR#AUD_DISTANCE_MODEL_EXPONENT_CLAMPED
+	
+		device.listener_location = bge.logic.getCurrentScene().active_camera.worldPosition.copy()
+		device.listener_orientation = bge.logic.getCurrentScene().active_camera.worldOrientation.copy().to_quaternion()
 
 		self.handle_sounds()
-		self.handle_music()
+		#self.handle_music()
 
 		
